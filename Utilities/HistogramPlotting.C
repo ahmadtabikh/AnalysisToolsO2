@@ -942,6 +942,58 @@ void Draw_TH2_Histogram(TH2D* histogram, TString Context, TString* pdfName, TStr
 
 
 
+void Plot_2D_Ratio(TH2D** histos,std::string options, int nDatasets, int refIndex) {
+  if (refIndex >= nDatasets) {
+      std::cerr << "Error: Reference index out of bounds!" << std::endl;
+      return;
+  }
+
+  TH2D* reference = histos[refIndex];
+  TH2D* ratioHisto[nDatasets];
+
+  for (int iDataset = 0; iDataset < nDatasets; iDataset++) {
+      // TCanvas* canvas = new TCanvas(Form("Ratio Jet #eta-#phi run %s/run %s", DatasetsNames[iDataset].Data(), DatasetsNames[refIndex].Data()) , Form("Ratio Jet #eta-#phi run %s/run %s", DatasetsNames[iDataset].Data(), DatasetsNames[refIndex].Data()), 800, 600);
+      // if (options.find("pteta") != std::string::npos) {
+      //   TCanvas* canvas = new TCanvas(Form("Ratio Jet #eta-#pt run %s/run %s", DatasetsNames[iDataset].Data(), DatasetsNames[refIndex].Data()) , Form("Ratio Jet #eta-#pt run %s/run %s", DatasetsNames[iDataset].Data(), DatasetsNames[refIndex].Data()), 800, 600);
+      // } else if (options.find("ptphi") != std::string::npos){
+      //   TCanvas* canvas = new TCanvas(Form("Ratio Jet #pt-#phi run %s/run %s", DatasetsNames[iDataset].Data(), DatasetsNames[refIndex].Data()) , Form("Ratio Jet #pt-#phi run %s/run %s", DatasetsNames[iDataset].Data(), DatasetsNames[refIndex].Data()), 800, 600);
+      // } else TCanvas* canvas = new TCanvas(Form("Ratio Jet #eta-#phi run %s/run %s", DatasetsNames[iDataset].Data(), DatasetsNames[refIndex].Data()) , Form("Ratio Jet #eta-#phi run %s/run %s", DatasetsNames[iDataset].Data(), DatasetsNames[refIndex].Data()), 800, 600);
+
+      if (iDataset == refIndex) continue; // Skip the reference itself
+
+      ratioHisto[iDataset] = (TH2D*)histos[iDataset]->Clone(Form("Ratio_%d_to_%d", iDataset, refIndex));
+      ratioHisto[iDataset]->SetTitle(Form("Ratio: Dataset %d / Dataset %d", iDataset, refIndex));
+
+      for (int xbin = 1; xbin <= histos[iDataset]->GetNbinsX(); xbin++) {
+          for (int ybin = 1; ybin <= histos[iDataset]->GetNbinsY(); ybin++) {
+              double refValue = reference->GetBinContent(xbin, ybin);
+              double value = histos[iDataset]->GetBinContent(xbin, ybin);
+              if (refValue != 0) {
+                  ratioHisto[iDataset]->SetBinContent(xbin, ybin, value / refValue);
+              } else {
+                  ratioHisto[iDataset]->SetBinContent(xbin, ybin, 0); // Avoid division by zero
+              }
+          }
+      }
+      ratioHisto[iDataset]->GetZaxis()->SetRangeUser(0.7, 2);
+      // ratioHisto[iDataset]->Draw("COLZ");
+      
+  }
+   TCanvas* c1 = new TCanvas("c1", "H2D_jetetaPhi_ratio", 1200, 800);
+
+  // Compute rows and columns for dividing canvas
+  int nCols = ceil(sqrt(nDatasets));
+  int nRows = ceil((double)nDatasets / nCols);
+  c1->Divide(nCols, nRows);
+
+  // Loop over the histograms and draw them
+  for (int i = 0; i < nDatasets; ++i) {
+      c1->cd(i+1); // Canvas pads are 1-indexed
+      ratioHisto[i]->Draw("COLZ");
+  }
+
+  c1->Update();
+}
 
 
 

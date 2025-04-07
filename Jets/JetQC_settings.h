@@ -14,8 +14,8 @@ const TString jetLevel[nJetLevel] = {"data", "mcd", "mcp"};
 // float arrayRadius[nRadius] = {0.2, 0.4, 0.6};
 // const float areaDisplayMax[nRadius] = {0.5, 1, 1.5};
 const int nRadius = 1;
-const TString RadiusLegend[nRadius] = {"R = 0.2"};
-float arrayRadius[nRadius] = {0.2};
+const TString RadiusLegend[nRadius] = {"R = 0.4"};
+float arrayRadius[nRadius] = {0.4};
 const float areaDisplayMax[nRadius] = {0.5};
 // const int nRadius = 9;
 // const TString RadiusLegend[nRadius] = {"R = 0.2", "R = 0.25", "R = 0.3", "R = 0.35", "R = 0.4", "R = 0.45", "R = 0.5", "R = 0.55", "R = 0.6"};
@@ -30,7 +30,7 @@ const int iJetType = 0;
 const int iJetLevel = 0;
 
 // Choice of jet QA type (uncorrected jets, background corrected jet (rho area version), event wise constituent subtraction
-const int iJetFinderQaType = 1;
+const int iJetFinderQaType = 0;
 
 // Choice of Random Cone method:
 const int iMethodRandomCone = 1; 

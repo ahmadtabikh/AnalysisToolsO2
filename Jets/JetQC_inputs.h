@@ -1915,8 +1915,11 @@ TFile* file_AliAnalysis;
 TString* texCollisionDataInfo = new TString("pp #sqrt{#it{s}} = 5.36 TeV");
 const TString* texDatasetsComparisonType = new TString("run");
 const TString* texDatasetsComparisonCommonDenominator = new TString("LHC24_pp_ref_pass1_train380686 ");
-const int nDatasets = 13;
-const TString Datasets[nDatasets] = {"Run559348", 
+const int nDatasets = 14; //14
+const TString Datasets[nDatasets] = {
+                                    "",  // not in a folder like others, all merged runs used as reference;  uncomment the line of desired reference and comment the other 
+                                    // "mergedRuns_woRun559348_&_Run559385", // all runs merged whithout 559348 and 559385 used as reference 
+                                    "Run559348", 
                                     "Run559456", 
                                     "Run559437", 
                                     "Run559385", 
@@ -1930,7 +1933,10 @@ const TString Datasets[nDatasets] = {"Run559348",
                                     "Run559410", 
                                     "Run559409"};
 // const TString DatasetsNames[nDatasets] = {"0-10%", "50-90%"};
-const TString DatasetsNames[nDatasets] = {"490 kHz - Run559348",
+const TString DatasetsNames[nDatasets] = {
+                                        "All runs",
+                                        // "All runs wo 559348 and 559385"
+                                        "490 kHz - Run559348",
                                         "1095 kHz - Run559456",
                                         "1101 kHz - Run559437",
                                         "1101 kHz - Run559385",
@@ -1944,7 +1950,9 @@ const TString DatasetsNames[nDatasets] = {"490 kHz - Run559348",
                                         "1120 kHz - Run559410",
                                         "1146 kHz - Run559409"};
                                         
-TFile* file_O2Analysis_list[nDatasets] = {new TFile("Datasets/LHC24_ppref_pass1_train380686/"+Datasets[0]+"/AnalysisResults.root"),
+TFile* file_O2Analysis_list[nDatasets] = {
+                                        new TFile("Datasets/LHC24_ppref_pass1_train380686/"+Datasets[0]+"/AnalysisResults.root"), // all runs merged
+                                        // new TFile("Datasets/LHC24_ppref_pass1_train380686/"+Datasets[0]+"/AnalysisResults.root"), // all runs merged whithout 559348 and 559385 
                                         new TFile("Datasets/LHC24_ppref_pass1_train380686/"+Datasets[1]+"/AnalysisResults.root"),
                                         new TFile("Datasets/LHC24_ppref_pass1_train380686/"+Datasets[2]+"/AnalysisResults.root"),
                                         new TFile("Datasets/LHC24_ppref_pass1_train380686/"+Datasets[3]+"/AnalysisResults.root"),
@@ -1956,9 +1964,11 @@ TFile* file_O2Analysis_list[nDatasets] = {new TFile("Datasets/LHC24_ppref_pass1_
                                         new TFile("Datasets/LHC24_ppref_pass1_train380686/"+Datasets[9]+"/AnalysisResults.root"),
                                         new TFile("Datasets/LHC24_ppref_pass1_train380686/"+Datasets[10]+"/AnalysisResults.root"),
                                         new TFile("Datasets/LHC24_ppref_pass1_train380686/"+Datasets[11]+"/AnalysisResults.root"),
-                                        new TFile("Datasets/LHC24_ppref_pass1_train380686/"+Datasets[12]+"/AnalysisResults.root")
+                                        new TFile("Datasets/LHC24_ppref_pass1_train380686/"+Datasets[12]+"/AnalysisResults.root"),
+                                        new TFile("Datasets/LHC24_ppref_pass1_train380686/"+Datasets[13]+"/AnalysisResults.root")
                                         };
 const TString analysisWorkflow[nDatasets] = {"jet-spectra-charged",
+                                          "jet-spectra-charged",
                                           "jet-spectra-charged",
                                           "jet-spectra-charged",
                                           "jet-spectra-charged",
@@ -1974,6 +1984,7 @@ const TString analysisWorkflow[nDatasets] = {"jet-spectra-charged",
                                          };
 
 const TString wagonId = "";
-const bool isDatasetWeighted[nDatasets] = {false,false,false,false,false,false,false,false,false,false,false,false,false};
+const bool isDatasetWeighted[nDatasets] = {false,false,false,false,false,false,false,false,false,false,false,false, false ,false };
 const std::string histDrawColorsOption = "";
+const std::string histDatasetComparisonStructure = "";
 const bool datasetsAreSubsetsofId0 = false;
