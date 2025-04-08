@@ -941,6 +941,40 @@ void Draw_TH2_Histogram(TH2D* histogram, TString Context, TString* pdfName, TStr
 
 
 
+// void customRebin2D(TH2D* h2d, const char* histoNameSuffix) {
+//     // Get the number of bins along each axis
+//     int nBinsX = h2d->GetNbinsX();
+//     int nBinsY = h2d->GetNbinsY();
+  
+//     Double_t newBinsY[] = {0,5,10,15,20,25,30,35,45,60,90,140,200};  // Example y-bin edges: [0, 3, 6, 9]
+//     TString histoName = TString("h2dNew_") + histoNameSuffix;  // Name with suffix to avoid conflicts
+//     // Create a new 2D histogram with the new binning
+//     TH2D* h2dNew = new TH2D("h2dNew", "Custom Rebinning Y", 
+//                             nBinsX, h2d->GetXaxis()->GetXmin(), h2d->GetXaxis()->GetXmax(),
+//                             sizeof(newBinsY)/sizeof(newBinsY[0])-1, newBinsY);
+//     // Loop over the original histogram's bins and rebin the y-axis
+//     for (int i = 1; i <= nBinsX; ++i) {
+//         for (int j = 1; j <= nBinsY; ++j) {
+//             // Get the content of the current bin in the original histogram
+//             Double_t binContent = h2d->GetBinContent(i, j);
+            
+//             // Find the new y-bin based on custom rebinning
+//             int newBinY = h2dNew->GetYaxis()->FindBin(h2d->GetYaxis()->GetBinCenter(j));
+            
+//             // Fill the new histogram with the summed bin content
+//             h2dNew->AddBinContent(i, newBinY, binContent);
+
+//         }
+//     }
+//     delete h2d;  // Delete original histogram if no longer needed
+//     h2d = h2dNew;
+// }
+
+
+
+
+
+
 
 void Plot_2D_Ratio(TH2D** histos,std::string options, int nDatasets, int refIndex) {
   if (refIndex >= nDatasets) {
@@ -975,25 +1009,66 @@ void Plot_2D_Ratio(TH2D** histos,std::string options, int nDatasets, int refInde
               }
           }
       }
-      ratioHisto[iDataset]->GetZaxis()->SetRangeUser(0.7, 2);
+      ratioHisto[iDataset]->GetZaxis()->SetRangeUser(0.7, 1.5);
       // ratioHisto[iDataset]->Draw("COLZ");
       
   }
-   TCanvas* c1 = new TCanvas("c1", "H2D_jetetaPhi_ratio", 1200, 800);
+
+  TCanvas* c2 = new TCanvas("c2", "H2D_jetetaPhi_ratio_2", 1200, 800);
 
   // Compute rows and columns for dividing canvas
   int nCols = ceil(sqrt(nDatasets));
   int nRows = ceil((double)nDatasets / nCols);
-  c1->Divide(nCols, nRows);
+  c2->Divide(nCols, nRows);
 
   // Loop over the histograms and draw them
-  for (int i = 0; i < nDatasets; ++i) {
-      c1->cd(i+1); // Canvas pads are 1-indexed
-      ratioHisto[i]->Draw("COLZ");
+  for (int i = 0; i < nDatasets; i++) {
+      c2->cd(i+1); // Canvas pads are 1-indexed
+      if (ratioHisto[i]) {
+        ratioHisto[i]->Draw("COLZ");
+        TLatex latex;
+        latex.SetNDC();
+        latex.SetTextSize(0.05);
+        latex.DrawLatex(0.5, 0.92, Form("Ratio: %s / %s", DatasetsNames[i].Data(), DatasetsNames[refIndex].Data()));
+      } else {
+          std::cerr << "Warning: ratioHisto[" << i << "] is null!" << std::endl;
+        }
   }
 
-  c1->Update();
+  c2->Update();
+   
+  // for (int i = 0; i < nDatasets; i += plotsPerCanvas) {
+  //     TString canvasName = Form("R%d", canvasIndex);
+  //     TString canvasTitle = Form("ratio_jetetaPhi %d", canvasIndex + 1);
+  //     TCanvas* R = new TCanvas(canvasName, canvasTitle, 1200, 800);
+
+  //     int nPlotsThisCanvas = std::min(plotsPerCanvas, nDatasets - i);
+  //     int nCols = ceil(sqrt(nPlotsThisCanvas));
+  //     int nRows = ceil((double)nPlotsThisCanvas / nCols);
+  //     R->Divide(nCols, nRows);
+
+  //     for (int j = 0; j < nPlotsThisCanvas; ++j) {
+  //         int plotIndex = i + j;
+  //         R->cd(j + 1);
+  //         ratioHisto[plotIndex]->Draw("COLZ");
+
+  //         TLatex latex;
+  //         latex.SetNDC();
+  //         latex.SetTextSize(0.04);
+  //         latex.DrawLatex(0.1, 0.92, Form("Ratio: %s / %s",
+  //                             DatasetsNames[plotIndex].Data(), DatasetsNames[refIndex].Data()));
+  //     }
+
+  //     R->Update();
+  //     ++canvasIndex;
+  // }
+
+
+
+
 }
+
+
 
 
 

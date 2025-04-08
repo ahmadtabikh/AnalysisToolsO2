@@ -33,6 +33,7 @@ void Draw_TH2_Histograms(TH2D** histograms_collection, const TString* legendList
 void Draw_TH2_Histograms(TH2D** histograms_collection, const TString* legendList_string, int collectionSize, TString Context, TString* pdfName, TString* &texXtitle, TString* &texYtitle, TString* texCollisionDataInfo, std::array<std::array<float, 2>, 3> drawnWindow2D, double* th2Contours, int th2ContourNumber, std::string options, TPolyLine** optionalLine) ;
 void Draw_TH2_Histogram(TH2D* histogram, TString Context, TString* pdfName, TString* &texXtitle, TString* &texYtitle, TString* texCollisionDataInfo, std::array<std::array<float, 2>, 3> drawnWindow2D, double* th2Contours, int th2ContourNumber, std::string options);
 void Plot_2D_Ratio(TH2D** histos,std::string options, int nDatasets, int refIndex);
+// void customRebin2D(TH2D* h2d, const char* histoNameSuffix);
 
 // Preferred colors and markers
 // const int fillColors[] = {kGray+1,  kRed-10, kBlue-9, kGreen-8, kMagenta-9, kOrange-9,kCyan-8,kYellow-7,}; // for syst bands

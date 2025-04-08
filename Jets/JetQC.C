@@ -172,6 +172,7 @@ void JetQC() {
   // Draw_Pt_DatasetComparison(etaRangeSym, "normEvents", jetRadiusForDataComp);
   // Draw_Pt_DatasetComparison_withRun2RitsuyaHardcoded(etaRangeSym, "normEvents", jetRadiusForDataComp);
   Draw_2D_DatasetComparison(etaRangeSym, "etaphi", jetRadiusForDataComp, 0) ;
+  
 
   for(int iPtBin = 0; iPtBin < nPtBins; iPtBin++){
     jetPtMinCut = jetPtMinCutArray[iPtBin];
@@ -4225,6 +4226,8 @@ void Draw_Pt_DatasetComparison_withRun2RitsuyaHardcoded(float* etaRange, std::st
 void Draw_2D_DatasetComparison(float* etaRange, std::string options, float jetRadiusForJetFinderWorkflow = 0.2, int refIndex = 0) {
   float jetRadius = jetRadiusForJetFinderWorkflow; // obsolete for new jet-spectra-charged as we don't do radii comparisons that often and so files will only have 1 radius
   TH2D* H2D_jetetaPhi[nDatasets];
+  // TH2D* H2D_jetetaPhi_rebin[nDatasets];
+
   TH3D* H3D_jetRjetPtjetEta[nDatasets];
   float EtaCutLow = etaRange[0];
   float EtaCutHigh = etaRange[1];
@@ -4268,24 +4271,97 @@ void Draw_2D_DatasetComparison(float* etaRange, std::string options, float jetRa
             H2D_jetetaPhi[iDataset]->SetBinContent(xbin, ybin, binContent / Nevents);
         }
     }
-    // H2D_jetetaPhi[iDataset]->Draw("COLZ");
+
+    // int nBinsX = H2D_jetetaPhi[iDataset]->GetNbinsX();
+    // int nBinsY = H2D_jetetaPhi[iDataset]->GetNbinsY();
+  
+    // Double_t newBinsY[] = {0,5,10,15,20,25,30,35,45,60,90,140,200};  
+    // TString histoName = TString("h2dNew_") + Form("Jet %s Projection - Run %s", projectionAxis.Data(), DatasetsNames[iDataset].Data());  
+    // // Create a new 2D histogram with the new binning
+    // TH2D* h2dNew = new TH2D("h2dNew",Form( "Custom Rebinning Y, %d", iDataset), 
+    //                         nBinsX, H2D_jetetaPhi[iDataset]->GetXaxis()->GetXmin(), H2D_jetetaPhi[iDataset]->GetXaxis()->GetXmax(),
+    //                         sizeof(newBinsY)/sizeof(newBinsY[0])-1, newBinsY);
+    // // Loop over the original histogram's bins and rebin the y-axis
+    // for (int i = 1; i <= nBinsX; ++i) {
+    //     for (int j = 1; j <= nBinsY; ++j) {
+    //         // Get the content of the current bin in the original histogram
+    //         Double_t binContent = H2D_jetetaPhi[iDataset]->GetBinContent(i, j);
+            
+    //         // Find the new y-bin based on custom rebinning
+    //         int newBinY = h2dNew->GetYaxis()->FindBin(H2D_jetetaPhi[iDataset]->GetYaxis()->GetBinCenter(j));
+            
+    //         // Fill the new histogram with the summed bin content
+    //         h2dNew->AddBinContent(i, newBinY, binContent);
+            
+    //     }
+    // }
+    // h2dNew->Draw("COLZ");
+    // // customRebin2D(H2D_jetetaPhi[iDataset], Form("Jet %s Projection - Run %s", projectionAxis.Data(), DatasetsNames[iDataset].Data())) ;
+    
     
   } 
-  TCanvas* c = new TCanvas("c", "H2D_jetetaPhi collection", 1200, 800);
 
-  // Compute rows and columns for dividing canvas
-  int nCols = ceil(sqrt(nDatasets));
-  int nRows = ceil((double)nDatasets / nCols);
-  c->Divide(nCols, nRows);
+    //Draw in one canvas 
 
-  // Loop over the histograms and draw them
-  for (int i = 0; i < nDatasets; ++i) {
-      c->cd(i+1); // Canvas pads are 1-indexed
-      H2D_jetetaPhi[i]->Draw("COLZ");
+  // TCanvas* c = new TCanvas("c", "H2D_jetetaPhi collection", 1200, 800);
+
+  // // Compute rows and columns for dividing canvas
+  // int nCols = ceil(sqrt(nDatasets));
+  // int nRows = ceil((double)nDatasets / nCols);
+  // c->Divide(nCols, nRows);
+
+  // // Loop over the histograms and draw them
+  // for (int i = 0; i < nDatasets; ++i) {
+  //     c->cd(i+1); // Canvas pads are 1-indexed
+  //     H2D_jetetaPhi[i]->Draw("COLZ");
+  //       // Add title to the top-left corner of each pad
+  //     TLatex latex;
+  //     latex.SetNDC(); // Use Normalized Device Coordinates
+  //     latex.SetTextSize(0.04); // Adjust size as needed
+  //     latex.DrawLatex(0.1, 0.92, DatasetsNames[i]); // x, y, and text
+  // }
+
+  // c->Update();
+
+
+  //Draw in 4 plots per canvas 
+
+
+  const int plotsPerCanvas = 4;
+  int canvasIndex = 0;
+
+  for (int i = 0; i < nDatasets; i += plotsPerCanvas) {
+      // Create a new canvas for every group of 4
+      TString canvasName = Form("c%d", canvasIndex);
+      TString canvasTitle = Form("H2D_jetetaPhi Collection %d", canvasIndex + 1);
+      TCanvas* c = new TCanvas(canvasName, canvasTitle, 1200, 800);
+
+      // Determine number of plots in this canvas (might be less than 4 at the end)
+      int nPlotsThisCanvas = std::min(plotsPerCanvas, nDatasets - i);
+
+      // Compute rows and columns (up to 2x2)
+      int nCols = ceil(sqrt(nPlotsThisCanvas));
+      int nRows = ceil((double)nPlotsThisCanvas / nCols);
+      c->Divide(nCols, nRows);
+
+      for (int j = 0; j < nPlotsThisCanvas; ++j) {
+          int plotIndex = i + j;
+          c->cd(j + 1);
+          H2D_jetetaPhi[plotIndex]->Draw("COLZ");
+
+          TLatex latex;
+          latex.SetNDC();
+          latex.SetTextSize(0.04);
+          latex.DrawLatex(0.1, 0.92, DatasetsNames[plotIndex]);
+      }
+
+      c->Update();
+      ++canvasIndex;
   }
 
-  c->Update();
-  Plot_2D_Ratio(H2D_jetetaPhi, options, nDatasets, refIndex);
+
+  Plot_2D_Ratio(H2D_jetetaPhi, "etaphi", nDatasets, refIndex);
+
 
   // Draw_TH2_Histograms(H2D_jetArea, RadiusLegend, nRadius, textContext, pdfNamelogz, iJetFinderQaType == 0 ? texPtJetRawX : texPtJetBkgCorrX, texJetArea, texCollisionDataInfo, drawnWindowAuto, th2ContoursNone, contourNumberNone, "logz");
   // Draw_TH2_Histogram(H2D_jetArea, textContext, pdfNamelogz, iJetFinderQaType == 0 ? texPtJetRawX : texPtJetBkgCorrX, texJetArea, texCollisionDataInfo, drawnWindowAuto, th2ContoursNone, contourNumberNone, "logz");
