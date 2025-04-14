@@ -4324,40 +4324,39 @@ void Draw_2D_DatasetComparison(float* etaRange, std::string options, float jetRa
   // c->Update();
 
 
-  //Draw in 4 plots per canvas 
+  // //Draw in 4 plots per canvas 
 
+  // const int plotsPerCanvas = 4;
+  // int canvasIndex = 0;
 
-  const int plotsPerCanvas = 4;
-  int canvasIndex = 0;
+  // for (int i = 0; i < nDatasets; i += plotsPerCanvas) {
+  //     // Create a new canvas for every group of 4
+  //     TString canvasName = Form("c%d", canvasIndex);
+  //     TString canvasTitle = Form("H2D_jetetaPhi Collection %d", canvasIndex + 1);
+  //     TCanvas* c = new TCanvas(canvasName, canvasTitle, 1200, 800);
 
-  for (int i = 0; i < nDatasets; i += plotsPerCanvas) {
-      // Create a new canvas for every group of 4
-      TString canvasName = Form("c%d", canvasIndex);
-      TString canvasTitle = Form("H2D_jetetaPhi Collection %d", canvasIndex + 1);
-      TCanvas* c = new TCanvas(canvasName, canvasTitle, 1200, 800);
+  //     // Determine number of plots in this canvas (might be less than 4 at the end)
+  //     int nPlotsThisCanvas = std::min(plotsPerCanvas, nDatasets - i);
 
-      // Determine number of plots in this canvas (might be less than 4 at the end)
-      int nPlotsThisCanvas = std::min(plotsPerCanvas, nDatasets - i);
+  //     // Compute rows and columns (up to 2x2)
+  //     int nCols = ceil(sqrt(nPlotsThisCanvas));
+  //     int nRows = ceil((double)nPlotsThisCanvas / nCols);
+  //     c->Divide(nCols, nRows);
 
-      // Compute rows and columns (up to 2x2)
-      int nCols = ceil(sqrt(nPlotsThisCanvas));
-      int nRows = ceil((double)nPlotsThisCanvas / nCols);
-      c->Divide(nCols, nRows);
+  //     for (int j = 0; j < nPlotsThisCanvas; ++j) {
+  //         int plotIndex = i + j;
+  //         c->cd(j + 1);
+  //         H2D_jetetaPhi[plotIndex]->Draw("COLZ");
 
-      for (int j = 0; j < nPlotsThisCanvas; ++j) {
-          int plotIndex = i + j;
-          c->cd(j + 1);
-          H2D_jetetaPhi[plotIndex]->Draw("COLZ");
+  //         TLatex latex;
+  //         latex.SetNDC();
+  //         latex.SetTextSize(0.04);
+  //         latex.DrawLatex(0.1, 0.92, DatasetsNames[plotIndex]);
+  //     }
 
-          TLatex latex;
-          latex.SetNDC();
-          latex.SetTextSize(0.04);
-          latex.DrawLatex(0.1, 0.92, DatasetsNames[plotIndex]);
-      }
-
-      c->Update();
-      ++canvasIndex;
-  }
+  //     c->Update();
+  //     ++canvasIndex;
+  // }
 
 
   Plot_2D_Ratio(H2D_jetetaPhi, "etaphi", nDatasets, refIndex);

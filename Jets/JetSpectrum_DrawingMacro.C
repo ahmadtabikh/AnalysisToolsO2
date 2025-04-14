@@ -90,27 +90,27 @@ void JetSpectrum_DrawingMacro() {
   snprintf(optionsAnalysis, sizeof(optionsAnalysis), "%s,%s,%s", mergingPrior, unfoldingPrior, unfoldingMethod);
   cout << "Analysis options are: " << optionsAnalysis << endl;
 
-  int iDataset = 0;
-  int iRadius = 0;
+  int iDataset = 1;
+  int iRadius = 1;
 
   // // // find a way to input mcpPrior/mcdPrior and bayes/svd as a variables rather than typed out like this
   // Draw_ResponseMatrices_Fluctuations(iDataset, iRadius);
-  // Draw_ResponseMatrices_detectorResponse(iDataset, iRadius);
-  // Draw_ResponseMatrices_DetectorAndFluctuationsCombined(iDataset, iRadius, optionsAnalysis);
+  Draw_ResponseMatrices_detectorResponse(iDataset, iRadius);
+  Draw_ResponseMatrices_DetectorAndFluctuationsCombined(iDataset, iRadius, optionsAnalysis);
 
   // // // // Draw_Pt_spectrum_unfolded_FluctResponseOnly(iDataset, iRadius, optionsAnalysis); // NOT FIXED YET - result meaningless
-  // Draw_Pt_spectrum_raw(iDataset, iRadius, optionsAnalysis);
-  // Draw_Pt_spectrum_mcp(iDataset, iRadius, optionsAnalysis);
-  // Draw_Pt_spectrum_mcdMatched(iDataset, iRadius, optionsAnalysis);
+  Draw_Pt_spectrum_raw(iDataset, iRadius, optionsAnalysis);
+  Draw_Pt_spectrum_mcp(iDataset, iRadius, optionsAnalysis);
+  Draw_Pt_spectrum_mcdMatched(iDataset, iRadius, optionsAnalysis);
 
-  // Draw_Pt_efficiency_jets(iDataset, iRadius, optionsAnalysis);
-  // Draw_kinematicEfficiency(iDataset, iRadius, optionsAnalysis);
-  // Draw_FakeRatio(iDataset, iRadius, optionsAnalysis);
+  Draw_Pt_efficiency_jets(iDataset, iRadius, optionsAnalysis);
+  Draw_kinematicEfficiency(iDataset, iRadius, optionsAnalysis);
+  Draw_FakeRatio(iDataset, iRadius, optionsAnalysis);
 
-  int unfoldParameterInput = 5;
-  Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput, optionsAnalysis);
-  // int unfoldParameterInput2 = 8;
-  // Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput2, optionsAnalysis);
+  // int unfoldParameterInput = 5;
+  // Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput, optionsAnalysis);
+  int unfoldParameterInput2 = 8;
+  Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput2, optionsAnalysis);
   // int unfoldParameterInput3 = 10;
   // Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput3, optionsAnalysis);
 

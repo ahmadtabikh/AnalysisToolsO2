@@ -1009,7 +1009,7 @@ void Plot_2D_Ratio(TH2D** histos,std::string options, int nDatasets, int refInde
               }
           }
       }
-      ratioHisto[iDataset]->GetZaxis()->SetRangeUser(0.7, 1.5);
+      ratioHisto[iDataset]->GetZaxis()->SetRangeUser(0.7, 1.3);
       // ratioHisto[iDataset]->Draw("COLZ");
       
   }
@@ -1022,8 +1022,8 @@ void Plot_2D_Ratio(TH2D** histos,std::string options, int nDatasets, int refInde
   c2->Divide(nCols, nRows);
 
   // Loop over the histograms and draw them
-  for (int i = 0; i < nDatasets; i++) {
-      c2->cd(i+1); // Canvas pads are 1-indexed
+  for (int i = 1; i < nDatasets; i++) {
+      c2->cd(i); // Canvas pads are 1-indexed
       if (ratioHisto[i]) {
         ratioHisto[i]->Draw("COLZ");
         TLatex latex;

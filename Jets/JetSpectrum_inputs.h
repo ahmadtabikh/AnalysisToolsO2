@@ -11,40 +11,44 @@ TFile* file_O2Analysis_run2ComparisonFileHannaBossiLaura = new TFile("Datasets/R
 TFile* file_O2Analysis_run2ComparisonFileMLPaper = new TFile("Datasets/Run2_Unfolding_MachineLearningMethod_R020/Ch-jetSuppression_PbPb502TeV.root");
 
 
-//////// -------- LHC23zzh pass 4 with - pp sim anchored to PbPb 10%  ///////
+//////// -------- pp LHC24ap_pass1_small_train379582 as data with LHC25b4a as MC  ///////
 TString* texEnergy = new TString("#sqrt{#it{s}} = 5.36 TeV"); 
-TString* texCollisionDataType = new TString("Data Pb-Pb 00-10%"); 
+
+TString* texCollisionDataType = new TString("Data pp"); 
 TString* texCollisionDataInfo = new TString((TString)*texCollisionDataType+" "+(TString)*texEnergy); 
+
 TString* texCollisionMCType = new TString("MC pp PYTHIA"); 
 TString* texCollisionMCInfo = new TString((TString)*texCollisionMCType+" "+(TString)*texEnergy); 
-const TString* texDatasetsComparisonType = new TString("00-10% centrality");
-// const TString* texDatasetsComparisonType = new TString("50-70% centrality");
-const TString* texDatasetsComparisonCommonDenominator = new TString("ALICE performance");
+
+const TString* texDatasetsComparisonType = new TString("0");
+const TString* texDatasetsComparisonCommonDenominator = new TString("");
 const int nDatasets = 1;
-const TString Datasets[nDatasets] = {"LHC23_PbPb_pass4_goldenRuns_occupancy01000_train372068"};
-const TString DatasetsNames[nDatasets] = {""};
+const TString Datasets[nDatasets] = {"LHC24_ppref_pass1_train380686"};
+const TString DatasetsNames[nDatasets] = {"ppref"};
 TFile* file_O2Analysis_list[nDatasets] = {new TFile("Datasets/"+Datasets[0]+"/AnalysisResults.root")
                                       };
 // TFile* file_O2Analysis_MCfileForMatrix[nDatasets] = new TFile("Datasets/ppSim_LHC23d4/AnalysisResults.root");
 // TFile* file_O2Analysis_MCfileForMatrix = new TFile("Datasets/ppSim_LHC23d4_weighted_withLeadingTrackCut/AnalysisResults.root");
 // TFile* file_O2Analysis_MCfileForMatrix = new TFile("Datasets/MC_halfMCAngantyr/AnalysisResults.root");
-TFile* file_O2Analysis_MCfileForMatrix = new TFile("Datasets/LHC25b6_pp_sim_PbPbAnchor_10percent_R02_train380970/AnalysisResults.root");
-TFile* file_O2Analysis_ppSimDetectorEffect_unfoldingControl = {new TFile("Datasets/LHC25b6_pp_sim_PbPbAnchor_10percent_R02_train380970/AnalysisResults.root")}; // use this MC file as input to unfolding (with h_jet_pt_rhoareasubtracted distrib on file) and as comparison to gen (with h_jet_pt_part distrib on file)
+TFile* file_O2Analysis_MCfileForMatrix = new TFile("Datasets/LHC25b6_train380971/AnalysisResults.root");
+TFile* file_O2Analysis_ppSimDetectorEffect_unfoldingControl = {new TFile("Datasets/LHC25b6_train380971/AnalysisResults.root")}; // use this MC file as input to unfolding (with h_jet_pt_rhoareasubtracted distrib on file) and as comparison to gen (with h_jet_pt_part distrib on file)
 
 // const TString trainId = "_id12832";
 // const TString analysisWorkflowData = "jet-finder-charged-qa_central_5090_lead5"+trainId;
 // const TString trainId = "_id12436";
 // const TString analysisWorkflowData = "jet-finder-charged-qa_central_0010_lead5"+trainId;
-const TString trainIdData = "_id26156";
-const TString analysisWorkflowData = "jet-spectra-charged_central"+trainIdData;
-// const TString analysisWorkflowData = "jet-spectra-charged_peripheral"+trainIdData;
+const TString trainIdData = "";
+const TString analysisWorkflowData = "jet-spectra-charged"+trainIdData;
+
 const TString trainIdBkg = "";
 const TString analysisWorkflowBkg = "jet-background-analysis"+trainIdBkg;
+
 const TString trainIdUnfoldingControl = "";
-const TString analysisWorkflow_unfoldingControl = "jet-spectra-charged_noOccupancyCut"+trainIdUnfoldingControl;
+const TString analysisWorkflow_unfoldingControl = "jet-spectra-charged"+trainIdUnfoldingControl;
 
 const TString trainIdMC = "";
-const TString analysisWorkflowMC = "jet-spectra-charged_noOccupancyCut"+trainIdMC;
+const TString analysisWorkflowMC = "jet-spectra-charged"+trainIdMC;
+
 const bool etaCutOnMatchedJetsIsObsoleteVersion = false;
 
 
