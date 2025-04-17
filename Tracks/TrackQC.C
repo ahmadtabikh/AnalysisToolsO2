@@ -77,6 +77,8 @@ void Draw_Mean_Pt_vs_Dataset();
 void Draw_Mean_Eta_vs_Dataset();
 void Draw_DcaXY_DatasetComp();
 
+void Draw_tracks_2D_profile(std::string options, int refIndex);
+
 /////////////////////////////////////////////////////
 ///////////////////// Main Macro ////////////////////
 /////////////////////////////////////////////////////
@@ -111,7 +113,7 @@ void TrackQC() {
   // float jetPtMinCutArray[nPtBins+1] = {0, 1, 2, 4, 6, 8, 10, 15, 20, 30, 200};
   float jetPtMinCutArray[nPtBins+1] = {0, 200};
 
-
+  // Draw_tracks_2D_profile("etaphi", 0) ;
   Draw_Pt_DatasetComparison("evtNorm");
   // Draw_Pt_DatasetComparison("entriesNorm");
   for(int iPtBin = 0; iPtBin < nPtBins; iPtBin++){
@@ -239,11 +241,14 @@ void Draw_Pt_DatasetComparison(std::string options) {
   
   TH1D* H1D_trackPt_rebinned_ratios[nDatasets];
   TH1D* H1D_spectrum_sum = nullptr;
+  TH1D* H1D_spectrum_sum_exclude = nullptr;
   TH1D* H1D_trackPt_all_avg = nullptr;
+  TH1D* H1D_trackPt_all_avg_3 = nullptr;
+
 
 
   bool divideSuccess = false;
-
+  std::vector<int> excludedDatasets = {1, 4, 13}; 
   double Nevents; 
 
   for(int iDataset = 0; iDataset < nDatasets; iDataset++){
@@ -266,8 +271,8 @@ void Draw_Pt_DatasetComparison(std::string options) {
     H1D_trackPt_rebinned[iDataset] = (TH1D*)H1D_trackPt[iDataset]->Rebin(nBinsLog, "trackPt_rebinned_"+Datasets[iDataset]+DatasetsNames[iDataset], O2ptLogBins);
 
 
-    ////////////////////////////////////////////////////////////////////////
-    //////////// add spectrum then divide by nDatasets /////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////// add spectrum then divide by nDatasets /////////////////////////////////////////////////////////////////////////////////////////////
     TH1D* rebinnedClone = (TH1D*)H1D_trackPt_rebinned[iDataset]->Clone("trackPt_rebinned_clone_" + Datasets[iDataset] + DatasetsNames[iDataset]);
     double Neventstemp = GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflow[iDataset]);
     NormaliseYieldToNEvents(rebinnedClone, Neventstemp);
@@ -276,8 +281,20 @@ void Draw_Pt_DatasetComparison(std::string options) {
     } else {
         H1D_spectrum_sum->Add(rebinnedClone);
     }
-    ////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////
+
+    //////////add spectrum except desired ones/////////////////////////////
+    if (std::find(excludedDatasets.begin(), excludedDatasets.end(), iDataset) == excludedDatasets.end()) {
+      TH1D* rebinnedCloneExclude = (TH1D*)H1D_trackPt_rebinned[iDataset]->Clone("trackPt_rebinned_clone_wExclusion" + Datasets[iDataset] + DatasetsNames[iDataset]);
+      double Neventstemp2 = GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflow[iDataset]);
+      NormaliseYieldToNEvents(rebinnedCloneExclude, Neventstemp2);
+      if (H1D_spectrum_sum_exclude == nullptr) {
+          H1D_spectrum_sum_exclude = (TH1D*)rebinnedCloneExclude->Clone("H1D_spectrum_sum_exculde");
+      } else {
+          H1D_spectrum_sum_exclude->Add(rebinnedCloneExclude);
+      }
+    }
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
     // NormaliseYieldToNEntries(H1D_trackPt_rebinned[iDataset]);
@@ -300,8 +317,12 @@ void Draw_Pt_DatasetComparison(std::string options) {
   ////////////suite///////////////////////////////////////////////////////
   if (H1D_spectrum_sum && nDatasets > 0) {
     H1D_spectrum_sum->Scale(1.0 / nDatasets);
-  }
-  // H1D_spectrum_sum is the sum of all run's normalized tracks spctra, then divided bu the number of runs
+  }   // H1D_spectrum_sum is the sum of all run's normalized tracks spctra, then divided bu the number of runs
+
+  int nUsedDatasets = nDatasets - excludedDatasets.size();
+  if (H1D_spectrum_sum_exclude && nUsedDatasets > 0) {
+    H1D_spectrum_sum_exclude->Scale(1.0 / nUsedDatasets);
+  }   // H1D_spectrum_sum-exclude is the sum of all runs normalized by the tracks' spectra (excluding problematic ones), and then divided by the number of used runs.
   ////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////
 
@@ -318,9 +339,11 @@ void Draw_Pt_DatasetComparison(std::string options) {
     } else {
       H1D_trackPt_rebinned_ratios[iDataset] = (TH1D*)H1D_trackPt_rebinned[iDataset]->Clone("trackPt_rebinned_ratios"+Datasets[iDataset]+DatasetsNames[iDataset]);
       H1D_trackPt_rebinned_ratios[iDataset]->Reset("M");
-      divideSuccess = H1D_trackPt_rebinned_ratios[iDataset]->Divide(H1D_trackPt_rebinned[iDataset], H1D_trackPt_rebinned[0], 1., 1., datasetsAreSubsetsofId0 ? "b" : "");
-      // divideSuccess = H1D_trackPt_rebinned_ratios[iDataset]->Divide(H1D_trackPt_rebinned[iDataset], H1D_spectrum_sum, 1., 1., datasetsAreSubsetsofId0 ? "b" : "");
+      // divideSuccess = H1D_trackPt_rebinned_ratios[iDataset]->Divide(H1D_trackPt_rebinned[iDataset], H1D_trackPt_rebinned[0], 1., 1., datasetsAreSubsetsofId0 ? "b" : ""); // ratio in pt = run/AllRuns
+      // divideSuccess = H1D_trackPt_rebinned_ratios[iDataset]->Divide(H1D_trackPt_rebinned[iDataset], H1D_spectrum_sum, 1., 1., datasetsAreSubsetsofId0 ? "b" : "");        // ratio in pt = run/AvgOfRuns
+      divideSuccess = H1D_trackPt_rebinned_ratios[iDataset]->Divide(H1D_trackPt_rebinned[iDataset], H1D_spectrum_sum_exclude, 1., 1., datasetsAreSubsetsofId0 ? "b" : "");   // ratio in pt = run/AvgOfUsedRuns
 
+      
     }
   }
   TString textContext(contextTrackDatasetComp(""));
@@ -354,23 +377,38 @@ void Draw_Pt_DatasetComparison(std::string options) {
 
   //////////////////////////////////////////////////////////////////////////
   //////////////////suite//////////////////////////////////////////////////
-  TString* pdfNametemp = new TString("track_Pt_after_Sum_all_normspectrum_thenDivide_nDataset");
-  Draw_TH1_Histogram(H1D_spectrum_sum, textContext, pdfNametemp, texPtX, textYaxis, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "logx, logy");
+  // TString* pdfNametemp = new TString("track_Pt_after_Sum_all_normspectrum_thenDivide_nDataset");
+  // Draw_TH1_Histogram(H1D_spectrum_sum, textContext, pdfNametemp, texPtX, textYaxis, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "logx, logy");
 
-  // Clone the numerator histogram and give it a unique name
-  // TH1D* H1D_ratio = (TH1D*)H1D_trackPt_rebinned[0]->Clone("H1D_ratio_datasetLast_div_averagedSumDataset");
-  // H1D_ratio->Divide(H1D_spectrum_sum);
-  TString* pdfNametemp2 = new TString("ratio_track_Pt_AllRuns_div_averagedSumDataset");
-  // Draw_TH1_Histogram(H1D_ratio, textContext, pdfNametemp2, texPtX, textYaxis, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
-  TString* y = new TString("ratio Allruns/Avrg");
-
+  // TString* pdfNametemp2 = new TString("ratio_track_Pt_AllRuns_div_averagedSumDataset");
+  // TString* y = new TString("ratio Allruns/Avrg");
   bool divideSuccess1 = false;
   H1D_trackPt_all_avg = (TH1D*)H1D_trackPt_rebinned[0]->Clone("trackPt_rebinned_ratios_all_avg");
   H1D_trackPt_all_avg->Reset("M");
   divideSuccess1 = H1D_trackPt_all_avg->Divide(H1D_trackPt_rebinned[0], H1D_spectrum_sum, 1., 1., datasetsAreSubsetsofId0 ? "b" : "");
-  if (divideSuccess == true) {
-    Draw_TH1_Histogram(H1D_trackPt_all_avg, textContext, pdfNametemp2, texPtX, y, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
-  }
+  // if (divideSuccess == true) {
+  //   Draw_TH1_Histogram(H1D_trackPt_all_avg, textContext, pdfNametemp2, texPtX, y, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
+  // }
+
+  // TString* pdfNametemp3 = new TString("ratio_track_Pt_AllRuns_div_averagedUsedSumDataset");
+  // TString* Y = new TString("ratio Allruns/AvrgOfUsed");
+  bool divideSuccess3 = false;
+  H1D_trackPt_all_avg_3 = (TH1D*)H1D_trackPt_rebinned[0]->Clone("trackPt_rebinned_ratios_all_Usedavg");
+  H1D_trackPt_all_avg_3->Reset("M");
+  divideSuccess3 = H1D_trackPt_all_avg_3->Divide(H1D_trackPt_rebinned[0], H1D_spectrum_sum_exclude, 1., 1., datasetsAreSubsetsofId0 ? "b" : "");
+  // if (divideSuccess3 == true) {
+  //   Draw_TH1_Histogram(H1D_trackPt_all_avg_3, textContext, pdfNametemp3, texPtX, Y, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
+  // }
+
+  TString* pdfNametemp4 = new TString("Ratio");
+  TString* Yaxislabel = new TString("ratio Allruns/Avrg");
+  const TString Names[2] = {"All Runs/averaged Runs",
+                            "All Runs/averaged Used Runs"};
+  TH1D** denominatorRatios = new TH1D*[2];
+  denominatorRatios[0] = H1D_trackPt_all_avg;
+  denominatorRatios[1] = H1D_trackPt_all_avg_3;
+  Draw_TH1_Histograms(denominatorRatios, Names, 2, textContext, pdfNametemp4, texPtX, Yaxislabel, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
+
 
   ////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////
@@ -385,13 +423,18 @@ void Draw_Eta_DatasetComparison(float* ptRange, std::string options) {
   TH1D* H1D_trackEta_rebinned[nDatasets];
   
   TH1D* H1D_trackEta_rebinned_ratios[nDatasets];
+  TH1D* H1D_spectrum_sum = nullptr;
+  TH1D* H1D_spectrum_sum_exclude = nullptr;
+  TH1D* H1D_trackPt_all_avg = nullptr;
+  TH1D* H1D_trackPt_all_avg_3 = nullptr;
 
   bool divideSuccess = false;
-
+  std::vector<int> excludedDatasets = {1, 4, 13}; 
   double Nevents; 
 
   float ptCutLow = ptRange[0];
   float ptCutHigh = ptRange[1];
+
 
   for(int iDataset = 0; iDataset < nDatasets; iDataset++){
 
@@ -416,6 +459,34 @@ void Draw_Eta_DatasetComparison(float* ptRange, std::string options) {
     H1D_trackEta_rebinned[iDataset] = (TH1D*)H1D_trackEta[iDataset]->Rebin(1.,"trackEta_rebinned"+Datasets[iDataset]+DatasetsNames[iDataset]);
 
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////// add spectrum then divide by nDatasets /////////////////////////////////////////////////////////////////////////////////////////////
+    TH1D* rebinnedClone = (TH1D*)H1D_trackEta_rebinned[iDataset]->Clone("trackEta_rebinned_clone_" + Datasets[iDataset] + DatasetsNames[iDataset]);
+    double Neventstemp = GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflow[iDataset]);
+    NormaliseYieldToNEvents(rebinnedClone, Neventstemp);
+    if (H1D_spectrum_sum == nullptr) {
+        H1D_spectrum_sum = (TH1D*)rebinnedClone->Clone("H1D_spectrum_sum");
+    } else {
+        H1D_spectrum_sum->Add(rebinnedClone);
+    }
+
+    //////////add spectrum except desired ones/////////////////////////////
+    if (std::find(excludedDatasets.begin(), excludedDatasets.end(), iDataset) == excludedDatasets.end()) {
+      TH1D* rebinnedCloneExclude = (TH1D*)H1D_trackEta_rebinned[iDataset]->Clone("trackEta_rebinned_clone_wExclusion" + Datasets[iDataset] + DatasetsNames[iDataset]);
+      double Neventstemp2 = GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflow[iDataset]);
+      NormaliseYieldToNEvents(rebinnedCloneExclude, Neventstemp2);
+      if (H1D_spectrum_sum_exclude == nullptr) {
+          H1D_spectrum_sum_exclude = (TH1D*)rebinnedCloneExclude->Clone("H1D_spectrum_sum_exculde");
+      } else {
+          H1D_spectrum_sum_exclude->Add(rebinnedCloneExclude);
+      }
+    }
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
     if (options.find("evtNorm") != std::string::npos) {
       if (isDatasetWeighted[iDataset]) {
         Nevents = GetNEventsSelected_JetFramework_weighted(file_O2Analysis_list[iDataset], analysisWorkflow[iDataset]), analysisWorkflow[iDataset];
@@ -428,6 +499,21 @@ void Draw_Eta_DatasetComparison(float* ptRange, std::string options) {
         NormaliseYieldToIntegral(H1D_trackEta_rebinned[iDataset]);
     }
   }
+
+
+  ////////////////////////////////////////////////////////////////////////
+  ////////////suite///////////////////////////////////////////////////////
+  if (H1D_spectrum_sum && nDatasets > 0) {
+    H1D_spectrum_sum->Scale(1.0 / nDatasets);
+  }   // H1D_spectrum_sum is the sum of all run's normalized tracks spctra, then divided bu the number of runs
+
+  int nUsedDatasets = nDatasets - excludedDatasets.size();
+  if (H1D_spectrum_sum_exclude && nUsedDatasets > 0) {
+    H1D_spectrum_sum_exclude->Scale(1.0 / nUsedDatasets);
+  }   // H1D_spectrum_sum-exclude is the sum of all runs normalized by the tracks' spectra (excluding problematic ones), and then divided by the number of used runs.
+  ////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////
+
 
   TString DatasetsNamesPairRatio[nDatasets];
   int nHistPairRatio = (int)nDatasets / 2;;
@@ -443,6 +529,9 @@ void Draw_Eta_DatasetComparison(float* ptRange, std::string options) {
       H1D_trackEta_rebinned_ratios[iDataset] = (TH1D*)H1D_trackEta_rebinned[iDataset]->Clone("trackEta_rebinned_ratios"+Datasets[iDataset]+DatasetsNames[iDataset]);
       H1D_trackEta_rebinned_ratios[iDataset]->Reset("M");
       divideSuccess = H1D_trackEta_rebinned_ratios[iDataset]->Divide(H1D_trackEta_rebinned[iDataset], H1D_trackEta_rebinned[0], 1., 1., datasetsAreSubsetsofId0 ? "b" : "");
+      // divideSuccess = H1D_trackEta_rebinned_ratios[iDataset]->Divide(H1D_trackEta_rebinned[iDataset], H1D_spectrum_sum, 1., 1., datasetsAreSubsetsofId0 ? "b" : "");
+      // divideSuccess = H1D_trackEta_rebinned_ratios[iDataset]->Divide(H1D_trackEta_rebinned[iDataset], H1D_spectrum_sum_exclude, 1., 1., datasetsAreSubsetsofId0 ? "b" : "");
+
     }
   }
 
@@ -1250,3 +1339,61 @@ void Draw_Mean_Ntrack_vs_Dataset() {
 }
 
 void Draw_DcaXY_DatasetComp();
+
+
+
+void Draw_tracks_2D_profile(std::string options, int refIndex = 0){
+  //only used when "trackHistsObsoleteVersion" is false in the settings, and the analysisWorkflow name is "jet-finder-charged-qa" because the 3D histogram "h3_track_pt_track_eta_track_phi" exists there
+  TH2D* H2D_etaPhi[nDatasets];
+  TH3D* H3D_track[nDatasets];
+
+  // Create a TCanvas to hold the plots
+  TString* yAxisLabel;
+
+  for(int iDataset = 0; iDataset < nDatasets; iDataset++){
+
+    if (analysisWorkflow[iDataset].Contains("jet-finder-charged-qa") == true){
+      H3D_track[iDataset] = (TH3D*)((TH3D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h3_track_pt_track_eta_track_phi"))->Clone("Draw_2D_DatasetComparison"+Datasets[iDataset]+DatasetsNames[iDataset]);
+    }
+
+    TString projectionAxis = "yz";  // Default is eta-phi
+    if (options.find("pteta") != std::string::npos) {
+      projectionAxis = "xy";
+    } else if (options.find("ptphi") != std::string::npos){
+      projectionAxis = "xz";
+    } 
+
+    H2D_etaPhi[iDataset] = dynamic_cast<TH2D*>(H3D_track[iDataset]->Project3D(projectionAxis));
+    H2D_etaPhi[iDataset]->SetName(Form("TrackProjection_%s_%d", projectionAxis.Data(), iDataset));
+    H2D_etaPhi[iDataset]->SetTitle(Form("Tracks %s Projection - Run %s", projectionAxis.Data(), DatasetsNames[iDataset].Data()));
+    
+    double Nevents = GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflow[iDataset]);
+    H2D_etaPhi[iDataset]->Scale(1.0 / Nevents);
+  }
+
+  //Draw in one canvas 
+
+  TCanvas* c = new TCanvas("c", "H2D_TracketaPhi collection", 1200, 800);
+
+  // Compute rows and columns for dividing canvas
+  int nCols = ceil(sqrt(nDatasets));
+  int nRows = ceil((double)nDatasets / nCols);
+  c->Divide(nCols, nRows);
+
+  // Loop over the histograms and draw them
+  for (int i = 0; i < nDatasets; ++i) {
+      c->cd(i+1); // Canvas pads are 1-indexed
+      H2D_etaPhi[i]->Draw("COLZ");
+        // Add title to the top-left corner of each pad
+      TLatex latex;
+      latex.SetNDC(); // Use Normalized Device Coordinates
+      latex.SetTextSize(0.04); // Adjust size as needed
+      latex.DrawLatex(0.1, 0.92, DatasetsNames[i]); // x, y, and text
+  }
+
+  c->Update();  
+  //Plot_2D_Ratio(H2D_etaPhi, "etaphi", nDatasets, refIndex);
+
+
+}
+

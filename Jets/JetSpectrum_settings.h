@@ -77,7 +77,7 @@ bool smoothenMCP = false;
 bool automaticBestSvdParameter = false; // automatic function not well setup yet, should work on it; keep false for now
 
 
-float ptWindowDisplay[2] = {10, 140}; // used for drawn histograms of unfolded distrib
+float ptWindowDisplay[2] = {0, 200}; // used for drawn histograms of unfolded distrib
 std::array<std::array<float, 2>, 2> drawnWindowUnfoldedMeasurement = {{{ptWindowDisplay[0], ptWindowDisplay[1]}, {-999, -999}}}; // {{xmin, xmax}, {ymin, ymax}}
 
 // I should change the naming of draw_mcp (to account for  unfolding control case), also change how unfolding control is done
@@ -129,15 +129,15 @@ std::array<std::array<float, 2>, 2> drawnWindowUnfoldedMeasurement = {{{ptWindow
 // int nBinPtJetsGen[nRadius] = {11,9,9};
 
 
-// // PbPb Aimeric default
-double ptBinsJetsRec[nRadius][30] = {{10., 15., 20., 25., 30., 35., 40., 45., 50., 55., 60., 65., 70., 75., 80., 85., 90., 95., 100., 110., 120., 140.},
-                                      {0., 5., 10, 20., 25., 30., 35., 40., 45., 50., 55., 60., 65., 70., 75., 80., 85., 90., 95., 100., 110., 120., 140., 200.},
-                                      {5., 10, 20., 25., 30., 35., 40., 45., 50., 55., 60., 65., 70., 75., 80., 85., 90., 95., 100., 110., 120., 140., 200.}};
-int nBinPtJetsRec[nRadius] = {21,22,22};
-double ptBinsJetsGen[nRadius][30] = {{0., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 120., 140., 200.},
-                                      {0., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 120., 140., 200.},
-                                      {0., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 120., 140., 200.}};
-int nBinPtJetsGen[nRadius] = {13,13,13};
+// // // PbPb Aimeric default
+// double ptBinsJetsRec[nRadius][30] = {{10., 15., 20., 25., 30., 35., 40., 45., 50., 55., 60., 65., 70., 75., 80., 85., 90., 95., 100., 110., 120., 140.},
+//                                       {0., 5., 10, 20., 25., 30., 35., 40., 45., 50., 55., 60., 65., 70., 75., 80., 85., 90., 95., 100., 110., 120., 140., 200.},
+//                                       {5., 10, 20., 25., 30., 35., 40., 45., 50., 55., 60., 65., 70., 75., 80., 85., 90., 95., 100., 110., 120., 140., 200.}};
+// int nBinPtJetsRec[nRadius] = {21,23,22};
+// double ptBinsJetsGen[nRadius][30] = {{0., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 120., 140., 200.},
+//                                       {0., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 120., 140., 200.},
+//                                       {0., 10., 20., 30., 40., 50., 60., 70., 80., 90., 100., 120., 140., 200.}};
+// int nBinPtJetsGen[nRadius] = {13,13,13};
 
 // // PbPb Aimeric old
 // double ptBinsJetsRec[nRadius][30] = {{20., 25., 30., 35., 40., 45., 50., 55., 60., 65., 70., 75., 80., 85., 90., 95., 100., 110., 120., 140., 200.},{20., 25., 30., 35., 40., 45., 50., 55., 60., 65., 70., 75., 80., 85., 90., 95., 100., 110., 120., 140., 200.},{20., 25., 30., 35., 40., 45., 50., 55., 60., 65., 70., 75., 80., 85., 90., 95., 100., 110., 120., 140., 200.}};
@@ -154,6 +154,13 @@ int nBinPtJetsGen[nRadius] = {13,13,13};
 //                                     {-5, 0, 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 120, 140, 200} ,
 //                                      {-5, 0, 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 120, 140, 200}};
 // int nBinPtJetsGen[nRadius] = {17,17,17};
+
+
+// Ahmad binning for pp
+double ptBinsJetsRec[nRadius][30] = {{0, 1, 2, 3, 4, 5,  6,  7,  8,  9,  10, 12, 14, 16, 18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140},{0, 1, 2, 3, 4, 5,  6,  7,  8,  9,  10, 12, 14, 16, 18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140},{5,  6,  7,  8,  9,  10, 12, 14, 16, 18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140}};
+int nBinPtJetsRec[nRadius] = {24,24,19};
+double ptBinsJetsGen[nRadius][30] = {{0, 1, 2, 3, 4, 5,  6,  7,  8,  9,  10, 12, 14,  16,  18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140, 200},{0, 1, 2, 3, 4, 5,  6,  7,  8,  9,  10, 12, 14,  16,  18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140, 200},{5,  6,  7,  8,  9,  10, 12, 14,  16,  18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140, 200}};
+int nBinPtJetsGen[nRadius] = {25,25,20};
 
 
 // // Joonsuk binning for pp

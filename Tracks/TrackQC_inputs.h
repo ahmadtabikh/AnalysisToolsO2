@@ -733,22 +733,23 @@ const TString DatasetsNames[nDatasets] = {
                                         "1146 kHz - Run559409"
                                         };
 
+// excute the macro in the "yyyymmdd_discription" directroies (/home/tabikh/alice/MyWork/yyyymmdd_discription)
 TFile* file_O2Analysis_list[nDatasets] = {
-                                new TFile("Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[0]+"/AnalysisResults.root"),
+                                new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[0]+"/AnalysisResults.root"),
                                 // new TFile("Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[0]+"/AnalysisResults.root"), // all runs merged whithout 559348 and 559385 
-                                new TFile("Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[1]+"/AnalysisResults.root"),
-                                new TFile("Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[2]+"/AnalysisResults.root"),
-                                new TFile("Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[3]+"/AnalysisResults.root"),
-                                new TFile("Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[4]+"/AnalysisResults.root"),
-                                new TFile("Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[5]+"/AnalysisResults.root"),
-                                new TFile("Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[6]+"/AnalysisResults.root"),
-                                new TFile("Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[7]+"/AnalysisResults.root"),
-                                new TFile("Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[8]+"/AnalysisResults.root"),
-                                new TFile("Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[9]+"/AnalysisResults.root"),
-                                new TFile("Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[10]+"/AnalysisResults.root"),
-                                new TFile("Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[11]+"/AnalysisResults.root"),
-                                new TFile("Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[12]+"/AnalysisResults.root"),
-                                new TFile("Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[13]+"/AnalysisResults.root")
+                                new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[1]+"/AnalysisResults.root"),
+                                new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[2]+"/AnalysisResults.root"),
+                                new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[3]+"/AnalysisResults.root"),
+                                new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[4]+"/AnalysisResults.root"),
+                                new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[5]+"/AnalysisResults.root"),
+                                new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[6]+"/AnalysisResults.root"),
+                                new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[7]+"/AnalysisResults.root"),
+                                new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[8]+"/AnalysisResults.root"),
+                                new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[9]+"/AnalysisResults.root"),
+                                new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[10]+"/AnalysisResults.root"),
+                                new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[11]+"/AnalysisResults.root"),
+                                new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[12]+"/AnalysisResults.root"),
+                                new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[13]+"/AnalysisResults.root")
                                 };
 
 const TString analysisWorkflow[nDatasets] = {

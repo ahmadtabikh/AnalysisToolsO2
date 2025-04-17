@@ -109,15 +109,15 @@ void JetSpectrum_DrawingMacro() {
 
   // int unfoldParameterInput = 5;
   // Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput, optionsAnalysis);
-  int unfoldParameterInput2 = 8;
-  Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput2, optionsAnalysis);
+  // int unfoldParameterInput2 = 10;
+  // Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput2, optionsAnalysis);
   // int unfoldParameterInput3 = 10;
   // Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput3, optionsAnalysis);
 
-  // int unfoldParameterInputMin = 3;
-  // int unfoldParameterInputMax = 6;
-  // int unfoldParameterInputStep = 1;
-  // Draw_Pt_spectrum_unfolded_parameterVariation(iDataset, iRadius, unfoldParameterInputMin, unfoldParameterInputMax, unfoldParameterInputStep, optionsAnalysis);
+  int unfoldParameterInputMin = 8;
+  int unfoldParameterInputMax = 24;
+  int unfoldParameterInputStep = 4;
+  Draw_Pt_spectrum_unfolded_parameterVariation(iDataset, iRadius, unfoldParameterInputMin, unfoldParameterInputMax, unfoldParameterInputStep, optionsAnalysis);
 }
 
 /////////////////////////////////////////////////////
