@@ -127,6 +127,9 @@ void Draw_Pt_DatasetComparison_withRun2RitsuyaHardcoded(float* etaRange, std::st
 
 void Draw_2D_DatasetComparison(float* etaRange, std::string options, float jetRadiusForJetFinderWorkflow , int refIndex );
 
+void Draw_2D_Tracks_eta_phi_DatasetComparasion(int refIndex);
+
+
 
 /////////////////////////////////////////////////////
 ///////////////////// Main Macro ////////////////////
@@ -171,7 +174,9 @@ void JetQC() {
 
   // Draw_Pt_DatasetComparison(etaRangeSym, "normEvents", jetRadiusForDataComp);
   // Draw_Pt_DatasetComparison_withRun2RitsuyaHardcoded(etaRangeSym, "normEvents", jetRadiusForDataComp);
-  Draw_2D_DatasetComparison(etaRangeSym, "etaphi", jetRadiusForDataComp, 0) ;
+  // Draw_2D_DatasetComparison(etaRangeSym, "etaphi", jetRadiusForDataComp, 0) ;
+  Draw_2D_Tracks_eta_phi_DatasetComparasion(0);
+
   
 
   for(int iPtBin = 0; iPtBin < nPtBins; iPtBin++){
@@ -4236,6 +4241,11 @@ void Draw_2D_DatasetComparison(float* etaRange, std::string options, float jetRa
   bool divideSuccess = false;
   // Create a TCanvas to hold the plots
   TString* yAxisLabel;
+
+  for(int iDataset = 1; iDataset < nDatasets; iDataset++){
+    cout << "Nevent_" << DatasetsNames[iDataset] << " =   " << GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflow[iDataset]) << endl;
+  }
+
   for(int iDataset = 0; iDataset < nDatasets; iDataset++){
     // TCanvas* canvas = new TCanvas(Form("canvas_%d", iDataset), Form("Jet #eta-#phi run %s", DatasetsNames[iDataset].Data()), 800, 600);
 
@@ -4361,6 +4371,98 @@ void Draw_2D_DatasetComparison(float* etaRange, std::string options, float jetRa
 
   Plot_2D_Ratio(H2D_jetetaPhi, "etaphi", nDatasets, refIndex);
   ///faysdgfhabdf
+
+
+  // Draw_TH2_Histograms(H2D_jetArea, RadiusLegend, nRadius, textContext, pdfNamelogz, iJetFinderQaType == 0 ? texPtJetRawX : texPtJetBkgCorrX, texJetArea, texCollisionDataInfo, drawnWindowAuto, th2ContoursNone, contourNumberNone, "logz");
+  // Draw_TH2_Histogram(H2D_jetArea, textContext, pdfNamelogz, iJetFinderQaType == 0 ? texPtJetRawX : texPtJetBkgCorrX, texJetArea, texCollisionDataInfo, drawnWindowAuto, th2ContoursNone, contourNumberNone, "logz");
+}
+
+
+void Draw_2D_Tracks_eta_phi_DatasetComparasion(int refIndex = 0) {
+  TH2D* H2D_trackEtaPhi[nDatasets];
+  
+  
+  int ibinJetRadius = 0;
+
+  bool divideSuccess = false;
+  // Create a TCanvas to hold the plots
+  TString* yAxisLabel;
+
+  for(int iDataset = 0; iDataset < nDatasets; iDataset++){
+
+    if (analysisWorkflow[iDataset].Contains("jet-spectra-charged") == true) {
+        H2D_trackEtaPhi[iDataset] = (TH2D*)((TH2D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h2_track_eta_track_phi"+jetFinderQaHistType[iJetFinderQaType]))->Clone("Draw_2D_EtaPhi_DatasetComparison"+Datasets[iDataset]+DatasetsNames[iDataset]);
+      }
+      
+    H2D_trackEtaPhi[iDataset]->SetName(Form("Tracks_eta_phi_%d", iDataset));
+    H2D_trackEtaPhi[iDataset]->SetTitle(Form("Tracks eta phi - Run %s", DatasetsNames[iDataset].Data()));
+    
+    double Nevents = GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflow[iDataset]);
+
+    for (int xbin = 1; xbin <= H2D_trackEtaPhi[iDataset]->GetNbinsX(); ++xbin) {
+        for (int ybin = 1; ybin <= H2D_trackEtaPhi[iDataset]->GetNbinsY(); ++ybin) {
+            double binContent = H2D_trackEtaPhi[iDataset]->GetBinContent(xbin, ybin);
+            H2D_trackEtaPhi[iDataset]->SetBinContent(xbin, ybin, binContent / Nevents);
+        }
+    }
+    
+  } 
+
+  //Draw in one canvas 
+  TCanvas* Tracks2D = new TCanvas("Tracks2D", "H2D_TracksEtaPhi collection", 1200, 800);
+  int nCols = ceil(sqrt(nDatasets));
+  int nRows = ceil((double)nDatasets / nCols);
+  Tracks2D->Divide(nCols, nRows);
+
+  for (int i = 0; i < nDatasets; ++i) {
+      Tracks2D->cd(i+1); // Canvas pads are 1-indexed
+      H2D_trackEtaPhi[i]->Draw("COLZ");
+        // Add title to the top-left corner of each pad
+      TLatex latex;
+      latex.SetNDC(); // Use Normalized Device Coordinates
+      latex.SetTextSize(0.04); // Adjust size as needed
+      latex.DrawLatex(0.1, 0.92, DatasetsNames[i]); // x, y, and text
+  }
+
+  Tracks2D->Update();
+
+
+  // //Draw in 4 plots per canvas 
+
+  // const int plotsPerCanvas = 4;
+  // int canvasIndex = 0;
+
+  // for (int i = 0; i < nDatasets; i += plotsPerCanvas) {
+  //     // Create a new canvas for every group of 4
+  //     TString canvasName = Form("c%d", canvasIndex);
+  //     TString canvasTitle = Form("H2D_jetetaPhi Collection %d", canvasIndex + 1);
+  //     TCanvas* c = new TCanvas(canvasName, canvasTitle, 1200, 800);
+
+  //     // Determine number of plots in this canvas (might be less than 4 at the end)
+  //     int nPlotsThisCanvas = std::min(plotsPerCanvas, nDatasets - i);
+
+  //     // Compute rows and columns (up to 2x2)
+  //     int nCols = ceil(sqrt(nPlotsThisCanvas));
+  //     int nRows = ceil((double)nPlotsThisCanvas / nCols);
+  //     c->Divide(nCols, nRows);
+
+  //     for (int j = 0; j < nPlotsThisCanvas; ++j) {
+  //         int plotIndex = i + j;
+  //         c->cd(j + 1);
+  //         H2D_jetetaPhi[plotIndex]->Draw("COLZ");
+
+  //         TLatex latex;
+  //         latex.SetNDC();
+  //         latex.SetTextSize(0.04);
+  //         latex.DrawLatex(0.1, 0.92, DatasetsNames[plotIndex]);
+  //     }
+
+  //     c->Update();
+  //     ++canvasIndex;
+  // }
+
+
+  Plot_2D_Ratio(H2D_trackEtaPhi, "track", nDatasets, refIndex);
 
 
   // Draw_TH2_Histograms(H2D_jetArea, RadiusLegend, nRadius, textContext, pdfNamelogz, iJetFinderQaType == 0 ? texPtJetRawX : texPtJetBkgCorrX, texJetArea, texCollisionDataInfo, drawnWindowAuto, th2ContoursNone, contourNumberNone, "logz");

@@ -976,7 +976,7 @@ void Draw_TH2_Histogram(TH2D* histogram, TString Context, TString* pdfName, TStr
 
 
 
-void Plot_2D_Ratio(TH2D** histos,std::string options, int nDatasets, int refIndex) {
+void Plot_2D_Ratio(TH2D** histos, std::string options, int nDatasets, int refIndex) {
   if (refIndex >= nDatasets) {
       std::cerr << "Error: Reference index out of bounds!" << std::endl;
       return;
@@ -996,7 +996,7 @@ void Plot_2D_Ratio(TH2D** histos,std::string options, int nDatasets, int refInde
       if (iDataset == refIndex) continue; // Skip the reference itself
 
       ratioHisto[iDataset] = (TH2D*)histos[iDataset]->Clone(Form("Ratio_%d_to_%d", iDataset, refIndex));
-      ratioHisto[iDataset]->SetTitle(Form("Ratio: Dataset %d / Dataset %d", iDataset, refIndex));
+      ratioHisto[iDataset]->SetTitle(Form("Ratio: run %d / run %d", iDataset, refIndex));
 
       for (int xbin = 1; xbin <= histos[iDataset]->GetNbinsX(); xbin++) {
           for (int ybin = 1; ybin <= histos[iDataset]->GetNbinsY(); ybin++) {
@@ -1009,14 +1009,26 @@ void Plot_2D_Ratio(TH2D** histos,std::string options, int nDatasets, int refInde
               }
           }
       }
-      ratioHisto[iDataset]->GetZaxis()->SetRangeUser(0.7, 1.3);
+      ratioHisto[iDataset]->GetZaxis()->SetRangeUser(0.9, 1.3);
       // ratioHisto[iDataset]->Draw("COLZ");
       
   }
 
-  TCanvas* c2 = new TCanvas("c2", "H2D_jetetaPhi_ratio_2", 1200, 800);
+  std::string canvasName = "c2";
+  std::string canvasTitle = "H2D_jetetaPhi_ratio";
 
-  // Compute rows and columns for dividing canvas
+  if (options.find("track") != std::string::npos) {
+      canvasName = "c2_tracks";
+      canvasTitle = "H2D_tracketaPhi_ratio";
+  } else if (options.find("jet") != std::string::npos) {
+      canvasName = "c2_jets";
+      canvasTitle = "H2D_jetetaPhi_ratio";
+  }
+
+  TCanvas* c2 = new TCanvas(canvasName.c_str(), canvasTitle.c_str(), 1200, 800);
+
+  //TCanvas* c2 = new TCanvas("c2", "H2D_jetetaPhi_ratio_2", 1200, 800);
+
   int nCols = ceil(sqrt(nDatasets));
   int nRows = ceil((double)nDatasets / nCols);
   c2->Divide(nCols, nRows);
