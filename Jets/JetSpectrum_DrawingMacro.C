@@ -20,6 +20,13 @@
 #include "RooUnfoldSvd.h"
 #include "TSVDUnfold.h"
 
+
+#include <TMultiGraph.h>
+#include <TGraphErrors.h>
+#include <TAxis.h>
+
+
+
 //My Libraries
 #include "./JetSpectrum_settings.h"
 #include "./JetSpectrum_inputs.h"
@@ -90,7 +97,7 @@ void JetSpectrum_DrawingMacro() {
   snprintf(optionsAnalysis, sizeof(optionsAnalysis), "%s,%s,%s", mergingPrior, unfoldingPrior, unfoldingMethod);
   cout << "Analysis options are: " << optionsAnalysis << endl;
 
-  int iDataset = 1;
+  int iDataset = 0;
   int iRadius = 1;
 
   // // // find a way to input mcpPrior/mcdPrior and bayes/svd as a variables rather than typed out like this
@@ -98,7 +105,7 @@ void JetSpectrum_DrawingMacro() {
   Draw_ResponseMatrices_detectorResponse(iDataset, iRadius);
   Draw_ResponseMatrices_DetectorAndFluctuationsCombined(iDataset, iRadius, optionsAnalysis);
 
-  // // // // Draw_Pt_spectrum_unfolded_FluctResponseOnly(iDataset, iRadius, optionsAnalysis); // NOT FIXED YET - result meaningless
+  // // Draw_Pt_spectrum_unfolded_FluctResponseOnly(iDataset, iRadius, optionsAnalysis); // NOT FIXED YET - result meaningless
   Draw_Pt_spectrum_raw(iDataset, iRadius, optionsAnalysis);
   Draw_Pt_spectrum_mcp(iDataset, iRadius, optionsAnalysis);
   Draw_Pt_spectrum_mcdMatched(iDataset, iRadius, optionsAnalysis);
@@ -107,16 +114,16 @@ void JetSpectrum_DrawingMacro() {
   Draw_kinematicEfficiency(iDataset, iRadius, optionsAnalysis);
   Draw_FakeRatio(iDataset, iRadius, optionsAnalysis);
 
-  // int unfoldParameterInput = 5;
-  // Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput, optionsAnalysis);
-  // int unfoldParameterInput2 = 10;
+  int unfoldParameterInput = 6;
+  Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput, optionsAnalysis);
+  // int unfoldParameterInput2 = 8;
   // Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput2, optionsAnalysis);
   // int unfoldParameterInput3 = 10;
   // Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput3, optionsAnalysis);
 
-  // int unfoldParameterInputMin = 8;
-  // int unfoldParameterInputMax = 24;
-  // int unfoldParameterInputStep = 4;
+  // int unfoldParameterInputMin = 0;
+  // int unfoldParameterInputMax = 18;
+  // int unfoldParameterInputStep = 3;
   // Draw_Pt_spectrum_unfolded_parameterVariation(iDataset, iRadius, unfoldParameterInputMin, unfoldParameterInputMax, unfoldParameterInputStep, optionsAnalysis);
 }
 
@@ -374,7 +381,7 @@ void Draw_ResponseMatrices_Fluctuations(int iDataset, int iRadius) {
 }
 
 void Draw_ResponseMatrices_detectorResponse(int iDataset, int iRadius) {
-
+  TH2D* MatrixResponseBeforeYSliceNorm;
   TH2D* H2D_jetPtResponseMatrix_detectorResponse;
   cout << "Draw_ResponseMatrices_detectorResponse 1" << endl;
   Get_PtResponseMatrix_detectorResponse(H2D_jetPtResponseMatrix_detectorResponse, iDataset, iRadius);
@@ -412,6 +419,14 @@ void Draw_ResponseMatrices_detectorResponse(int iDataset, int iRadius) {
 
   Draw_TH2_Histogram(MatrixResponse, textContextMatrixDetails, pdfName, texPtJetGenX, texPtJetRecX, &texCombinedMatrix, drawnWindow2DAuto, th2ContoursNone, contourNumberNone, "");
   Draw_TH2_Histogram(MatrixResponse, textContextMatrixDetails, pdfName_logz, texPtJetGenX, texPtJetRecX, &texCombinedMatrix, drawnWindow2DAuto, th2ContoursNone, contourNumberNone, "logz");
+
+
+  //////////////////////////////// Ahmad : draw reponse matrix before normalization ////////////////////////////////////
+  MatrixResponseBeforeYSliceNorm = (TH2D*)((TH2D*)file_O2Analysis_MCfileForMatrix->Get(analysisWorkflowMC+"/h2_jet_pt_mcd_jet_pt_mcp_matchedgeo_mcpetaconstraint"))->Clone("Get_PtResponseMatrix_detectorResponse_evt"+Datasets[iDataset]+DatasetsNames[iDataset]);
+  TH2D* MatrixResponseEvt = (TH2D*)GetTransposeHistogram(MatrixResponseBeforeYSliceNorm).Clone("Draw_ResponseMatrices_detectorResponse_Evt"+(TString)"_R="+Form("%.1f",arrayRadius[iRadius])+"_"+Datasets[iDataset]+DatasetsNames[iDataset]);
+  TString* pdfName2_logz = new TString("ResponseMatrices/responseMatrixEvt_detectorEffects_"+(TString)"_R="+Form("%.1f",arrayRadius[iRadius])+"_"+Datasets[iDataset]+DatasetsNames[iDataset]+"_logz");
+  Draw_TH2_Histogram(MatrixResponseEvt, textContextMatrixDetails, pdfName2_logz, texPtJetGenX, texPtJetRecX, &texCombinedMatrix, drawnWindow2DAuto, th2ContoursNone, contourNumberNone, "logz");
+
 }
 
 void Draw_ResponseMatrices_DetectorAndFluctuationsCombined(int iDataset, int iRadius, std::string options) {
@@ -888,6 +903,102 @@ void Draw_Pt_spectrum_unfolded_parameterVariation(int iDataset, int iRadius, int
     TString* pdfName_ratio_refoldedComp = new TString("jet_"+jetType[iJetType]+"_"+jetLevel[iJetLevel]+"_"+partialUniqueSpecifier+"_Pt_unfolded_"+unfoldingInfo+"_ratioRefoldedUnfolded");
     Draw_TH1_Histograms(H1D_jetPt_ratio_measuredRefolded, unfoldingIterationLegend, nUnfoldIteration, textContext, pdfName_ratio_refoldedComp, texPtX, texRatioRefoldedMeasured, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "zoomToOneLarge,ratioLine");
   }
+
+
+
+
+
+
+
+
+
+
+
+// ///////////////////////////////////////////////////////test bin offset ///////////////////////////////////////////////////////
+// ///////////////////////////////////////work well only need horizontal bars to indicate different bins region//////////////////
+// //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  TCanvas* ratioWithOffset = new TCanvas("ratioWithOffset", "Unfolded jet pT with offset", 800, 800);                                           
+  TMultiGraph* mg = new TMultiGraph();   
+  // int customColors[] = {kRed, kBlack, kBlue, kGreen + 2, kPink};
+  int customColors[] = {
+    kBlack,          // black: classic and neutral
+    kRed + 1,        // a slightly lighter red (more readable than kRed)
+    kBlue + 1,       // soft blue
+    kGreen + 2,      // bright green, better than dark kGreen
+    kOrange + 7,     // light orange
+    kViolet + 1      // pleasant purple tone
+  };
+  int nColors = sizeof(customColors) / sizeof(customColors[0]);  
+                                                                              
+
+  for (int i = 0; i < nUnfoldIteration; ++i) {
+      TH1D* h = H1D_jetPt_ratio_measuredRefolded[i];
+      int nBins = h->GetNbinsX();
+      // double binWidth = h->GetBinWidth(1);
+      //double offset = (i - nUnfoldIteration / 2.0) * 0.4 * binWidth; // espacement augmenté
+      // double offset = (i - nUnfoldIteration / 2.0) * 0.15 * binWidth; // tune spacing
+
+      std::vector<double> x_vals, y_vals, ex_vals, ey_vals;
+
+      for (int bin = 1; bin <= nBins; ++bin) {
+          // double x = h->GetBinCenter(bin) + offset;
+          // double y = h->GetBinContent(bin);
+          // double ex = 0.5 * binWidth;  // barres horizontales couvrant chaque bin
+          // double ey = h->GetBinError(bin);
+
+          double binLowEdge = ptBinsJetsRec[iRadius][bin - 1];
+          double binUpEdge  = ptBinsJetsRec[iRadius][bin];
+          double binWidth = binUpEdge - binLowEdge;
+          double offset = (i - nUnfoldIteration / 2.0) * 0.065 * binWidth; 
+
+          double x = h->GetBinCenter(bin) + offset;
+          double y = h->GetBinContent(bin);
+          // double ex = 0.5 * binWidth;
+          double ex = 0;
+          double ey = h->GetBinError(bin);
+
+          x_vals.push_back(x);
+          y_vals.push_back(y);
+          ex_vals.push_back(ex);
+          ey_vals.push_back(ey);
+      }
+
+      TGraphErrors* gr = new TGraphErrors(nBins, &x_vals[0], &y_vals[0], &ex_vals[0], &ey_vals[0]);
+      int color = customColors[i % nColors];
+      gr->SetMarkerStyle(20 + i);  // Different markers
+      // gr->SetMarkerColor(i+1);
+      // gr->SetLineColor(i+1);
+      gr->SetMarkerColor(color);
+      gr->SetMarkerSize(0.8);  // default is 1.0
+      gr->SetLineColor(color);
+      // gr->SetLineWidth(0.8);  // thinner error bars
+      gr->SetTitle(Form("k_{unfold} = %d", unfoldIterationMax-step*i));
+
+      mg->Add(gr, "P");  // "P" for points
+  }
+
+  mg->Draw("A");
+  mg->GetXaxis()->SetTitle("p_{T} (GeV/c)");
+  mg->GetYaxis()->SetTitle("Refolded / measured");
+  ratioWithOffset->BuildLegend();
+  ratioWithOffset->Update();
+
+  // Get the current x-axis range
+  double xmin = mg->GetXaxis()->GetXmin();
+  double xmax = mg->GetXaxis()->GetXmax();
+
+  // Create and draw the horizontal line at y = 1
+  TLine* line = new TLine(xmin, 1.0, xmax, 1.0);
+  line->SetLineStyle(2);  // Dashed line
+  line->SetLineColor(kGray + 2);  // Light gray or any color
+  line->Draw("same");  // Draw on top of existing plot
+  ratioWithOffset->Update();
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 }
 
 

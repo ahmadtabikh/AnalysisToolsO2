@@ -25,13 +25,13 @@ const TString* texDatasetsComparisonCommonDenominator = new TString("");
 const int nDatasets = 1;
 const TString Datasets[nDatasets] = {"LHC24_ppref_pass1_train380686"};
 const TString DatasetsNames[nDatasets] = {"ppref"};
-TFile* file_O2Analysis_list[nDatasets] = {new TFile("Datasets/"+Datasets[0]+"/AnalysisResults.root")
+TFile* file_O2Analysis_list[nDatasets] = {new TFile("../Datasets/"+Datasets[0]+"/AnalysisResults.root")
                                       };
 // TFile* file_O2Analysis_MCfileForMatrix[nDatasets] = new TFile("Datasets/ppSim_LHC23d4/AnalysisResults.root");
 // TFile* file_O2Analysis_MCfileForMatrix = new TFile("Datasets/ppSim_LHC23d4_weighted_withLeadingTrackCut/AnalysisResults.root");
 // TFile* file_O2Analysis_MCfileForMatrix = new TFile("Datasets/MC_halfMCAngantyr/AnalysisResults.root");
-TFile* file_O2Analysis_MCfileForMatrix = new TFile("Datasets/LHC25b6_train380971/AnalysisResults.root");
-TFile* file_O2Analysis_ppSimDetectorEffect_unfoldingControl = {new TFile("Datasets/LHC25b6_train380971/AnalysisResults.root")}; // use this MC file as input to unfolding (with h_jet_pt_rhoareasubtracted distrib on file) and as comparison to gen (with h_jet_pt_part distrib on file)
+TFile* file_O2Analysis_MCfileForMatrix = new TFile("../Datasets/LHC25b4a_train403705_MC/AnalysisResults.root"); // previously i used this LHC25b6_train380971 is MCweighted --> in settings set : const bool mcIsWeighted = true;
+TFile* file_O2Analysis_ppSimDetectorEffect_unfoldingControl = {new TFile("../Datasets/LHC25b4a_train403705_MC/AnalysisResults.root")}; // use this MC file as input to unfolding (with h_jet_pt_rhoareasubtracted distrib on file) and as comparison to gen (with h_jet_pt_part distrib on file)
 
 // const TString trainId = "_id12832";
 // const TString analysisWorkflowData = "jet-finder-charged-qa_central_5090_lead5"+trainId;

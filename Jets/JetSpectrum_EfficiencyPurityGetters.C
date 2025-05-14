@@ -37,13 +37,21 @@ void  Get_ResponseMatrix_Pt_KinematicEffiency(TH1D* &H1D_kinematicEfficiency, TH
   
   H1D_kinematicEfficiency = (TH1D*)H1D_kinematicEfficiency_preRebin->Rebin(nBinPtJetsGen[iRadius],"H1D_kinematicEfficiency"+name_H1D_kinematicEfficiency+RadiusLegend[iRadius], ptBinsJetsGen[iRadius]);
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  TString* pdfNameTest = new TString("kinematicEfficiency_TestByWidthNorm");
+  TString textContext(contextCustomOneField(*texDatasetsComparisonCommonDenominator, ""));
+    TH1D* H1D_jetKinematicEfficiencyTest;
+  H1D_jetKinematicEfficiencyTest = (TH1D*)H1D_kinematicEfficiency->Clone("H1D_jetKinematicEfficiencyTestbeforWidthNorm");
+  TransformRawHistToYield(H1D_jetKinematicEfficiencyTest); // errors will be falsly calculated since division by width is different of division by the sum of the pdf inside of the bins that have errors after the sum 
+  Draw_TH1_Histogram(H1D_jetKinematicEfficiencyTest, textContext, pdfNameTest, texPtJetGenX, texJetKinematicEfficiency, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   double integralOfResponse_iBinGen, integralOfResponse_iBinGen_error;
   double binContent, binError, binErrorA, binErrorB;
   for(int iBinGen = 1; iBinGen <= nBinPtJetsGen[iRadius]; iBinGen++){
     int ibinGen_low = H2D_jetPtResponseMatrix_fineBinning->GetYaxis()->FindBin(ptBinsJetsGen[iRadius][iBinGen-1]);
     int ibinGen_high = H2D_jetPtResponseMatrix_fineBinning->GetYaxis()->FindBin(ptBinsJetsGen[iRadius][iBinGen])-1;
     integralOfResponse_iBinGen = H2D_jetPtResponseMatrix_fineBinning->IntegralAndError(1, nBinPtJetsFine[iRadius], ibinGen_low, ibinGen_high, integralOfResponse_iBinGen_error);
-
 
     H1D_kinematicEfficiency->GetBinContent(iBinGen) == 0 ? binErrorB = 0 : binErrorB = H1D_kinematicEfficiency->GetBinError(iBinGen)*H1D_kinematicEfficiency->GetBinError(iBinGen) / (H1D_kinematicEfficiency->GetBinContent(iBinGen)*H1D_kinematicEfficiency->GetBinContent(iBinGen));
     integralOfResponse_iBinGen == 0                                    ? binErrorA = 0 : binErrorA = integralOfResponse_iBinGen_error*integralOfResponse_iBinGen_error / (integralOfResponse_iBinGen*integralOfResponse_iBinGen);

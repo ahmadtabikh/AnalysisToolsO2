@@ -295,6 +295,20 @@ std::pair<int, RooUnfold*> Get_Pt_spectrum_unfolded_preWidthScalingAtEndAndEvtNo
     }
   }
 
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////draw measured input and unfolded(after eff division) before normalisation by evt and width////////////////////////////////////////////////
+  // TH1D** H1D_jetPt_unfolded_measuredComp = new TH1D*[2];
+  // Get_Pt_spectrum_bkgCorrected_genBinning(H1D_jetPt_measured_genBinning_test, iDataset, iRadius, options);
+  // H1D_jetPt_unfolded_measuredComp[0] = H1D_jetPt_measured_genBinning;
+  // H1D_jetPt_unfolded_measuredComp[1] = H1D_jetPt_unfolded;
+  // TString textContext(contextCustomOneField(*texDatasetsComparisonCommonDenominator, ""));
+  // TString* Yaxislabel = new TString("counts");
+  // TString Measured_unfolded_Legend[2] = {"unfolded after eff division", "measured"};
+  // TString* pdfName_measured_unfolded_comp = new TString("_measured_unfolded_comp_counts");
+  // Draw_TH1_Histograms(H1D_jetPt_unfolded_measuredComp, Measured_unfolded_Legend, 2, textContext, pdfName_measured_unfolded_comp, texPtX, Yaxislabel, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "logy");
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   if (drawIntermediateResponseMatrices) {
     TH2D* H2D_jetPtResponseMatrix_detectorAndFluctuationsCombined_postUnfolding = (TH2D*)unfold->response()->Hresponse()->Clone("H2D_jetPtResponseMatrix_detectorAndFluctuationsCombined_postUnfolding"+partialUniqueSpecifier);
 
@@ -468,6 +482,15 @@ void Get_Pt_spectrum_dataUnfoldedThenRefolded_preWidthScalingAtEndAndEvtNorm(TH1
 
   if (normaliseRespYSliceForRefold){
     NormaliseYSlicesToOne(refoldingResponseMatrix);
+    cout << "###################################################################################################" << endl;
+    cout << "###################################################################################################" << endl;
+    cout << "###################################################################################################" << endl;
+    cout << "################  X axis: " << refoldingResponseMatrix->GetNbinsX() << "################" << endl;
+    cout << "################  Y axis: " << refoldingResponseMatrix->GetNbinsY() << "################" << endl;
+    cout << "###################################################################################################" << endl;
+    cout << "###################################################################################################" << endl;
+    cout << "###################################################################################################" << endl;
+
   }
   // H1D_jetPt_unfoldedThenRefolded = (TH1D*)GetMatrixVectorProductTH2xTH1((TH2D*)unfold->response()->Hresponse(), H1D_jetPt_unfolded).Clone("Get_Pt_spectrum_dataUnfoldedThenRefolded_preWidthScalingAtEndAndEvtNorm"+partialUniqueSpecifier); //gives the same
   // H1D_jetPt_unfoldedThenRefolded = (TH1D*)GetMatrixVectorProductTH2xTH1(H2D_jetPtResponseMatrix_detectorAndFluctuationsCombined, H1D_jetPt_unfolded).Clone("Get_Pt_spectrum_dataUnfoldedThenRefolded_preWidthScalingAtEndAndEvtNorm"+partialUniqueSpecifier); //gives the same

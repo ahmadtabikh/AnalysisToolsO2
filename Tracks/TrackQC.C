@@ -262,7 +262,9 @@ void Draw_Pt_DatasetComparison(std::string options) {
     }
 
     // H1D_trackPt_rebinned[iDataset] = (TH1D*)H1D_trackPt[iDataset]->Rebin(2.,"trackPt_rebinned_"+Datasets[iDataset]+DatasetsNames[iDataset]);
-    
+    cout << "########################################################################################################"<< endl;
+    cout << "number of bins x "<< H1D_trackPt[iDataset]->GetNbinsX()<< ",,,,,"<<H1D_trackPt[iDataset]->GetBinCenter(1)<<",,,"<< H1D_trackPt[iDataset]->GetXaxis()->GetXmax()<<endl;
+    cout << "########################################################################################################"<< endl;
 
     int nBinsLog = 20;
     std::vector<double> O2H1DPtLogBinsVector = MakeVariableBinning_logarithmic(H1D_trackPt[iDataset]->GetBinCenter(1), H1D_trackPt[iDataset]->GetXaxis()->GetXmax(), nBinsLog);

@@ -984,6 +984,7 @@ void Plot_2D_Ratio(TH2D** histos, std::string options, int nDatasets, int refInd
 
   TH2D* reference = histos[refIndex];
   TH2D* ratioHisto[nDatasets];
+  TH2D* ratioHistoTranspose[nDatasets];
 
   for (int iDataset = 0; iDataset < nDatasets; iDataset++) {
       // TCanvas* canvas = new TCanvas(Form("Ratio Jet #eta-#phi run %s/run %s", DatasetsNames[iDataset].Data(), DatasetsNames[refIndex].Data()) , Form("Ratio Jet #eta-#phi run %s/run %s", DatasetsNames[iDataset].Data(), DatasetsNames[refIndex].Data()), 800, 600);
@@ -1009,7 +1010,7 @@ void Plot_2D_Ratio(TH2D** histos, std::string options, int nDatasets, int refInd
               }
           }
       }
-      ratioHisto[iDataset]->GetZaxis()->SetRangeUser(0.9, 1.3);
+      ratioHisto[iDataset]->GetZaxis()->SetRangeUser(0.85, 1.15);
       // ratioHisto[iDataset]->Draw("COLZ");
       
   }
@@ -1031,13 +1032,43 @@ void Plot_2D_Ratio(TH2D** histos, std::string options, int nDatasets, int refInd
 
   int nCols = ceil(sqrt(nDatasets));
   int nRows = ceil((double)nDatasets / nCols);
-  c2->Divide(nCols, nRows);
+  c2->Divide(nCols, nRows, 0.01 , 0.01);
 
   // Loop over the histograms and draw them
   for (int i = 1; i < nDatasets; i++) {
       c2->cd(i); // Canvas pads are 1-indexed
       if (ratioHisto[i]) {
-        ratioHisto[i]->Draw("COLZ");
+        if (options.find("jet") != std::string::npos){
+
+          // Assume your original histogram is called ratioHisto[i] (with phi on X and eta on Y)
+          int nbinsX = ratioHisto[i]->GetNbinsX();
+          int nbinsY = ratioHisto[i]->GetNbinsY();
+
+          // Create a new histogram with axes swapped
+          ratioHistoTranspose[i] = new TH2D(Form("h2_transposed_%d", i),
+                                            ratioHisto[i]->GetTitle(),
+                                            nbinsY, ratioHisto[i]->GetYaxis()->GetXmin(), ratioHisto[i]->GetYaxis()->GetXmax(),
+                                            nbinsX, ratioHisto[i]->GetXaxis()->GetXmin(), ratioHisto[i]->GetXaxis()->GetXmax());
+
+          // Copy contents with i<->j swap
+          for (int ix = 1; ix <= nbinsX; ++ix) {
+              for (int iy = 1; iy <= nbinsY; ++iy) {
+                  double content = ratioHisto[i]->GetBinContent(ix, iy);
+                  ratioHistoTranspose[i]->SetBinContent(iy, ix, content); // Swap i<->j
+              }
+          }
+
+          /// Set axis labels
+          ratioHistoTranspose[i]->GetXaxis()->SetTitle(ratioHisto[i]->GetYaxis()->GetTitle());
+          ratioHistoTranspose[i]->GetYaxis()->SetTitle(ratioHisto[i]->GetXaxis()->GetTitle());
+
+          // Draw the transposed histogram
+          ratioHistoTranspose[i]->GetZaxis()->SetRangeUser(0.85, 1.15);
+          ratioHistoTranspose[i]->Draw("COLZ");
+
+        } else if (options.find("track") != std::string::npos){
+          ratioHisto[i]->Draw("COLZ");
+          }
         TLatex latex;
         latex.SetNDC();
         latex.SetTextSize(0.05);

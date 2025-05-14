@@ -174,8 +174,8 @@ void JetQC() {
 
   // Draw_Pt_DatasetComparison(etaRangeSym, "normEvents", jetRadiusForDataComp);
   // Draw_Pt_DatasetComparison_withRun2RitsuyaHardcoded(etaRangeSym, "normEvents", jetRadiusForDataComp);
-  // Draw_2D_DatasetComparison(etaRangeSym, "etaphi", jetRadiusForDataComp, 0) ;
-  Draw_2D_Tracks_eta_phi_DatasetComparasion(0);
+  Draw_2D_DatasetComparison(etaRangeSym, "etaphi", jetRadiusForDataComp, 0) ;
+  // Draw_2D_Tracks_eta_phi_DatasetComparasion(0);
 
   
 
@@ -4231,6 +4231,7 @@ void Draw_Pt_DatasetComparison_withRun2RitsuyaHardcoded(float* etaRange, std::st
 void Draw_2D_DatasetComparison(float* etaRange, std::string options, float jetRadiusForJetFinderWorkflow = 0.2, int refIndex = 0) {
   float jetRadius = jetRadiusForJetFinderWorkflow; // obsolete for new jet-spectra-charged as we don't do radii comparisons that often and so files will only have 1 radius
   TH2D* H2D_jetetaPhi[nDatasets];
+  TH2D* ratioHistoTransposeJets[nDatasets];
   // TH2D* H2D_jetetaPhi_rebin[nDatasets];
 
   TH3D* H3D_jetRjetPtjetEta[nDatasets];
@@ -4313,25 +4314,53 @@ void Draw_2D_DatasetComparison(float* etaRange, std::string options, float jetRa
 
     //Draw in one canvas 
 
-  // TCanvas* c = new TCanvas("c", "H2D_jetetaPhi collection", 1200, 800);
+  TCanvas* c = new TCanvas("c", "H2D_jetetaPhi collection", 1200, 800);
 
-  // // Compute rows and columns for dividing canvas
-  // int nCols = ceil(sqrt(nDatasets));
-  // int nRows = ceil((double)nDatasets / nCols);
-  // c->Divide(nCols, nRows);
+  // Compute rows and columns for dividing canvas
+  int nCols = ceil(sqrt(nDatasets));
+  int nRows = ceil((double)nDatasets / nCols);
+  c->Divide(nCols, nRows);
 
-  // // Loop over the histograms and draw them
-  // for (int i = 0; i < nDatasets; ++i) {
-  //     c->cd(i+1); // Canvas pads are 1-indexed
-  //     H2D_jetetaPhi[i]->Draw("COLZ");
-  //       // Add title to the top-left corner of each pad
-  //     TLatex latex;
-  //     latex.SetNDC(); // Use Normalized Device Coordinates
-  //     latex.SetTextSize(0.04); // Adjust size as needed
-  //     latex.DrawLatex(0.1, 0.92, DatasetsNames[i]); // x, y, and text
-  // }
+  // Loop over the histograms and draw them
+  for (int i = 0; i < nDatasets; ++i) {
+      c->cd(i+1); // Canvas pads are 1-indexed
+      if (H2D_jetetaPhi[i]) {
+        int nbinsX = H2D_jetetaPhi[i]->GetNbinsX();
+        int nbinsY = H2D_jetetaPhi[i]->GetNbinsY();
 
-  // c->Update();
+        ratioHistoTransposeJets[i] = new TH2D(Form("h2_JetsTransposed_%d", i),
+                                          H2D_jetetaPhi[i]->GetTitle(),
+                                          nbinsY, H2D_jetetaPhi[i]->GetYaxis()->GetXmin(), H2D_jetetaPhi[i]->GetYaxis()->GetXmax(),
+                                          nbinsX, H2D_jetetaPhi[i]->GetXaxis()->GetXmin(), H2D_jetetaPhi[i]->GetXaxis()->GetXmax());
+
+        for (int ix = 1; ix <= nbinsX; ++ix) {
+            for (int iy = 1; iy <= nbinsY; ++iy) {
+                double content = H2D_jetetaPhi[i]->GetBinContent(ix, iy);
+                ratioHistoTransposeJets[i]->SetBinContent(iy, ix, content); // Swap i<->j
+            }
+        }
+
+        ratioHistoTransposeJets[i]->GetXaxis()->SetTitle(H2D_jetetaPhi[i]->GetYaxis()->GetTitle());
+        ratioHistoTransposeJets[i]->GetYaxis()->SetTitle(H2D_jetetaPhi[i]->GetXaxis()->GetTitle());
+        // ratioHistoTransposeJets[i]->GetZaxis()->SetRangeUser(0.85, 1.15);
+        ratioHistoTransposeJets[i]->Draw("COLZ");
+        
+        TLatex latex;
+        latex.SetNDC();
+        latex.SetTextSize(0.05);
+        latex.DrawLatex(0.5, 0.92, Form("Run: %s ", DatasetsNames[i].Data() ));
+      } else {
+          std::cerr << "Warning: H2D_jetetaPhi[" << i << "] is null!" << std::endl;
+        }
+      // H2D_jetetaPhi[i]->Draw("COLZ");
+        // Add title to the top-left corner of each pad
+      TLatex latex;
+      latex.SetNDC(); // Use Normalized Device Coordinates
+      latex.SetTextSize(0.04); // Adjust size as needed
+      latex.DrawLatex(0.1, 0.92, DatasetsNames[i]); // x, y, and text
+  }
+
+  c->Update();
 
 
   // //Draw in 4 plots per canvas 
@@ -4369,7 +4398,7 @@ void Draw_2D_DatasetComparison(float* etaRange, std::string options, float jetRa
   // }
 
 
-  Plot_2D_Ratio(H2D_jetetaPhi, "etaphi", nDatasets, refIndex);
+  Plot_2D_Ratio(H2D_jetetaPhi, "jet", nDatasets, refIndex);
   ///faysdgfhabdf
 
 
@@ -4398,11 +4427,12 @@ void Draw_2D_Tracks_eta_phi_DatasetComparasion(int refIndex = 0) {
     H2D_trackEtaPhi[iDataset]->SetTitle(Form("Tracks eta phi - Run %s", DatasetsNames[iDataset].Data()));
     
     double Nevents = GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflow[iDataset]);
+    //H2D_trackEtaPhi[iDataset]->Scale(1.0 / H2D_trackEtaPhi[iDataset]->GetEntries());
 
     for (int xbin = 1; xbin <= H2D_trackEtaPhi[iDataset]->GetNbinsX(); ++xbin) {
         for (int ybin = 1; ybin <= H2D_trackEtaPhi[iDataset]->GetNbinsY(); ++ybin) {
             double binContent = H2D_trackEtaPhi[iDataset]->GetBinContent(xbin, ybin);
-            H2D_trackEtaPhi[iDataset]->SetBinContent(xbin, ybin, binContent / Nevents);
+            H2D_trackEtaPhi[iDataset]->SetBinContent(xbin, ybin, binContent / Nevents * (-1));
         }
     }
     
@@ -4435,7 +4465,7 @@ void Draw_2D_Tracks_eta_phi_DatasetComparasion(int refIndex = 0) {
   // for (int i = 0; i < nDatasets; i += plotsPerCanvas) {
   //     // Create a new canvas for every group of 4
   //     TString canvasName = Form("c%d", canvasIndex);
-  //     TString canvasTitle = Form("H2D_jetetaPhi Collection %d", canvasIndex + 1);
+  //     TString canvasTitle = Form("H2D_TracksEtaPhi Collection %d", canvasIndex + 1);
   //     TCanvas* c = new TCanvas(canvasName, canvasTitle, 1200, 800);
 
   //     // Determine number of plots in this canvas (might be less than 4 at the end)
@@ -4449,7 +4479,7 @@ void Draw_2D_Tracks_eta_phi_DatasetComparasion(int refIndex = 0) {
   //     for (int j = 0; j < nPlotsThisCanvas; ++j) {
   //         int plotIndex = i + j;
   //         c->cd(j + 1);
-  //         H2D_jetetaPhi[plotIndex]->Draw("COLZ");
+  //         H2D_trackEtaPhi[plotIndex]->Draw("COLZ");
 
   //         TLatex latex;
   //         latex.SetNDC();

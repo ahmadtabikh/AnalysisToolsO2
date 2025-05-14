@@ -47,7 +47,7 @@ const bool isDataPbPb = false; // if false -> pp
 const bool doBkgSubtractionInData = false;
 const bool doBkgSubtractionInMC = false;
 const bool useFactorisedMatrix = false; // use factorised response matrix for unfolding, or not
-const bool mcIsWeighted = true; // use if the MC has been weighted to have more high pt jets?
+const bool mcIsWeighted = false; // use if the MC has been weighted to have more high pt jets?
 bool applyFakes = true; // only applied if useManualRespMatrixSettingMethod is true; 18/03: if false?
 int applyEfficiencies = 2 ; // 2 is best; kinematic efficiency is already be handled by roounfold (02/04/2025; one can check simply with a pp unfolding with just det matrix and fine-ish binning like "// Joonsuk binning for pp with smaller rec window to test kinematic efficiency")
 //applyEfficiencies: 0: no efficiency correction, 1: kine only, 2: jet finding efficiency only, 3: both active; only applied if useManualRespMatrixSettingMethod is true
@@ -157,10 +157,26 @@ std::array<std::array<float, 2>, 2> drawnWindowUnfoldedMeasurement = {{{ptWindow
 
 
 // Ahmad binning for pp
-double ptBinsJetsRec[nRadius][30] = {{0, 1, 2, 3, 4, 5,  6,  7,  8,  9,  10, 12, 14, 16, 18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140},{0, 1, 2, 3, 4, 5,  6,  7,  8,  9,  10, 12, 14, 16, 18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140},{5,  6,  7,  8,  9,  10, 12, 14, 16, 18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140}};
-int nBinPtJetsRec[nRadius] = {24,24,19};
-double ptBinsJetsGen[nRadius][30] = {{0, 1, 2, 3, 4, 5,  6,  7,  8,  9,  10, 12, 14,  16,  18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140, 200},{0, 1, 2, 3, 4, 5,  6,  7,  8,  9,  10, 12, 14,  16,  18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140, 200},{5,  6,  7,  8,  9,  10, 12, 14,  16,  18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140, 200}};
+
+double ptBinsJetsRec[nRadius][30] = {{0, 1, 2, 3, 4, 5,  6,  7,  8,  9,  10, 12, 14, 16, 18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140},
+                                       {5,  6,  7,  8,  9,  10, 12, 14, 16, 18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140},
+                                       {5,  6,  7,  8,  9,  10, 12, 14, 16, 18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140}};
+int nBinPtJetsRec[nRadius] = {24,19,19};
+double ptBinsJetsGen[nRadius][30] = {{0, 1, 2, 3, 4, 5,  6,  7,  8,  9,  10, 12, 14,  16,  18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140, 200},
+                                    {0, 1, 2, 3, 4, 5,  6,  7,  8,  9,  10, 12, 14,  16,  18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140, 200},
+                                    {5,  6,  7,  8,  9,  10, 12, 14,  16,  18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140, 200}};
 int nBinPtJetsGen[nRadius] = {25,25,20};
+
+// double ptBinsJetsRec[nRadius][30] = {{0, 1, 2, 3, 4, 5,  6,  7,  8,  9,  10, 12, 14, 16, 18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140},
+//                                        {10, 12, 14, 16, 18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140},
+//                                        {5,  6,  7,  8,  9,  10, 12, 14, 16, 18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140}};
+// int nBinPtJetsRec[nRadius] = {24,14,19};
+
+// double ptBinsJetsGen[nRadius][30] = {{0, 1, 2, 3, 4, 5,  6,  7,  8,  9,  10, 12, 14,  16,  18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140, 200},
+//                                     {5,  6,  7,  8,  9,  10, 12, 14,  16,  18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140, 200},
+//                                     {5,  6,  7,  8,  9,  10, 12, 14,  16,  18, 20, 25, 30, 40, 50, 60, 70, 85, 100, 140, 200}};
+// int nBinPtJetsGen[nRadius] = {25,20,20};
+
 
 
 // // Joonsuk binning for pp
