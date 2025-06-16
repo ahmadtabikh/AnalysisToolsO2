@@ -38,12 +38,12 @@ void  Get_ResponseMatrix_Pt_KinematicEffiency(TH1D* &H1D_kinematicEfficiency, TH
   H1D_kinematicEfficiency = (TH1D*)H1D_kinematicEfficiency_preRebin->Rebin(nBinPtJetsGen[iRadius],"H1D_kinematicEfficiency"+name_H1D_kinematicEfficiency+RadiusLegend[iRadius], ptBinsJetsGen[iRadius]);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  TString* pdfNameTest = new TString("kinematicEfficiency_TestByWidthNorm");
-  TString textContext(contextCustomOneField(*texDatasetsComparisonCommonDenominator, ""));
-    TH1D* H1D_jetKinematicEfficiencyTest;
-  H1D_jetKinematicEfficiencyTest = (TH1D*)H1D_kinematicEfficiency->Clone("H1D_jetKinematicEfficiencyTestbeforWidthNorm");
-  TransformRawHistToYield(H1D_jetKinematicEfficiencyTest); // errors will be falsly calculated since division by width is different of division by the sum of the pdf inside of the bins that have errors after the sum 
-  Draw_TH1_Histogram(H1D_jetKinematicEfficiencyTest, textContext, pdfNameTest, texPtJetGenX, texJetKinematicEfficiency, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
+  // TString* pdfNameTest = new TString("kinematicEfficiency_TestByWidthNorm");
+  // TString textContext(contextCustomOneField(*texDatasetsComparisonCommonDenominator, ""));
+  //   TH1D* H1D_jetKinematicEfficiencyTest;
+  // H1D_jetKinematicEfficiencyTest = (TH1D*)H1D_kinematicEfficiency->Clone("H1D_jetKinematicEfficiencyTestbeforWidthNorm");
+  // TransformRawHistToYield(H1D_jetKinematicEfficiencyTest); // errors will be falsly calculated since division by width is different of division by the sum of the pdf inside of the bins that have errors after the sum 
+  // Draw_TH1_Histogram(H1D_jetKinematicEfficiencyTest, textContext, pdfNameTest, texPtJetGenX, texJetKinematicEfficiency, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   double integralOfResponse_iBinGen, integralOfResponse_iBinGen_error;
@@ -125,7 +125,6 @@ bool Get_Pt_JetFakes(TH1D* &H1D_jetFakes, int iDataset, int iRadius, std::string
 
   Get_Pt_spectrum_mcd_recBinning(H1D_jetPt_mcd, iDataset, iRadius, options);
   Get_Pt_spectrum_mcdMatched_recBinning(H1D_jetPt_mcdMatched, iDataset, iRadius, options);
-
 
   H1D_jetFakes = (TH1D*)H1D_jetPt_mcdMatched->Clone("H1D_jetFakes"+Datasets[iDataset]+DatasetsNames[iDataset]+"_R="+Form("%.1f", arrayRadius[iRadius]));
   divideSuccess = H1D_jetFakes->Divide(H1D_jetFakes, H1D_jetPt_mcd, 1., 1., "b"); // option b for binomial because efficiency: https://twiki.cern.ch/twiki/bin/view/ALICE/PWGLFPAGSTRANGENESSEfficiency (purity similar to efficiency)

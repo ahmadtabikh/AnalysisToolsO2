@@ -30,8 +30,17 @@ TFile* file_O2Analysis_list[nDatasets] = {new TFile("../Datasets/"+Datasets[0]+"
 // TFile* file_O2Analysis_MCfileForMatrix[nDatasets] = new TFile("Datasets/ppSim_LHC23d4/AnalysisResults.root");
 // TFile* file_O2Analysis_MCfileForMatrix = new TFile("Datasets/ppSim_LHC23d4_weighted_withLeadingTrackCut/AnalysisResults.root");
 // TFile* file_O2Analysis_MCfileForMatrix = new TFile("Datasets/MC_halfMCAngantyr/AnalysisResults.root");
+
 TFile* file_O2Analysis_MCfileForMatrix = new TFile("../Datasets/LHC25b4a_train403705_MC/AnalysisResults.root"); // previously i used this LHC25b6_train380971 is MCweighted --> in settings set : const bool mcIsWeighted = true;
 TFile* file_O2Analysis_ppSimDetectorEffect_unfoldingControl = {new TFile("../Datasets/LHC25b4a_train403705_MC/AnalysisResults.root")}; // use this MC file as input to unfolding (with h_jet_pt_rhoareasubtracted distrib on file) and as comparison to gen (with h_jet_pt_part distrib on file)
+
+
+// TFile* file_O2Analysis_MCfileForMatrix = new TFile("../Datasets/LHC25b6_train405048/AnalysisResults.root"); // previously i used this LHC25b6_train380971 is MCweighted --> in settings set : const bool mcIsWeighted = true;
+// TFile* file_O2Analysis_ppSimDetectorEffect_unfoldingControl = {new TFile("../Datasets/LHC25b6_train405048/AnalysisResults.root")}; // use this MC file as input to unfolding (with h_jet_pt_rhoareasubtracted distrib on file) and as comparison to gen (with h_jet_pt_part distrib on file)
+
+// ///// !!!!!!! if controlMC is true use this ; if not comment it and uncomment the two line above 
+// TFile* file_O2Analysis_MCfileForMatrix = new TFile("../Datasets/LHC25b6_McControl_train405048DividedByTwo/merged_AnalysisResults1.root"); 
+// TFile* file_O2Analysis_ppSimDetectorEffect_unfoldingControl = {new TFile("../Datasets/LHC25b6_McControl_train405048DividedByTwo/merged_AnalysisResults2.root")}; // use this MC file as input to unfolding (with h_jet_pt_rhoareasubtracted distrib on file) and as comparison to gen (with h_jet_pt_part distrib on file)
 
 // const TString trainId = "_id12832";
 // const TString analysisWorkflowData = "jet-finder-charged-qa_central_5090_lead5"+trainId;
@@ -52,6 +61,10 @@ const TString analysisWorkflowMC = "jet-spectra-charged"+trainIdMC;
 const bool etaCutOnMatchedJetsIsObsoleteVersion = false;
 
 
+// add two matching matrix from different MC : LHC25b4a & LHC25b4b
+const bool addTwoMatchingMatrixFromDifferentMC = false; 
+//the first one will be the : file_O2Analysis_MCfileForMatrix
+TFile* file_O2Analysis_MCfileForSecondMatrix = new TFile("../Datasets/LHC25b4b_train403772_MC/AnalysisResults.root");
 
 
 // //////// -------- pp -------- ////////

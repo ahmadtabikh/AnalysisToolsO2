@@ -391,35 +391,55 @@ void ReweightResponseMatrixWithPrior_fineBinning(TH2D* &H2D_jetPtResponseMatrix,
 }
 
 void Get_PtResponseMatrix_detectorResponse(TH2D* &H2D_jetPtResponseMatrix_detectorResponse, int iDataset, int iRadius) {
-  TH3D* H3D_jetRpartPtdetPt;
-  TH2D* H2D_jetPtMcdjetPtMcd;
+
 
   TH2D* H2D_gen_det_geoMatched;
   TH2D* H2D_gen_det_geoMatched_rebinned;
   cout << "Get_PtResponseMatrix_detectorResponse 1" << endl;
   TString partialUniqueSpecifier = Datasets[iDataset]+"_R="+Form("%.1f",arrayRadius[iRadius]);
-  if (analysisWorkflowMC.Contains("jet-finder-charged-qa") == true) {
-    H3D_jetRpartPtdetPt = (TH3D*)((TH3D*)file_O2Analysis_MCfileForMatrix->Get(analysisWorkflowMC+"/h3_jet_r_jet_pt_tag_jet_pt_base_matchedgeo"))->Clone("Get_PtResponseMatrix_detectorResponse"+partialUniqueSpecifier);// base is mcd in jetfinderQA as of 06/2024, thus tag is mcp, and so hist is (x=r, y=mcp, z=mcd)
-    H3D_jetRpartPtdetPt->Sumw2();
 
-    int ibinJetRadius = H3D_jetRpartPtdetPt->GetXaxis()->FindBin(arrayRadius[iRadius]+GLOBAL_epsilon);
-    H3D_jetRpartPtdetPt->GetXaxis()->SetRange(ibinJetRadius, ibinJetRadius);
-    // project H3D onto a H2D, option "yz" means y goes on y-axis while z goes on x-axis, and so H2D_gen_det_geoMatched will be (x=mcd, y=mcp)
-    H2D_gen_det_geoMatched = (TH2D*)H3D_jetRpartPtdetPt->Project3D(partialUniqueSpecifier+"_genrec_e_yz"); //can't use letter D in this or it seems to replace the histogram in current pad (see documentation of ProjectionX function. Isn't mentioned in project3D sadly)
-  } else if (analysisWorkflowMC.Contains("jet-spectra-charged") == true) {
-    if (doBkgSubtractionInMC) {
-      H2D_jetPtMcdjetPtMcd = (TH2D*)((TH2D*)file_O2Analysis_MCfileForMatrix->Get(analysisWorkflowMC+"/h2_jet_pt_mcd_jet_pt_mcp_matchedgeo_rhoareasubtracted"))->Clone("Get_PtResponseMatrix_detectorResponse"+Datasets[iDataset]+DatasetsNames[iDataset]);
-    } else {
-      if (etaCutOnMatchedJetsIsObsoleteVersion == true) {
-        H2D_jetPtMcdjetPtMcd = (TH2D*)((TH2D*)file_O2Analysis_MCfileForMatrix->Get(analysisWorkflowMC+"/h2_jet_pt_mcd_jet_pt_mcp_matchedgeo"))->Clone("Get_PtResponseMatrix_detectorResponse"+Datasets[iDataset]+DatasetsNames[iDataset]);
-      } else {
-        H2D_jetPtMcdjetPtMcd = (TH2D*)((TH2D*)file_O2Analysis_MCfileForMatrix->Get(analysisWorkflowMC+"/h2_jet_pt_mcd_jet_pt_mcp_matchedgeo_mcpetaconstraint"))->Clone("Get_PtResponseMatrix_detectorResponse"+Datasets[iDataset]+DatasetsNames[iDataset]);
-      }
-    }
-    H2D_jetPtMcdjetPtMcd->Sumw2();
+  if(addTwoMatchingMatrixFromDifferentMC){
+    TH2D* H2D_jetPtMcdjetPtMcdFirst;
+    TH2D* H2D_jetPtMcdjetPtMcdSecond;
 
-    // H2D_gen_det_geoMatched = (TH2D*)GetTransposeHistogram(H2D_jetPtMcdjetPtMcd).Clone(partialUniqueSpecifier+"_genrec");
+    H2D_jetPtMcdjetPtMcdFirst = (TH2D*)((TH2D*)file_O2Analysis_MCfileForMatrix->Get(analysisWorkflowMC+"/h2_jet_pt_mcd_jet_pt_mcp_matchedgeo_mcpetaconstraint"))->Clone("Get_PtResponseMatrix_detectorResponse"+Datasets[iDataset]+DatasetsNames[iDataset]);
+    H2D_jetPtMcdjetPtMcdSecond = (TH2D*)((TH2D*)file_O2Analysis_MCfileForSecondMatrix->Get(analysisWorkflowMC+"/h2_jet_pt_mcd_jet_pt_mcp_matchedgeo_mcpetaconstraint"))->Clone("Get_PtResponseMatrix_detectorResponse"+Datasets[iDataset]+DatasetsNames[iDataset]);
+
+    H2D_jetPtMcdjetPtMcdFirst->Sumw2();
+    H2D_jetPtMcdjetPtMcdSecond->Sumw2();
+
+    TH2D *H2D_jetPtMcdjetPtMcd = (TH2D*)H2D_jetPtMcdjetPtMcdFirst->Clone("H2D_jetPtMcdjetPtMcd_Sum");
+    H2D_jetPtMcdjetPtMcd->Add(H2D_jetPtMcdjetPtMcdSecond);  // This does content + error^2 propagation
+
     H2D_gen_det_geoMatched = (TH2D*)H2D_jetPtMcdjetPtMcd->Clone(partialUniqueSpecifier+"_genrec");
+
+  }else{
+    TH3D* H3D_jetRpartPtdetPt;
+    TH2D* H2D_jetPtMcdjetPtMcd;
+
+    if (analysisWorkflowMC.Contains("jet-finder-charged-qa") == true) {
+      H3D_jetRpartPtdetPt = (TH3D*)((TH3D*)file_O2Analysis_MCfileForMatrix->Get(analysisWorkflowMC+"/h3_jet_r_jet_pt_tag_jet_pt_base_matchedgeo"))->Clone("Get_PtResponseMatrix_detectorResponse"+partialUniqueSpecifier);// base is mcd in jetfinderQA as of 06/2024, thus tag is mcp, and so hist is (x=r, y=mcp, z=mcd)
+      H3D_jetRpartPtdetPt->Sumw2();
+
+      int ibinJetRadius = H3D_jetRpartPtdetPt->GetXaxis()->FindBin(arrayRadius[iRadius]+GLOBAL_epsilon);
+      H3D_jetRpartPtdetPt->GetXaxis()->SetRange(ibinJetRadius, ibinJetRadius);
+      // project H3D onto a H2D, option "yz" means y goes on y-axis while z goes on x-axis, and so H2D_gen_det_geoMatched will be (x=mcd, y=mcp)
+      H2D_gen_det_geoMatched = (TH2D*)H3D_jetRpartPtdetPt->Project3D(partialUniqueSpecifier+"_genrec_e_yz"); //can't use letter D in this or it seems to replace the histogram in current pad (see documentation of ProjectionX function. Isn't mentioned in project3D sadly)
+    } else if (analysisWorkflowMC.Contains("jet-spectra-charged") == true) {
+      if (doBkgSubtractionInMC) {
+        H2D_jetPtMcdjetPtMcd = (TH2D*)((TH2D*)file_O2Analysis_MCfileForMatrix->Get(analysisWorkflowMC+"/h2_jet_pt_mcd_jet_pt_mcp_matchedgeo_rhoareasubtracted"))->Clone("Get_PtResponseMatrix_detectorResponse"+Datasets[iDataset]+DatasetsNames[iDataset]);
+      } else {
+        if (etaCutOnMatchedJetsIsObsoleteVersion == true) {
+          H2D_jetPtMcdjetPtMcd = (TH2D*)((TH2D*)file_O2Analysis_MCfileForMatrix->Get(analysisWorkflowMC+"/h2_jet_pt_mcd_jet_pt_mcp_matchedgeo"))->Clone("Get_PtResponseMatrix_detectorResponse"+Datasets[iDataset]+DatasetsNames[iDataset]);
+        } else {
+          H2D_jetPtMcdjetPtMcd = (TH2D*)((TH2D*)file_O2Analysis_MCfileForMatrix->Get(analysisWorkflowMC+"/h2_jet_pt_mcd_jet_pt_mcp_matchedgeo_mcpetaconstraint"))->Clone("Get_PtResponseMatrix_detectorResponse"+Datasets[iDataset]+DatasetsNames[iDataset]);
+        }
+      }
+      H2D_jetPtMcdjetPtMcd->Sumw2();
+
+      // H2D_gen_det_geoMatched = (TH2D*)GetTransposeHistogram(H2D_jetPtMcdjetPtMcd).Clone(partialUniqueSpecifier+"_genrec");
+      H2D_gen_det_geoMatched = (TH2D*)H2D_jetPtMcdjetPtMcd->Clone(partialUniqueSpecifier+"_genrec");
+    }
   }
 
   // keep (gen, gen) for the bins; rec will be introduced in the fluctuation response, and by multiplication will stay in the combined matrix

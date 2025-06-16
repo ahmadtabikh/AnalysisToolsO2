@@ -77,6 +77,8 @@ void Draw_Pt_spectrum_unfolded_parameterVariation(int iDataset, int iRadius, int
 void Draw_Pt_efficiency_jets(int iDataset, int iRadius, std::string options);
 void Draw_kinematicEfficiency(int iDataset, int iRadius, std::string options);
 void Draw_FakeRatio(int iDataset, int iRadius, std::string options);
+void DrawRatioWithOffset(TH1D* histList[], int nUnfoldIteration,   const TString& yAxisTitle,const TString& canvasName, int unfoldIterationMax, int step);
+
 
 /////////////////////////////////////////////////////
 ///////////////////// Main Macro ////////////////////
@@ -102,27 +104,27 @@ void JetSpectrum_DrawingMacro() {
 
   // // // find a way to input mcpPrior/mcdPrior and bayes/svd as a variables rather than typed out like this
   // Draw_ResponseMatrices_Fluctuations(iDataset, iRadius);
-  Draw_ResponseMatrices_detectorResponse(iDataset, iRadius);
-  Draw_ResponseMatrices_DetectorAndFluctuationsCombined(iDataset, iRadius, optionsAnalysis);
+  // Draw_ResponseMatrices_detectorResponse(iDataset, iRadius);
+  // Draw_ResponseMatrices_DetectorAndFluctuationsCombined(iDataset, iRadius, optionsAnalysis);
 
   // // Draw_Pt_spectrum_unfolded_FluctResponseOnly(iDataset, iRadius, optionsAnalysis); // NOT FIXED YET - result meaningless
-  Draw_Pt_spectrum_raw(iDataset, iRadius, optionsAnalysis);
-  Draw_Pt_spectrum_mcp(iDataset, iRadius, optionsAnalysis);
-  Draw_Pt_spectrum_mcdMatched(iDataset, iRadius, optionsAnalysis);
+  // Draw_Pt_spectrum_raw(iDataset, iRadius, optionsAnalysis);
+  // Draw_Pt_spectrum_mcp(iDataset, iRadius, optionsAnalysis);
+  // Draw_Pt_spectrum_mcdMatched(iDataset, iRadius, optionsAnalysis);
 
-  Draw_Pt_efficiency_jets(iDataset, iRadius, optionsAnalysis);
-  Draw_kinematicEfficiency(iDataset, iRadius, optionsAnalysis);
-  Draw_FakeRatio(iDataset, iRadius, optionsAnalysis);
+  // Draw_Pt_efficiency_jets(iDataset, iRadius, optionsAnalysis);
+  // Draw_kinematicEfficiency(iDataset, iRadius, optionsAnalysis);
+  // Draw_FakeRatio(iDataset, iRadius, optionsAnalysis);
 
-  int unfoldParameterInput = 6;
+  int unfoldParameterInput = 5;
   Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput, optionsAnalysis);
   // int unfoldParameterInput2 = 8;
   // Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput2, optionsAnalysis);
   // int unfoldParameterInput3 = 10;
   // Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput3, optionsAnalysis);
 
-  // int unfoldParameterInputMin = 0;
-  // int unfoldParameterInputMax = 18;
+  // int unfoldParameterInputMin = 4;
+  // int unfoldParameterInputMax = 16;
   // int unfoldParameterInputStep = 3;
   // Draw_Pt_spectrum_unfolded_parameterVariation(iDataset, iRadius, unfoldParameterInputMin, unfoldParameterInputMax, unfoldParameterInputStep, optionsAnalysis);
 }
@@ -699,9 +701,17 @@ void Draw_Pt_spectrum_unfolded(int iDataset, int iRadius, int unfoldParameterInp
   Draw_TH1_Histograms(H1D_jetPt_unfolded_mcpComp, unfoldedTruthCompLegend, 2, textContext, pdfName_mcpComp, texPtX, yAxisLabel, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "logy");
   if (divideSuccessMcp){
     TString* pdfName_ratio_mcp = new TString(pdfTitleBase+unfoldingInfo+"_mcpComp_ratio");
-    Draw_TH1_Histogram(H1D_jetPt_ratio_mcp, textContext, pdfName_ratio_mcp, texPtX, texRatioMcpUnfolded, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "zoomToOneLarge,ratioLine");
+    TString* texRatioMcpUnfmcd = new TString("mcp / Unf(mcd)");
+    // Draw_TH1_Histogram(H1D_jetPt_ratio_mcp, textContext, pdfName_ratio_mcp, texPtX, texRatioMcpUnfolded, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "zoomToOneLarge,ratioLine");
+    // TString* pdfName_ratio_mcp_zoom = new TString(pdfTitleBase+unfoldingInfo+"_mcpComp_ratio_zoom");
+    // Draw_TH1_Histogram(H1D_jetPt_ratio_mcp, textContext, pdfName_ratio_mcp_zoom, texPtX, texRatioMcpUnfolded, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "zoomToOneLarge,ratioLine,zoomToOneMedium2");
+
+
+    Draw_TH1_Histogram(H1D_jetPt_ratio_mcp, textContext, pdfName_ratio_mcp, texPtX, texRatioMcpUnfmcd, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "zoomToOneLarge,ratioLine");
     TString* pdfName_ratio_mcp_zoom = new TString(pdfTitleBase+unfoldingInfo+"_mcpComp_ratio_zoom");
-    Draw_TH1_Histogram(H1D_jetPt_ratio_mcp, textContext, pdfName_ratio_mcp_zoom, texPtX, texRatioMcpUnfolded, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "zoomToOneLarge,ratioLine,zoomToOneMedium2");
+    Draw_TH1_Histogram(H1D_jetPt_ratio_mcp, textContext, pdfName_ratio_mcp_zoom, texPtX, texRatioMcpUnfmcd, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "zoomToOneLarge,ratioLine,zoomToOneMedium2");
+  
+
   }
 
 
@@ -915,93 +925,159 @@ void Draw_Pt_spectrum_unfolded_parameterVariation(int iDataset, int iRadius, int
 
 
 // ///////////////////////////////////////////////////////test bin offset ///////////////////////////////////////////////////////
-// ///////////////////////////////////////work well only need horizontal bars to indicate different bins region//////////////////
+// ///////////////////////////////////////ratio refolded/measured with offset differetn k//////////////////
 // //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  DrawRatioWithOffset(H1D_jetPt_ratio_measuredRefolded, nUnfoldIteration, "Refolded / Measured", "ratio_RefoldMeasure_different_k_withOffset", unfoldIterationMax, step);
+  DrawRatioWithOffset(H1D_jetPt_ratio_mcp, nUnfoldIteration, "mcp / undolded", "ratio_McpUnfolded_different_k_withOffset", unfoldIterationMax, step);
 
-  TCanvas* ratioWithOffset = new TCanvas("ratioWithOffset", "Unfolded jet pT with offset", 800, 800);                                           
-  TMultiGraph* mg = new TMultiGraph();   
-  // int customColors[] = {kRed, kBlack, kBlue, kGreen + 2, kPink};
-  int customColors[] = {
-    kBlack,          // black: classic and neutral
-    kRed + 1,        // a slightly lighter red (more readable than kRed)
-    kBlue + 1,       // soft blue
-    kGreen + 2,      // bright green, better than dark kGreen
-    kOrange + 7,     // light orange
-    kViolet + 1      // pleasant purple tone
-  };
-  int nColors = sizeof(customColors) / sizeof(customColors[0]);  
+  // TCanvas* ratioWithOffset = new TCanvas("ratioWithOffset", "Unfolded jet pT with offset", 800, 800);                                           
+  // TMultiGraph* mg = new TMultiGraph();   
+  // // int customColors[] = {kRed, kBlack, kBlue, kGreen + 2, kPink};
+  // int customColors[] = {
+  //   kBlack,          // black: classic and neutral
+  //   kRed + 1,        // a slightly lighter red (more readable than kRed)
+  //   kBlue + 1,       // soft blue
+  //   kGreen + 2,      // bright green, better than dark kGreen
+  //   kOrange + 7,     // light orange
+  //   kViolet + 1      // pleasant purple tone
+  // };
+  // int nColors = sizeof(customColors) / sizeof(customColors[0]);  
                                                                               
 
-  for (int i = 0; i < nUnfoldIteration; ++i) {
-      TH1D* h = H1D_jetPt_ratio_measuredRefolded[i];
-      int nBins = h->GetNbinsX();
-      // double binWidth = h->GetBinWidth(1);
-      //double offset = (i - nUnfoldIteration / 2.0) * 0.4 * binWidth; // espacement augmenté
-      // double offset = (i - nUnfoldIteration / 2.0) * 0.15 * binWidth; // tune spacing
+  // for (int i = 0; i < nUnfoldIteration; ++i) {
+  //     TH1D* h = H1D_jetPt_ratio_measuredRefolded[i];
+  //     int nBins = h->GetNbinsX();
+  //     // double binWidth = h->GetBinWidth(1);
+  //     //double offset = (i - nUnfoldIteration / 2.0) * 0.4 * binWidth; // espacement augmenté
+  //     // double offset = (i - nUnfoldIteration / 2.0) * 0.15 * binWidth; // tune spacing
 
-      std::vector<double> x_vals, y_vals, ex_vals, ey_vals;
+  //     std::vector<double> x_vals, y_vals, ex_vals, ey_vals;
 
-      for (int bin = 1; bin <= nBins; ++bin) {
-          // double x = h->GetBinCenter(bin) + offset;
-          // double y = h->GetBinContent(bin);
-          // double ex = 0.5 * binWidth;  // barres horizontales couvrant chaque bin
-          // double ey = h->GetBinError(bin);
+  //     for (int bin = 1; bin <= nBins; ++bin) {
+  //         // double x = h->GetBinCenter(bin) + offset;
+  //         // double y = h->GetBinContent(bin);
+  //         // double ex = 0.5 * binWidth;  // barres horizontales couvrant chaque bin
+  //         // double ey = h->GetBinError(bin);
 
-          double binLowEdge = ptBinsJetsRec[iRadius][bin - 1];
-          double binUpEdge  = ptBinsJetsRec[iRadius][bin];
-          double binWidth = binUpEdge - binLowEdge;
-          double offset = (i - nUnfoldIteration / 2.0) * 0.065 * binWidth; 
+  //         double binLowEdge = ptBinsJetsRec[iRadius][bin - 1];
+  //         double binUpEdge  = ptBinsJetsRec[iRadius][bin];
+  //         double binWidth = binUpEdge - binLowEdge;
+  //         double offset = (i - nUnfoldIteration / 2.0) * 0.065 * binWidth; 
 
-          double x = h->GetBinCenter(bin) + offset;
-          double y = h->GetBinContent(bin);
-          // double ex = 0.5 * binWidth;
-          double ex = 0;
-          double ey = h->GetBinError(bin);
+  //         double x = h->GetBinCenter(bin) + offset;
+  //         double y = h->GetBinContent(bin);
+  //         // double ex = 0.5 * binWidth;
+  //         double ex = 0;
+  //         double ey = h->GetBinError(bin);
 
-          x_vals.push_back(x);
-          y_vals.push_back(y);
-          ex_vals.push_back(ex);
-          ey_vals.push_back(ey);
-      }
+  //         x_vals.push_back(x);
+  //         y_vals.push_back(y);
+  //         ex_vals.push_back(ex);
+  //         ey_vals.push_back(ey);
+  //     }
 
-      TGraphErrors* gr = new TGraphErrors(nBins, &x_vals[0], &y_vals[0], &ex_vals[0], &ey_vals[0]);
-      int color = customColors[i % nColors];
-      gr->SetMarkerStyle(20 + i);  // Different markers
-      // gr->SetMarkerColor(i+1);
-      // gr->SetLineColor(i+1);
-      gr->SetMarkerColor(color);
-      gr->SetMarkerSize(0.8);  // default is 1.0
-      gr->SetLineColor(color);
-      // gr->SetLineWidth(0.8);  // thinner error bars
-      gr->SetTitle(Form("k_{unfold} = %d", unfoldIterationMax-step*i));
+  //     TGraphErrors* gr = new TGraphErrors(nBins, &x_vals[0], &y_vals[0], &ex_vals[0], &ey_vals[0]);
+  //     int color = customColors[i % nColors];
+  //     gr->SetMarkerStyle(20 + i);  // Different markers
+  //     // gr->SetMarkerColor(i+1);
+  //     // gr->SetLineColor(i+1);
+  //     gr->SetMarkerColor(color);
+  //     gr->SetMarkerSize(0.8);  // default is 1.0
+  //     gr->SetLineColor(color);
+  //     // gr->SetLineWidth(0.8);  // thinner error bars
+  //     gr->SetTitle(Form("k_{unfold} = %d", unfoldIterationMax-step*i));
 
-      mg->Add(gr, "P");  // "P" for points
-  }
+  //     mg->Add(gr, "P");  // "P" for points
+  // }
 
-  mg->Draw("A");
-  mg->GetXaxis()->SetTitle("p_{T} (GeV/c)");
-  mg->GetYaxis()->SetTitle("Refolded / measured");
-  ratioWithOffset->BuildLegend();
-  ratioWithOffset->Update();
+  // mg->Draw("A");
+  // mg->GetXaxis()->SetTitle("p_{T} (GeV/c)");
+  // mg->GetYaxis()->SetTitle("Refolded / measured");
+  // ratioWithOffset->BuildLegend();
+  // ratioWithOffset->Update();
 
-  // Get the current x-axis range
-  double xmin = mg->GetXaxis()->GetXmin();
-  double xmax = mg->GetXaxis()->GetXmax();
+  // // Get the current x-axis range
+  // double xmin = mg->GetXaxis()->GetXmin();
+  // double xmax = mg->GetXaxis()->GetXmax();
 
-  // Create and draw the horizontal line at y = 1
-  TLine* line = new TLine(xmin, 1.0, xmax, 1.0);
-  line->SetLineStyle(2);  // Dashed line
-  line->SetLineColor(kGray + 2);  // Light gray or any color
-  line->Draw("same");  // Draw on top of existing plot
-  ratioWithOffset->Update();
+  // // Create and draw the horizontal line at y = 1
+  // TLine* line = new TLine(xmin, 1.0, xmax, 1.0);
+  // line->SetLineStyle(2);  // Dashed line
+  // line->SetLineColor(kGray + 2);  // Light gray or any color
+  // line->Draw("same");  // Draw on top of existing plot
+  // ratioWithOffset->Update();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////ratio mcp/unfolded with offset ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 }
 
 
+void DrawRatioWithOffset(TH1D* histList[], int nUnfoldIteration, const TString& yAxisTitle,const TString& canvasName, int unfoldIterationMax, int step){
+    TCanvas* c = new TCanvas(canvasName, canvasName, 800, 800);
+    TMultiGraph* mg = new TMultiGraph();
+
+    int customColors[] = {
+        kBlack, kRed + 1, kBlue + 1, kGreen + 2, kOrange + 7, kViolet + 1
+    };
+    int nColors = sizeof(customColors) / sizeof(customColors[0]);
+
+    //int nUnfoldIteration = histList.size();  // infer number of iterations from input list
+
+    for (int i = 0; i < nUnfoldIteration; ++i) {
+        TH1D* h = histList[i];
+        int nBins = h->GetNbinsX();
+
+        std::vector<double> x_vals, y_vals, ex_vals, ey_vals;
+
+        for (int bin = 1; bin <= nBins; ++bin) {
+            // Replace ptBinsJetsRec[iRadius] with your own binning logic if needed:
+            double binLowEdge = h->GetXaxis()->GetBinLowEdge(bin);
+            double binUpEdge  = h->GetXaxis()->GetBinUpEdge(bin);
+            double binWidth   = binUpEdge - binLowEdge;
+            double offset     = (i - nUnfoldIteration / 2.0) * 0.065 * binWidth;
+
+            double x  = h->GetBinCenter(bin) + offset;
+            double y  = h->GetBinContent(bin);
+            double ex = 0;
+            double ey = h->GetBinError(bin);
+
+            x_vals.push_back(x);
+            y_vals.push_back(y);
+            ex_vals.push_back(ex);
+            ey_vals.push_back(ey);
+        }
+
+        TGraphErrors* gr = new TGraphErrors(nBins, &x_vals[0], &y_vals[0], &ex_vals[0], &ey_vals[0]);
+        int color = customColors[i % nColors];
+        gr->SetMarkerStyle(20 + i);
+        gr->SetMarkerColor(color);
+        gr->SetLineColor(color);
+        gr->SetMarkerSize(0.8);
+        gr->SetTitle(Form("k_{unfold} = %d", unfoldIterationMax-step*i));  // Adjust if you have different logic
+
+        mg->Add(gr, "P");
+    }
+
+    mg->Draw("A");
+    mg->GetXaxis()->SetTitle("p_{T} (GeV/c)");
+    mg->GetYaxis()->SetTitle(yAxisTitle);
+
+    c->BuildLegend();
+    c->Update();
+
+    // Draw horizontal reference line at y=1
+    double xmin = mg->GetXaxis()->GetXmin();
+    double xmax = mg->GetXaxis()->GetXmax();
+    TLine* line = new TLine(xmin, 1.0, xmax, 1.0);
+    line->SetLineStyle(2);
+    line->SetLineColor(kGray + 2);
+    line->Draw("same");
+
+    c->Update();
+}
 
 
 // rename refoldedUnfolded as closure test?

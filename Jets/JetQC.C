@@ -129,6 +129,7 @@ void Draw_2D_DatasetComparison(float* etaRange, std::string options, float jetRa
 
 void Draw_2D_Tracks_eta_phi_DatasetComparasion(int refIndex);
 
+void Draw_Pt_Comparison_MC_Data(float* etaRange, std::string options, float jetRadiusForJetFinderWorkflow) ;
 
 
 /////////////////////////////////////////////////////
@@ -163,6 +164,7 @@ void JetQC() {
   const int nPtBins = 5;
   float jetPtMinCut, jetPtMaxCut;
   float jetPtMinCutArray[nPtBins+1] = {0.15, 10, 20, 40, 60, 200};
+
   // const int nPtBins = 1;
   // float jetPtMinCut, jetPtMaxCut;
   // float jetPtMinCutArray[nPtBins+1] = {0.15, 200};
@@ -172,10 +174,11 @@ void JetQC() {
   // Draw_PtPeakPosition_vs_leadTrackCut(etaRangeSym, jetRadiusForDataComp);
   // Draw_PtLeadCutStudy_PtOfRatio1(etaRangeSym, "", jetRadiusForDataComp);
 
-  // Draw_Pt_DatasetComparison(etaRangeSym, "normEvents", jetRadiusForDataComp);
+  // Draw_Pt_DatasetComparison(etaRangeSym,"normEvents", jetRadiusForDataComp);
   // Draw_Pt_DatasetComparison_withRun2RitsuyaHardcoded(etaRangeSym, "normEvents", jetRadiusForDataComp);
-  Draw_2D_DatasetComparison(etaRangeSym, "etaphi", jetRadiusForDataComp, 0) ;
+  // Draw_2D_DatasetComparison(etaRangeSym, "etaphi", jetRadiusForDataComp, 0) ;
   // Draw_2D_Tracks_eta_phi_DatasetComparasion(0);
+  // Draw_Pt_Comparison_MC_Data(etaRangeSym, "normEvents", jetRadiusForDataComp) ;
 
   
 
@@ -194,7 +197,7 @@ void JetQC() {
 
     // Draw_Eta_DatasetComparison(jetRadiusForDataComp, ptRange, "normEvents");
     // Draw_Eta_DatasetComparison(jetRadiusForDataComp, ptRange, "normEntries");
-    // Draw_Phi_DatasetComparison(jetRadiusForDataComp, ptRange, "normEvents");
+    Draw_Phi_DatasetComparison(jetRadiusForDataComp, ptRange, "normEvents");
 
     // Draw_Constituent_Pt_DatasetComparison(ptRange, jetRadiusForDataComp);
 
@@ -4500,3 +4503,133 @@ void Draw_2D_Tracks_eta_phi_DatasetComparasion(int refIndex = 0) {
 
 
 }
+
+
+
+
+// void Draw_Pt_Comparison_MC_Data(float* etaRange, std::string options, float jetRadiusForJetFinderWorkflow = 0.2) {
+//   float jetRadius = jetRadiusForJetFinderWorkflow; // obsolete for new jet-spectra-charged as we don't do radii comparisons that often and so files will only have 1 radius
+
+//   TH3D* H3D_jetRjetPtjetEtaData[nDatasets];
+//   TH1D* H1D_jetPt_Data[nDatasets];
+//   TH1D* H1D_jetPt_Data_rebinned[nDatasets];
+
+//   TH3D* H3D_jetRjetPtjetEtaMC[nDatasets];
+//   TH1D* H1D_jetPt_MC[nDatasets];
+//   TH1D* H1D_jetPt_MC_rebinned[nDatasets];
+
+
+
+//   float EtaCutLow = etaRange[0];
+//   float EtaCutHigh = etaRange[1];
+//   int ibinJetRadius = 0;
+
+//   TString* yAxisLabel;
+//   for(int iDataset = 0; iDataset < nDatasets; iDataset++){
+
+//     H3D_jetRjetPtjetEtaData[iDataset] = (TH3D*)((TH3D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h3_jet_pt_jet_eta_jet_phi"+jetFinderQaHistType[iJetFinderQaType]))->Clone("pt_Data"+Datasets[iDataset]+DatasetsNames[iDataset]+"Radius"+Form("%.1f",jetRadius)+jetRadius+Form("%.1f", etaRange[0])+"<eta<"+Form("%.1f", etaRange[1]));
+//     int ibinEta_low = H3D_jetRjetPtjetEtaData[iDataset]->GetYaxis()->FindBin(EtaCutLow);
+//     int ibinEta_high = H3D_jetRjetPtjetEtaData[iDataset]->GetYaxis()->FindBin(EtaCutHigh);
+//     H1D_jetPt_Data[iDataset] = (TH1D*)H3D_jetRjetPtjetEtaData[iDataset]->ProjectionX("jetPt_Data_"+Datasets[iDataset]+DatasetsNames[iDataset]+"Radius"+Form("%.1f",jetRadius)+Form("%.1f", EtaCutLow)+"<eta<"+Form("%.1f", EtaCutHigh), ibinEta_low, ibinEta_high, 0, -1, "e");
+
+
+//     H3D_jetRjetPtjetEtaMC[iDataset] = (TH3D*)((TH3D*)file_O2AnalysisMC_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h3_jet_pt_jet_eta_jet_phi"+jetFinderQaHistType[iJetFinderQaType]))->Clone("pt_MC"+Datasets[iDataset]+DatasetsNames[iDataset]+"Radius"+Form("%.1f",jetRadius)+jetRadius+Form("%.1f", etaRange[0])+"<eta<"+Form("%.1f", etaRange[1]));
+//     int ibinEta_low_MC = H3D_jetRjetPtjetEtaMC[iDataset]->GetYaxis()->FindBin(EtaCutLow);
+//     int ibinEta_high_MC = H3D_jetRjetPtjetEtaMC[iDataset]->GetYaxis()->FindBin(EtaCutHigh);
+//     H1D_jetPt_MC[iDataset] = (TH1D*)H3D_jetRjetPtjetEtaMC[iDataset]->ProjectionX("jetPt_MC_"+Datasets[iDataset]+DatasetsNames[iDataset]+"Radius"+Form("%.1f",jetRadius)+Form("%.1f", EtaCutLow)+"<eta<"+Form("%.1f", EtaCutHigh), ibinEta_low_MC, ibinEta_high_MC, 0, -1, "e");
+
+
+//     ///////////////////////////////////////////////////////////////////////////////////////////////////custom binnig /////////////////////////////////////////////////////////////////////////////////
+//     // Define custom bin edges for dynamic rebinning
+//     std::vector<double> binEdges;
+//     for (double pt = 0; pt < 35; pt += 5) binEdges.push_back(pt);   
+//     for (double pt = 35; pt < 45; pt += 10) binEdges.push_back(pt);   
+//     for (double pt = 45; pt < 60; pt += 15) binEdges.push_back(pt);   
+//     for (double pt = 60; pt < 90; pt += 30) binEdges.push_back(pt);  
+//     for (double pt = 90; pt < 140; pt += 50) binEdges.push_back(pt); 
+//     for (double pt = 140; pt <= 200; pt += 60) binEdges.push_back(pt); 
+    
+//     int nBins = binEdges.size() - 1;
+//     double* binArray = &binEdges[0];
+//     // Rebin using the custom binning
+//     H1D_jetPt_Data_rebinned[iDataset] = (TH1D*)H1D_jetPt_Data[iDataset]->Rebin(nBins, "jetPt_Data_rebinned_"+Datasets[iDataset]+DatasetsNames[iDataset]+"Radius"+Form("%.1f",jetRadius)+Form("%.1f", EtaCutLow)+"<eta<"+Form("%.1f", EtaCutHigh), binArray);
+//     H1D_jetPt_MC_rebinned[iDataset] = (TH1D*)H1D_jetPt_MC[iDataset]->Rebin(nBins, "jetPt_MC_rebinned_"+Datasets[iDataset]+DatasetsNames[iDataset]+"Radius"+Form("%.1f",jetRadius)+Form("%.1f", EtaCutLow)+"<eta<"+Form("%.1f", EtaCutHigh), binArray);
+
+//     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//     if (options.find("normEntries") != std::string::npos) {
+//       NormaliseYieldToNEntries(H1D_jetPt_Data_rebinned[iDataset]);
+//       NormaliseYieldToNEntries(H1D_jetPt_MC_rebinned[iDataset]);
+//       yAxisLabel = texJetPtYield_EntriesNorm;
+//     }
+
+//     double Nevents;
+//     if (options.find("normEvents") != std::string::npos) {
+//       if (isDatasetWeighted[iDataset]) {
+//         Nevents = GetNEventsSelected_JetFramework_weighted(file_O2Analysis_list[iDataset], analysisWorkflow[iDataset]);
+//       } else {
+//         Nevents = GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflow[iDataset]);
+//         // cout << "Nevents = " << Nevents << endl;
+//       }
+//       // cout << "pre norm : H1D_jetPt_rebinned[iDataset]->GetBinContent(10) = " << H1D_jetPt_rebinned[iDataset]->GetBinContent(40) << endl;
+//       NormaliseYieldToNEvents(H1D_jetPt_Data_rebinned[iDataset], Nevents);
+//       // cout << "post norm: H1D_jetPt_rebinned[iDataset]->GetBinContent(10) = " << H1D_jetPt_rebinned[iDataset]->GetBinContent(40) << endl;
+//       yAxisLabel = texJetPtYield_EventNorm;
+//     }
+
+//     double NeventsMC;
+//     if (options.find("normEvents") != std::string::npos) {
+//       if (isDatasetWeighted[iDataset]) {
+//         NeventsMC = GetNEventsSelected_JetFramework_weighted(file_O2AnalysisMC_list[iDataset], analysisWorkflow[iDataset]);
+//       } else {
+//         NeventsMC = GetNEventsSelected_JetFramework(file_O2AnalysisMC_list[iDataset], analysisWorkflow[iDataset]);
+//         // cout << "Nevents = " << Nevents << endl;
+//       }
+//       // cout << "pre norm : H1D_jetPt_rebinned[iDataset]->GetBinContent(10) = " << H1D_jetPt_rebinned[iDataset]->GetBinContent(40) << endl;
+//       NormaliseYieldToNEvents(H1D_jetPt_MC_rebinned[iDataset], NeventsMC);
+//       // cout << "post norm: H1D_jetPt_rebinned[iDataset]->GetBinContent(10) = " << H1D_jetPt_rebinned[iDataset]->GetBinContent(40) << endl;
+//       yAxisLabel = texJetPtYield_EventNorm;
+//     }
+
+
+//     TH1D** DataMCpairs = new TH1D*[2];
+//     DataMCpairs[0] = H1D_jetPt_Data_rebinned[iDataset];
+//     DataMCpairs[1] = H1D_jetPt_MC_rebinned[iDataset];
+
+//     const TString Names[2] = {Datasets[iDataset] + " Data",
+//                               Datasets[iDataset] + " MC"};
+
+
+//     TString* pdfName = new TString(Datasets[iDataset]+"_jet_"+jetType[iJetType]+"_"+jetLevel[iJetLevel]+"_DataMcComp_R="+Form("%.1f", jetRadius)+"_Pt_@eta["+Form("%.1f", EtaCutLow)+","+Form("%.1f", EtaCutHigh)+"]"+jetFinderQaHistType[iJetFinderQaType]);
+    
+//     // TString textContext(contextDatasetCompAndRadiusAndVarRange(jetRadius, etaRange, "eta"));
+//     TString textContext(contextCustomThreeFields(*texDatasetsComparisonCommonDenominator, "", "#splitline{"+contextJetRadius(jetRadius)+"}{"+contextEtaRange(etaRange)+"}", ""));
+
+//     std::array<std::array<float, 2>, 2> drawnWindow = {{{-25, 200},{-999, -999}}};
+//     std::array<std::array<float, 2>, 2> legendPlacement = {{{0.65, 0.6}, {0.85, 0.85}}}; // {{{x1, y1}, {x2, y2}}}
+
+//     Draw_TH1_Histograms(DataMCpairs, Names, 2, textContext, pdfName, iJetFinderQaType == 0 ? texPtJetRawX : texPtJetBkgCorrX, texJetPtYield_EventNorm, texCollisionDataInfo, drawnWindow, legendPlacement, contextPlacementAuto, "logy"+histDatasetComparisonStructure);
+    
+
+
+//     ///// ratio between data & MC 
+//     // Clone the data histogram (numerator) to preserve binning and axis titles
+//     TH1D* hRatio = (TH1D*)DataMCpairs[0]->Clone("hRatio_" + Datasets[iDataset]);
+ 
+//     // Perform the division: hRatio = Data / MC
+//     // Option "B" → binomial errors (recommended for efficiency-like ratios)
+//     hRatio->Divide(DataMCpairs[1]);
+//     TString* pdfName_ratio = new TString(Datasets[iDataset]+"jet_"+jetType[iJetType]+"_"+jetLevel[iJetLevel]+"_ratioDataMC_R="+Form("%.1f", jetRadius)+"_Pt_@eta["+Form("%.1f", EtaCutLow)+","+Form("%.1f", EtaCutHigh)+"]"+jetFinderQaHistType[iJetFinderQaType]+"_ratio");
+
+//     Draw_TH1_Histogram(hRatio, textContext, pdfName_ratio, texCentrality, texPtJetRawX, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
+
+
+
+
+
+//     // Clean up
+//     delete[] DataMCpairs;
+//     delete pdfName;
+//   }
+  
+// }
