@@ -6,7 +6,7 @@
 const int nCollSystems = 1;
 const TString collSystems[nCollSystems] = {"pp"};
 
-const int iCollSystem = 0;
+const int iCollSystem = 1;
 
 // const int nCentralityBins = 7;
 // const float arrayCentralityBinning[nCentralityBins+1] = {0, 10, 20, 30, 40, 60, 80, 100};

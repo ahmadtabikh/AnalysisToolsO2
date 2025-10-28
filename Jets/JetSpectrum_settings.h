@@ -16,10 +16,12 @@ const double etaAnalysisRange[2] = {-0.5, 0.5};
 // Choice of jet type (charged, neutral, full) and level (data, detector level, particle level)
 const int iJetType = 0;
 const int iJetLevel = 0;
-const int randomConeType = 1;
+const int randomConeType = 0;
 
 
-const float centralityRange[2] = {0, 10};
+// const float centralityRange[2] = {0, 10};
+const float centralityRange[2] = {-0.1, 0};
+
 // const float centralityRange[2] = {50, 70};
 
 ////////////////////////////////////////////////

@@ -227,6 +227,7 @@ void Draw_TH1_Histograms_MasterFunction(TH1D** histograms_collection, const TStr
   }
   padMainHist->cd();
 
+  //////////////////////////////////loop over all histograms to determine their plotting ranges//////////////////////////////
   float minY_collection[collectionSize];
   float maxY_collection[collectionSize];
   float minY_ratio_collection[collectionSize];

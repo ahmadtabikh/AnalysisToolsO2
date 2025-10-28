@@ -121,9 +121,9 @@ void TrackQC() {
     jetPtMaxCut = jetPtMinCutArray[iPtBin+1];
 
     float ptRange[2] = {jetPtMinCut, jetPtMaxCut};
-    // Draw_Eta_DatasetComparison(ptRange, "evtNorm");
+    Draw_Eta_DatasetComparison(ptRange, "evtNorm");
     // Draw_Eta_DatasetComparison(ptRange, "entriesNorm");
-    // Draw_Phi_DatasetComparison(ptRange, "evtNorm");
+    Draw_Phi_DatasetComparison(ptRange, "evtNorm");
     // Draw_Phi_DatasetComparison(ptRange, "entriesNorm");
 
   // Draw_Eta_DatasetComparison_trackSelComp();
@@ -589,7 +589,7 @@ void Draw_Phi_DatasetComparison(float* ptRange, std::string options) {
     if (trackHistsObsoleteVersion[iDataset]) {
       cout << "WARNING: OBSOLETE track histogram version selected, cannot cut on pT" << endl;
       H2D_centrality_track[iDataset] = (TH2D*)((TH2D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h2_centrality_track_phi"))->Clone("Draw_Phi_DatasetComparison"+Datasets[iDataset]+DatasetsNames[iDataset]);
-      H1D_trackPhi[iDataset] = (TH1D*)H2D_centrality_track[iDataset]->ProjectionY("trackPhi_"+Datasets[iDataset]+DatasetsNames[iDataset], 1, H2D_centrality_track[iDataset]->GetNbinsX(), "e");
+      H1D_trackPhi[iDataset] = (TH1D*)H2D_centrality_track[iDataset]->ProjectionY("trackPhi_"+Datasets[iDataset]+DatasetsNames[iDataset], 0, H2D_centrality_track[iDataset]->GetNbinsX(), "e");
     } else {
       H3D_track[iDataset] = (TH3D*)((TH3D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h3_track_pt_track_eta_track_phi"))->Clone("Draw_Phi_DatasetComparison"+Datasets[iDataset]+DatasetsNames[iDataset]);
 

@@ -107,7 +107,7 @@ void JetSpectrum_DrawingMacro() {
   // Draw_ResponseMatrices_detectorResponse(iDataset, iRadius);
   // Draw_ResponseMatrices_DetectorAndFluctuationsCombined(iDataset, iRadius, optionsAnalysis);
 
-  // // Draw_Pt_spectrum_unfolded_FluctResponseOnly(iDataset, iRadius, optionsAnalysis); // NOT FIXED YET - result meaningless
+  // // // Draw_Pt_spectrum_unfolded_FluctResponseOnly(iDataset, iRadius, optionsAnalysis); // NOT FIXED YET - result meaningless
   // Draw_Pt_spectrum_raw(iDataset, iRadius, optionsAnalysis);
   // Draw_Pt_spectrum_mcp(iDataset, iRadius, optionsAnalysis);
   // Draw_Pt_spectrum_mcdMatched(iDataset, iRadius, optionsAnalysis);
@@ -116,7 +116,7 @@ void JetSpectrum_DrawingMacro() {
   // Draw_kinematicEfficiency(iDataset, iRadius, optionsAnalysis);
   // Draw_FakeRatio(iDataset, iRadius, optionsAnalysis);
 
-  int unfoldParameterInput = 5;
+  int unfoldParameterInput = 7;
   Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput, optionsAnalysis);
   // int unfoldParameterInput2 = 8;
   // Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput2, optionsAnalysis);
@@ -701,15 +701,15 @@ void Draw_Pt_spectrum_unfolded(int iDataset, int iRadius, int unfoldParameterInp
   Draw_TH1_Histograms(H1D_jetPt_unfolded_mcpComp, unfoldedTruthCompLegend, 2, textContext, pdfName_mcpComp, texPtX, yAxisLabel, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "logy");
   if (divideSuccessMcp){
     TString* pdfName_ratio_mcp = new TString(pdfTitleBase+unfoldingInfo+"_mcpComp_ratio");
-    TString* texRatioMcpUnfmcd = new TString("mcp / Unf(mcd)");
-    // Draw_TH1_Histogram(H1D_jetPt_ratio_mcp, textContext, pdfName_ratio_mcp, texPtX, texRatioMcpUnfolded, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "zoomToOneLarge,ratioLine");
-    // TString* pdfName_ratio_mcp_zoom = new TString(pdfTitleBase+unfoldingInfo+"_mcpComp_ratio_zoom");
-    // Draw_TH1_Histogram(H1D_jetPt_ratio_mcp, textContext, pdfName_ratio_mcp_zoom, texPtX, texRatioMcpUnfolded, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "zoomToOneLarge,ratioLine,zoomToOneMedium2");
-
-
-    Draw_TH1_Histogram(H1D_jetPt_ratio_mcp, textContext, pdfName_ratio_mcp, texPtX, texRatioMcpUnfmcd, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "zoomToOneLarge,ratioLine");
+    // TString* texRatioMcpUnfmcd = new TString("mcp / Unf(mcd)");
+    Draw_TH1_Histogram(H1D_jetPt_ratio_mcp, textContext, pdfName_ratio_mcp, texPtX, texRatioMcpUnfolded, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "zoomToOneLarge,ratioLine");
     TString* pdfName_ratio_mcp_zoom = new TString(pdfTitleBase+unfoldingInfo+"_mcpComp_ratio_zoom");
-    Draw_TH1_Histogram(H1D_jetPt_ratio_mcp, textContext, pdfName_ratio_mcp_zoom, texPtX, texRatioMcpUnfmcd, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "zoomToOneLarge,ratioLine,zoomToOneMedium2");
+    Draw_TH1_Histogram(H1D_jetPt_ratio_mcp, textContext, pdfName_ratio_mcp_zoom, texPtX, texRatioMcpUnfolded, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "zoomToOneLarge,ratioLine,zoomToOneMedium2");
+
+
+    // Draw_TH1_Histogram(H1D_jetPt_ratio_mcp, textContext, pdfName_ratio_mcp, texPtX, texRatioMcpUnfmcd, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "zoomToOneLarge,ratioLine");
+    // TString* pdfName_ratio_mcp_zoom = new TString(pdfTitleBase+unfoldingInfo+"_mcpComp_ratio_zoom");
+    // Draw_TH1_Histogram(H1D_jetPt_ratio_mcp, textContext, pdfName_ratio_mcp_zoom, texPtX, texRatioMcpUnfmcd, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "zoomToOneLarge,ratioLine,zoomToOneMedium2");
   
 
   }

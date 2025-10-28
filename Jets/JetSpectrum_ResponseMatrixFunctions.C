@@ -508,6 +508,15 @@ void Get_PtResponseMatrix_Fluctuations(TH2D* &H2D_jetPtResponseMatrix_fluctuatio
     NormaliseRawHistToIntegral(H1D_fluctuations); // normalising fluctuations to 1
     // cout << "Integral H1D_fluctuations: " << H1D_fluctuations->Integral(1, H1D_fluctuations->GetNbinsX()) << endl;
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    TString priorInfo = (TString)(TString)mergingPrior+"-"+(TString)unfoldingPrior;
+    TString* pdfName = new TString("deltapt");
+      TString textContext(contextCustomOneField(*texDatasetsComparisonCommonDenominator, ""));
+    Draw_TH1_Histogram(H1D_fluctuations, textContext, pdfName, texPtJetGenX, texJetKinematicEfficiency, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
     TH2D H2D_response = TH2D("H2D_response_"+partialUniqueSpecifier, "H2D_response_"+partialUniqueSpecifier, nBinPtJetsFine[iRadius], ptBinsJetsFine[iRadius], nBinPtJetsFine[iRadius], ptBinsJetsFine[iRadius]); 
 
     //==================== Build response matrix: shift deltaPt by pT gen along the pT rec axis ====================//
