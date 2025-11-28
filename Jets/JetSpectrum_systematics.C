@@ -20,16 +20,26 @@
 #include "TSVDUnfold.h"
 
 //My Libraries
-#include "./JetSpectrum.C" 
 #include "./JetSpectrum_settings.h"
+#include "./JetSpectrum_inputs.h"
+
+#include "./JetSpectrum_ResponseMatrixFunctions.h"
+#include "./JetSpectrum_ResponseMatrixFunctions.C"
+#include "./JetSpectrum_SpectraGetters.h"
+#include "./JetSpectrum_SpectraGetters.C"
+#include "./JetSpectrum_Unfolding.h"
+#include "./JetSpectrum_Unfolding.C"
+#include "./JetSpectrum_EfficiencyPurityGetters.h"
+#include "./JetSpectrum_EfficiencyPurityGetters.C"
+
 #include "../Settings/AxisTitles.h"
 #include "../Settings/GlobalSettings.h"
 #include "../Utilities/AnalysisUtilities.h"
 #include "../Utilities/HistogramUtilities.h"
 #include "../Utilities/HistogramPlotting.h"
-#include "../Utilities/AnalysisUtilities.C" // bizarre but only including the .h fils doesn't work for the standard 'root macro.C+' method, I need to include the .C as well
-#include "../Utilities/HistogramUtilities.C" // bizarre but only including the .h fils doesn't work for the standard 'root macro.C+' method, I need to include the .C as well
-#include "../Utilities/HistogramPlotting.C" // bizarre but only including the .h fils doesn't work for the standard 'root macro.C+' method, I need to include the .C as well
+#include "../Utilities/AnalysisUtilities.C" 
+#include "../Utilities/HistogramUtilities.C"
+#include "../Utilities/HistogramPlotting.C" 
 
 #include<array>
 #include <iomanip>
@@ -43,8 +53,8 @@ void LoadLibs_Systematics();
 
 
 
-void Get_systematics_UnfoldMethod(TH1D* &hSystematicUncertainty, TH1D* &hSystematicUncertainty_PreBarlow, int iDataset, int iRadius, int unfoldParameterInput, std::string options);
-void Draw_Systematics_UnfoldMethod(int iDataset, int iRadius, int unfoldParameterInput, std::string options);
+void Get_systematics_UnfoldMethod(TH1D* &hSystematicUncertainty, TH1D* &hSystematicUncertainty_PreBarlow, int iDataset, int iRadius, char** unfoldingMethodList, int* unfoldParameterInputList, int nUnfoldingMethods, std::string options);
+void Draw_Systematics_UnfoldMethod(int iDataset, int iRadius, char** unfoldingMethodList, int* unfoldParameterInputList, int nUnfoldingMethods, std::string options);
 
 /////////////////////////////////////////////////////
 ///////////////////// Main Macro ////////////////////
@@ -64,17 +74,18 @@ void JetSpectrum_systematics() {
   // gathers the analysis options in a single char[]
 
   int iDataset = 0;
-  int iRadius = 0;
+  int iRadius = 1;
 
-  int unfoldParameterInput = 20;
-
-  float centRange[2];
-  centRange[0] = arrayCentralityIntervals[0][0];
-  centRange[1] = arrayCentralityIntervals[0][1];
 
   char optionsAnalysis_withoutUnfoldingMethod[100] = "";
-  snprintf(optionsAnalysis_withoutUnfoldingMethod, sizeof(optionsAnalysis_withoutUnfoldingMethod), "%s,%s,%s", mergingPrior, unfoldingPrior, normMethod);
-  Draw_Systematics_UnfoldMethod(iDataset, iRadius, centRange, unfoldParameterInput, optionsAnalysis_withoutUnfoldingMethod);
+  snprintf(optionsAnalysis_withoutUnfoldingMethod, sizeof(optionsAnalysis_withoutUnfoldingMethod), "%s,%s", mergingPrior, unfoldingPrior);
+
+
+  const int nUnfoldingMethods = 2;
+  char* unfoldingMethodList[nUnfoldingMethods] = {"Svd", "Bayes"}; // default is the first one in this list
+  int unfoldParameterInputList[2] = {7, 5};
+
+  Draw_Systematics_UnfoldMethod(iDataset, iRadius, unfoldingMethodList, unfoldParameterInputList, nUnfoldingMethods, optionsAnalysis_withoutUnfoldingMethod);
 }
 
 /////////////////////////////////////////////////////
@@ -139,8 +150,7 @@ void SetStyle_Systematics(Bool_t graypalette) {
 }
 
 
-
-void Get_systematics_UnfoldMethod(TH1D* &hSystematicUncertainty, TH1D* &hSystematicUncertainty_PreBarlow, int iDataset, int iRadius, int unfoldParameterInput, std::string options) {
+void Get_systematics_UnfoldMethod(TH1D* &hSystematicUncertainty, TH1D* &hSystematicUncertainty_PreBarlow, int iDataset, int iRadius, char** unfoldingMethodList, int* unfoldParameterInputList, int nUnfoldingMethods, std::string options) {
 
   TH1D* hTempSystematicUncertainty = new TH1D("hTempSystematicUncertainty", "hTempSystematicUncertainty", nBinPtJetsGen[iRadius], ptBinsJetsGen[iRadius]);
   TH1D* hTempSystematicUncertainty_PreBarlow = new TH1D("hTempSystematicUncertainty_PreBarlow", "hTempSystematicUncertainty_PreBarlow", nBinPtJetsGen[iRadius], ptBinsJetsGen[iRadius]);
@@ -148,11 +158,9 @@ void Get_systematics_UnfoldMethod(TH1D* &hSystematicUncertainty, TH1D* &hSystema
   hTempSystematicUncertainty_PreBarlow->Sumw2();
   hTempSystematicUncertainty->Reset("M");
   hTempSystematicUncertainty_PreBarlow->Reset("M");
-  TString partialUniqueSpecifier = Datasets[iDataset]+"_R="+Form("%.1f",arrayRadius[iRadius])+"_@cent["+Form("%.1f", centRange[0])+","+Form("%.1f", centRange[1])+"]_kBayes="+Form("%i", unfoldParameterInput);
+  TString partialUniqueSpecifier = Datasets[iDataset]+"_R="+Form("%.1f",arrayRadius[iRadius]);
 
   // return histogram that has the systematics in its contents
-  const int nUnfoldingMethods = 2;
-  char* unfoldingMethodList[nUnfoldingMethods] = {"Svd", "Bayes"}; // default is the first one in this list
   TH1D* H1D_jetPt_unfolded[nUnfoldingMethods];
   TH1D* H1D_jetPt_unfolded_differences[nUnfoldingMethods-1];
 
@@ -172,14 +180,14 @@ void Get_systematics_UnfoldMethod(TH1D* &hSystematicUncertainty, TH1D* &hSystema
 
   char optionsAnalysis_withUnfoldingMethod[100] = "";
   for(int iMethod = 0; iMethod < nUnfoldingMethods; iMethod++){
-    snprintf(optionsAnalysis_withUnfoldingMethod, sizeof(optionsAnalysis_withUnfoldingMethod), "%s,%s", options, unfoldingMethodList[iMethod]);
-    Get_Pt_spectrum_unfolded(H1D_jetPt_unfolded[iMethod], measuredInput, iDataset, iRadius, centRange, unfoldParameterInput, optionsAnalysis_withUnfoldingMethod);
+    snprintf(optionsAnalysis_withUnfoldingMethod, sizeof(optionsAnalysis_withUnfoldingMethod), "%s,%s", options.c_str(), (const char*)unfoldingMethodList[iMethod]);
+    Get_Pt_spectrum_unfolded(H1D_jetPt_unfolded[iMethod], measuredInput, iDataset, iRadius, unfoldParameterInputList[iMethod], optionsAnalysis_withUnfoldingMethod);
 
     if (iMethod != 0) {
       H1D_jetPt_unfolded_differences[iMethod-1] = (TH1D*)H1D_jetPt_unfolded[iMethod]->Clone("H1D_jetPt_unfolded_differences"+partialUniqueSpecifier);
       H1D_jetPt_unfolded_differences[iMethod-1]->Add(H1D_jetPt_unfolded[0],-1);
     }
-    cout << "do I want the absolute value of teh difference?" << endl;
+    cout << "do I want the absolute value of the difference?" << endl;
   }
 
   // cout << "Do I apply Barlow condition even though not param variation ? check paper again" << endl; YES, the subset of data thing is only shown for first demonstration, but barlow says it holds true even if that's not the cast
@@ -206,7 +214,7 @@ void Get_systematics_UnfoldMethod(TH1D* &hSystematicUncertainty, TH1D* &hSystema
     Double_t StatUncertainty_MaxDeviationCase = H1D_jetPt_unfolded[id_SignalExtractionType_maxDeviation]->GetBinError(iBinPt);
  
     int PtArrayIterator = iBinPt - 1;
-    hSigmaBarlow[PtArrayIterator] = sqrt(abs(StatUncertainty_MaxDeviationCase*StatUncertainty_MaxDeviationCase - StatUncertainty_REF*StatUncertainty_REF)); //stat error of the difference in the case of subsample
+    hSigmaBarlow[PtArrayIterator] = sqrt(abs(StatUncertainty_MaxDeviationCase*StatUncertainty_MaxDeviationCase - StatUncertainty_REF*StatUncertainty_REF)); //stat error of the difference in the case of subsample : sqrt( | sigma1_{unfBayes}^2 - sigma_{unfSVD}^2 | )
  
     hTempSystematicUncertainty_PreBarlow->SetBinContent(iBinPt,SystUncertainty);
     hTempSystematicUncertainty_PreBarlow->SetBinError(iBinPt,hSigmaBarlow[PtArrayIterator]);
@@ -227,15 +235,15 @@ void Get_systematics_UnfoldMethod(TH1D* &hSystematicUncertainty, TH1D* &hSystema
 
 
 
-void Draw_Systematics_UnfoldMethod(int iDataset, int iRadius, int unfoldParameterInput, std::string options) {
+void Draw_Systematics_UnfoldMethod(int iDataset, int iRadius, char** unfoldingMethodList, int* unfoldParameterInputList, int nUnfoldingMethods, std::string options) {
 
   TH1D* hSystematicUncertainty;
   TH1D* hSystematicUncertainty_PreBarlow;
-  Get_systematics_UnfoldMethod(hSystematicUncertainty, hSystematicUncertainty_PreBarlow, iDataset, iRadius, centRange, unfoldParameterInput, options);
+  Get_systematics_UnfoldMethod(hSystematicUncertainty, hSystematicUncertainty_PreBarlow, iDataset, iRadius, unfoldingMethodList, unfoldParameterInputList, nUnfoldingMethods, options);
 
   TH1D* H1D_jetPt_unfolded;
   char optionsAnalysis_withUnfoldingMethod[100] = "";
-  snprintf(optionsAnalysis_withUnfoldingMethod, sizeof(optionsAnalysis_withUnfoldingMethod), "%s,%s", options, unfoldingMethod);
+  snprintf(optionsAnalysis_withUnfoldingMethod, sizeof(optionsAnalysis_withUnfoldingMethod), "%s,%s", options.c_str(), (const char*)unfoldingMethod);
 
   TH1D* measuredInput;
   if (!normGenAndMeasByNEvtsBeforeUnfolding) {
@@ -250,18 +258,18 @@ void Draw_Systematics_UnfoldMethod(int iDataset, int iRadius, int unfoldParamete
     }
   }
   
-  Get_Pt_spectrum_unfolded(H1D_jetPt_unfolded, measuredInput, iDataset, iRadius, centRange, unfoldParameterInput, optionsAnalysis_withUnfoldingMethod);
+  Get_Pt_spectrum_unfolded(H1D_jetPt_unfolded, measuredInput, iDataset, iRadius, unfoldParameterInputList[0], optionsAnalysis_withUnfoldingMethod); //SVD unfolding as reference
   hSystematicUncertainty->Divide(H1D_jetPt_unfolded); //get it as a ratio of ref corrected yield
   hSystematicUncertainty_PreBarlow->Divide(H1D_jetPt_unfolded); //get it as a ratio of ref corrected yield
 
 
-  TString partialUniqueSpecifier = Datasets[iDataset]+"_R="+Form("%.1f",arrayRadius[iRadius])+"_@cent["+Form("%.1f", centRange[0])+","+Form("%.1f", centRange[1])+"]_kBayes="+Form("%i", unfoldParameterBayes);
+  TString partialUniqueSpecifier = Datasets[iDataset]+"_R="+Form("%.1f",arrayRadius[iRadius])+"]_"+unfoldingMethodList[0]+"_kUnfold="+Form("%i", unfoldParameterInputList[0]);
 
   TString* pdfName = new TString("Systematics_UnfoldMethod_"+partialUniqueSpecifier);
   TString* pdfName_PreBarlow = new TString("Systematics_UnfoldMethod_"+partialUniqueSpecifier+"_PreBarlow");
 
   TString textContext("");
 
-  Draw_TH1_Histogram(hSystematicUncertainty, textContext, pdfName, texPtJetRecX, texCount, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
-  Draw_TH1_Histogram(hSystematicUncertainty_PreBarlow, textContext, pdfName_PreBarlow, texPtJetRecX, texCount, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
+  Draw_TH1_Histogram(hSystematicUncertainty, textContext, pdfName, texPtJetRecX, texSystematicsPercent, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
+  Draw_TH1_Histogram(hSystematicUncertainty_PreBarlow, textContext, pdfName_PreBarlow, texPtJetRecX, texSystematicsPercent, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
 }

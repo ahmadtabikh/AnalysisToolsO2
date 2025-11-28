@@ -174,11 +174,11 @@ void JetQC() {
   // Draw_PtPeakPosition_vs_leadTrackCut(etaRangeSym, jetRadiusForDataComp);
   // Draw_PtLeadCutStudy_PtOfRatio1(etaRangeSym, "", jetRadiusForDataComp);
 
-  Draw_Pt_DatasetComparison(etaRangeSym,"normEvents", jetRadiusForDataComp);
+  // Draw_Pt_DatasetComparison(etaRangeSym,"normEvents", jetRadiusForDataComp);
   // Draw_Pt_DatasetComparison_withRun2RitsuyaHardcoded(etaRangeSym, "normEvents", jetRadiusForDataComp);
   // Draw_2D_DatasetComparison(etaRangeSym, "etaphi", jetRadiusForDataComp, 0) ;
   // Draw_2D_Tracks_eta_phi_DatasetComparasion(0);
-  // Draw_Pt_Comparison_MC_Data(etaRangeSym, "normEvents", jetRadiusForDataComp) ;
+  Draw_Pt_Comparison_MC_Data(etaRangeSym, "normEvents", jetRadiusForDataComp) ;
 
   
 
@@ -4599,7 +4599,13 @@ void Draw_Pt_Comparison_MC_Data(float* etaRange, std::string options, float jetR
   float EtaCutHigh = etaRange[1];
   int ibinJetRadius = 0;
 
+  TH1D* test = (TH1D*)((TH1D*)file_O2Analysis_list[0]->Get(analysisWorkflow[0]+"/h_track_pt"+jetFinderQaHistType[iJetFinderQaType]))->Clone("test_h_track_pt"+Datasets[0]+DatasetsNames[0]);
+  test->Scale(-1);
+    TCanvas* c1 = new TCanvas("c1","c1",800,600);
+    test->Draw();
+
   TString* yAxisLabel;
+  
   for(int iDataset = 0; iDataset < nDatasets; iDataset++){
 
     H3D_jetRjetPtjetEtaData[iDataset] = (TH3D*)((TH3D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h3_jet_pt_jet_eta_jet_phi"+jetFinderQaHistType[iJetFinderQaType]))->Clone("pt_Data"+Datasets[iDataset]+DatasetsNames[iDataset]+"Radius"+Form("%.1f",jetRadius)+jetRadius+Form("%.1f", etaRange[0])+"<eta<"+Form("%.1f", etaRange[1]));
@@ -4707,7 +4713,7 @@ void Draw_Pt_Comparison_MC_Data(float* etaRange, std::string options, float jetR
 
 
 
-    ///// ratio between data & MC 
+    /// ratio between data & MC 
     // Clone the data histogram (numerator) to preserve binning and axis titles
     TH1D* hRatioPt = (TH1D*)PtDataMCpairs[0]->Clone("hRatioPt_" + Datasets[iDataset]);
     TH1D* hRatioEta = (TH1D*)EtaDataMCpairs[0]->Clone("hRatioEta_" + Datasets[iDataset]);
@@ -4730,20 +4736,22 @@ void Draw_Pt_Comparison_MC_Data(float* etaRange, std::string options, float jetR
     Draw_TH1_Histogram(hRatioPhi, textContext, pdfName_ratioPhi, texPhiX, yAxisLabelRatio, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "ratioLine");
 
 
+    
 
 
 
-    // Clean up
-    delete[] PtDataMCpairs;
-    delete[] EtaDataMCpairs;
-    delete[] PhiDataMCpairs;
-    delete pdfNamePt;
-    delete pdfNameEta;
-    delete pdfNamePhi;
 
-    delete pdfName_ratioPt;
-    delete pdfName_ratioEta;
-    delete pdfName_ratioPhi;
+    // // Clean up
+    // delete[] PtDataMCpairs;
+    // delete[] EtaDataMCpairs;
+    // delete[] PhiDataMCpairs;
+    // delete pdfNamePt;
+    // delete pdfNameEta;
+    // delete pdfNamePhi;
+
+    // delete pdfName_ratioPt;
+    // delete pdfName_ratioEta;
+    // delete pdfName_ratioPhi;
 
     
 

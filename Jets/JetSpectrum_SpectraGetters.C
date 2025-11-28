@@ -523,15 +523,15 @@ void Get_Pt_spectrum_mcp_genBinning_preWidthScalingAtEnd(TH1D* &H1D_jetPt_mcp, i
   if (normaliseDistribsBeforeUnfolding) {
     if (mcIsWeighted) {
       if (!fcontrolMC) {
-        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen_weighted( file_O2Analysis_MCfileForMatrix[iDataset], analysisWorkflowMC));
+        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen_weighted( file_O2Analysis_MCfileForMatrix, analysisWorkflowMC));
       } else {
-        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen_weighted( file_O2Analysis_ppSimDetectorEffect_unfoldingControl[iDataset], analysisWorkflow_unfoldingControl));
+        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen_weighted( file_O2Analysis_ppSimDetectorEffect_unfoldingControl, analysisWorkflow_unfoldingControl));
       }
     } else {
       if (!fcontrolMC) {
-        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen( file_O2Analysis_MCfileForMatrix[iDataset], analysisWorkflowMC));
+        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen( file_O2Analysis_MCfileForMatrix, analysisWorkflowMC));
       } else {
-        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen( file_O2Analysis_ppSimDetectorEffect_unfoldingControl[iDataset], analysisWorkflow_unfoldingControl));
+        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen( file_O2Analysis_ppSimDetectorEffect_unfoldingControl, analysisWorkflow_unfoldingControl));
       }
     }
   }
@@ -550,15 +550,15 @@ void Get_Pt_spectrum_mcp_fineBinning_preWidthScalingAtEnd(TH1D* &H1D_jetPt_mcp, 
   if (normaliseDistribsBeforeUnfolding) {
     if (mcIsWeighted) {
       if (!fcontrolMC) {
-        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen_weighted( file_O2Analysis_MCfileForMatrix[iDataset], analysisWorkflowMC));
+        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen_weighted( file_O2Analysis_MCfileForMatrix, analysisWorkflowMC));
       } else {
-        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen_weighted( file_O2Analysis_ppSimDetectorEffect_unfoldingControl[iDataset], analysisWorkflow_unfoldingControl));
+        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen_weighted( file_O2Analysis_ppSimDetectorEffect_unfoldingControl, analysisWorkflow_unfoldingControl));
       }
     } else {
       if (!fcontrolMC) {
-        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen( file_O2Analysis_MCfileForMatrix[iDataset], analysisWorkflowMC));
+        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen( file_O2Analysis_MCfileForMatrix, analysisWorkflowMC));
       } else {
-        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen( file_O2Analysis_ppSimDetectorEffect_unfoldingControl[iDataset], analysisWorkflow_unfoldingControl));
+        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen( file_O2Analysis_ppSimDetectorEffect_unfoldingControl, analysisWorkflow_unfoldingControl));
       }
     }
   }
@@ -690,9 +690,9 @@ void Get_Pt_spectrum_mcpMatched_genBinning_preWidthScalingAtEnd(TH1D* &H1D_jetPt
 
   if (normaliseDistribsBeforeUnfolding) {
     if (mcIsWeighted) {
-      NormaliseRawHistToNEvents(H1D_jetPt_mcpMatched, GetNEventsSelected_JetFramework_gen_weighted( file_O2Analysis_MCfileForMatrix[iDataset], analysisWorkflowMC));
+      NormaliseRawHistToNEvents(H1D_jetPt_mcpMatched, GetNEventsSelected_JetFramework_gen_weighted( file_O2Analysis_MCfileForMatrix, analysisWorkflowMC));
     } else {
-      NormaliseRawHistToNEvents(H1D_jetPt_mcpMatched, GetNEventsSelected_JetFramework_gen( file_O2Analysis_MCfileForMatrix[iDataset], analysisWorkflowMC));
+      NormaliseRawHistToNEvents(H1D_jetPt_mcpMatched, GetNEventsSelected_JetFramework_gen( file_O2Analysis_MCfileForMatrix, analysisWorkflowMC));
     }
   }
 }
@@ -709,9 +709,9 @@ void Get_Pt_spectrum_mcpMatched_fineBinning_preWidthScalingAtEnd(TH1D* &H1D_jetP
 
   if (normaliseDistribsBeforeUnfolding) {
     if (mcIsWeighted) {
-      NormaliseRawHistToNEvents(H1D_jetPt_mcpMatched, GetNEventsSelected_JetFramework_gen_weighted( file_O2Analysis_MCfileForMatrix[iDataset], analysisWorkflowMC));
+      NormaliseRawHistToNEvents(H1D_jetPt_mcpMatched, GetNEventsSelected_JetFramework_gen_weighted( file_O2Analysis_MCfileForMatrix, analysisWorkflowMC));
     } else {
-      NormaliseRawHistToNEvents(H1D_jetPt_mcpMatched, GetNEventsSelected_JetFramework_gen( file_O2Analysis_MCfileForMatrix[iDataset], analysisWorkflowMC));
+      NormaliseRawHistToNEvents(H1D_jetPt_mcpMatched, GetNEventsSelected_JetFramework_gen( file_O2Analysis_MCfileForMatrix, analysisWorkflowMC));
     }
   }
 }
@@ -729,15 +729,15 @@ void Get_Pt_spectrum_mcp_recBinning_preWidthScalingAtEnd(TH1D* &H1D_jetPt_mcp, i
   if (normaliseDistribsBeforeUnfolding) {
     if (mcIsWeighted) {
       if (!fcontrolMC) {
-        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen_weighted( file_O2Analysis_MCfileForMatrix[iDataset], analysisWorkflowMC));
+        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen_weighted( file_O2Analysis_MCfileForMatrix, analysisWorkflowMC));
       } else {
-        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen_weighted( file_O2Analysis_ppSimDetectorEffect_unfoldingControl[iDataset], analysisWorkflow_unfoldingControl));
+        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen_weighted( file_O2Analysis_ppSimDetectorEffect_unfoldingControl, analysisWorkflow_unfoldingControl));
       }
     } else {
       if (!fcontrolMC) {
-        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen( file_O2Analysis_MCfileForMatrix[iDataset], analysisWorkflowMC));
+        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen( file_O2Analysis_MCfileForMatrix, analysisWorkflowMC));
       } else {
-        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen( file_O2Analysis_ppSimDetectorEffect_unfoldingControl[iDataset], analysisWorkflow_unfoldingControl));
+        NormaliseRawHistToNEvents(H1D_jetPt_mcp, GetNEventsSelected_JetFramework_gen( file_O2Analysis_ppSimDetectorEffect_unfoldingControl, analysisWorkflow_unfoldingControl));
       }
     }
   }

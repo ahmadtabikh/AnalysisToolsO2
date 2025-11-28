@@ -505,14 +505,55 @@ void Get_PtResponseMatrix_Fluctuations(TH2D* &H2D_jetPtResponseMatrix_fluctuatio
     int ibinCent_high = H2D_fluctuations_centrality->GetXaxis()->FindBin(centralityRange[1]);
     H1D_fluctuations = (TH1D*)H2D_fluctuations_centrality->ProjectionY("bkgFluctuationCentrality_highRes_"+partialUniqueSpecifier, ibinCent_low, ibinCent_high, "e");
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    TCanvas* ctest = new TCanvas("ctest", "Fluctuations_ProjY_of_bkgFluctuationCentrality", 800, 600);
+    H1D_fluctuations->GetXaxis()->SetRange(0, H1D_fluctuations->GetNbinsX() + 1);
+    H1D_fluctuations->Draw(); 
+    ctest->Update();
+    int nBinsFluc = H1D_fluctuations->GetNbinsX();
+    cout << "Number of bins = " << nBinsFluc << std::endl;
+    cout << "Bin#\tLowEdge\tHighEdge\tContent\tError" << std::endl;
+    for (int i = 1; i <= nBinsFluc; i++) {
+        double lowEdge  = H1D_fluctuations->GetBinLowEdge(i);
+        double highEdge = H1D_fluctuations->GetBinLowEdge(i+1);
+        double content  = H1D_fluctuations->GetBinContent(i);
+        double error    = H1D_fluctuations->GetBinError(i);
+        cout << i << "\t" << lowEdge << "\t" << highEdge << "\t" << content << "\t" << error << std::endl;
+    }
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    TString priorInfo = (TString)(TString)mergingPrior+"-"+(TString)unfoldingPrior;
+    TString* pdfName_deltapt = new TString("deltapt_beforeNormalisation");
+    TString textContext(contextCustomOneField(*texDatasetsComparisonCommonDenominator, ""));
+    TString* texdeltapt = new TString("#delta#it{p}_{T} (GeV/#it{c})");
+    TString* counts_deltapt = new TString("counts ");
+    Draw_TH1_Histogram(H1D_fluctuations, textContext, pdfName_deltapt, texdeltapt, counts_deltapt, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "logy");
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
     NormaliseRawHistToIntegral(H1D_fluctuations); // normalising fluctuations to 1
     // cout << "Integral H1D_fluctuations: " << H1D_fluctuations->Integral(1, H1D_fluctuations->GetNbinsX()) << endl;
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    TString priorInfo = (TString)(TString)mergingPrior+"-"+(TString)unfoldingPrior;
-    TString* pdfName = new TString("deltapt");
-      TString textContext(contextCustomOneField(*texDatasetsComparisonCommonDenominator, ""));
-    Draw_TH1_Histogram(H1D_fluctuations, textContext, pdfName, texPtJetGenX, texJetKinematicEfficiency, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
+    // TString priorInfo = (TString)(TString)mergingPrior+"-"+(TString)unfoldingPrior;
+    TString* pdfName = new TString("deltapt_normalizedToIntegral");
+    // TString textContext(contextCustomOneField(*texDatasetsComparisonCommonDenominator, ""));
+    TString* norm_deltapt = new TString("pdf");
+    Draw_TH1_Histogram(H1D_fluctuations, textContext, pdfName, texdeltapt, norm_deltapt, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "logy");
+    // int underflowBin = -50; // by definition
+    int underflowBin = H1D_fluctuations->GetNbinsX() + 1;
+
+    double content = H1D_fluctuations->GetBinContent(underflowBin);
+    double error   = H1D_fluctuations->GetBinError(underflowBin);
+    double binLowEdge = H1D_fluctuations->GetBinLowEdge(underflowBin);
+    double binHighEdge = H1D_fluctuations->GetBinLowEdge(underflowBin + 1);
+
+    cout << "H1D_fluctuations_norm Underflow bin number: " << underflowBin << std::endl;
+    cout << "H1D_fluctuations_norm Underflow Bin range: [" << binLowEdge << ", " << binHighEdge << "]" << std::endl;
+    cout << "H1D_fluctuations_norm Underflow Bin Content: " << content << " ± " << error << std::endl;
+
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -521,22 +562,26 @@ void Get_PtResponseMatrix_Fluctuations(TH2D* &H2D_jetPtResponseMatrix_fluctuatio
 
     //==================== Build response matrix: shift deltaPt by pT gen along the pT rec axis ====================//
     int ibinZeroFluct= H1D_fluctuations->FindBin(0+GLOBAL_epsilon);
+    cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+    cout << "ibinZeroFluct = " << ibinZeroFluct << std::endl;
+    cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+
     double integralError;
     double ptGen, ptRec_low, ptRec_up;
     int iBin_fluct_low, iBin_fluct_high;
     for(int iBinRec = 0; iBinRec <= H2D_response.GetNbinsX()+1; iBinRec++){
       for(int iBinGen = 0; iBinGen <= H2D_response.GetNbinsY()+1; iBinGen++){
-        ptGen = H2D_response.GetYaxis()->GetBinCenter(iBinGen); // was bincenter before but then it'd give .5 values of GeV, and 
-        ptRec_low = H2D_response.GetXaxis()->GetBinLowEdge(iBinRec);
-        ptRec_up = H2D_response.GetXaxis()->GetBinLowEdge(iBinRec+1);
+        ptGen = H2D_response.GetYaxis()->GetBinCenter(iBinGen); // was bincenter before but then it'd give 0.5 values of GeV,
+        ptRec_low = H2D_response.GetXaxis()->GetBinLowEdge(iBinRec); //lower edge  = (X value) : 0
+        ptRec_up = H2D_response.GetXaxis()->GetBinLowEdge(iBinRec+1); //1
         // int iBin_fluct_low = H1D_fluctuations->GetXaxis()->FindBin(ptRec_low - ptGen + GLOBAL_epsilon);
         // int iBin_fluct_high = H1D_fluctuations->GetXaxis()->FindBin(ptRec_up - ptGen - GLOBAL_epsilon);
-        iBin_fluct_low = H1D_fluctuations->GetXaxis()->FindBin(ptRec_low - ptGen + GLOBAL_epsilon);
+        iBin_fluct_low = H1D_fluctuations->GetXaxis()->FindBin(ptRec_low - ptGen + GLOBAL_epsilon); //0-0.5 =-0.5 --> bin for -0.5 = 1
         if (iBinGen == 10 && (iBin_fluct_low >= iBin_fluct_high)) { // checks iBinRec =10 so that the message doesn't appear NbinsX*NBinsY times
           cout << "Get_PtResponseMatrix_Fluctuations: some bins are counted twice in the integral, binning needs to be looked at, right now the fluctuation matrix has too many entries" << endl;
         }
-        iBin_fluct_high = H1D_fluctuations->GetXaxis()->FindBin(ptRec_up - ptGen - GLOBAL_epsilon)-1;
-        H2D_response.SetBinContent(iBinRec, iBinGen, H1D_fluctuations->IntegralAndError(iBin_fluct_low, iBin_fluct_high, integralError)); 
+        iBin_fluct_high = H1D_fluctuations->GetXaxis()->FindBin(ptRec_up - ptGen - GLOBAL_epsilon)-1; // 1-0.5 =0.5 --> bin for 0.5 = 2,  //FindBin(x) returns the bin index corresponding to a given x-value in a histogram.
+        H2D_response.SetBinContent(iBinRec, iBinGen, H1D_fluctuations->IntegralAndError(iBin_fluct_low, iBin_fluct_high, integralError)); //in (0,0) bin, content is the integration from bin 1 to 2
         H2D_response.SetBinError(iBinRec, iBinGen, integralError); 
         // if (iBinRec == 10) {
         //   cout << "DeltaBin = " << iBin_fluct_high - iBin_fluct_low << ", iBin_low = " << iBin_fluct_low << ", iBin_high = " << iBin_fluct_high << endl;
@@ -549,6 +594,11 @@ void Get_PtResponseMatrix_Fluctuations(TH2D* &H2D_jetPtResponseMatrix_fluctuatio
       cout << "!!!!!!Response matrix of fluctuations does not have line integral equal to 1; something is wrong with binning!!!!!!" << endl;
       cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
     }
+    cout << "Integral over X for Y bin 10 = " << integralCheck << std::endl;
+    float integralCheck120 = H2D_response.Integral(1, H2D_response.GetNbinsX(), 120, 120);
+    cout << "Integral over X for Y bin 120 = " << integralCheck120 << std::endl;
+
+
 
     //========================================= Build response matrix end =========================================//
 

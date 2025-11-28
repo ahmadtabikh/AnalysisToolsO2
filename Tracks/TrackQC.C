@@ -79,6 +79,11 @@ void Draw_DcaXY_DatasetComp();
 
 void Draw_tracks_2D_profile(std::string options, int refIndex);
 
+void Draw_Phi_Data_MC_RunByRun_Comparison(std::string options);
+void Draw_Pt_Data_MC_RunByRun_Comparison(std::string options);
+void Draw_Eta_Data_MC_RunByRun_Comparison(std::string options);
+
+
 /////////////////////////////////////////////////////
 ///////////////////// Main Macro ////////////////////
 /////////////////////////////////////////////////////
@@ -114,16 +119,21 @@ void TrackQC() {
   float jetPtMinCutArray[nPtBins+1] = {0, 200};
 
   // Draw_tracks_2D_profile("etaphi", 0) ;
-  Draw_Pt_DatasetComparison("evtNorm");
+  // Draw_Pt_DatasetComparison("evtNorm");
+  // Draw_Phi_Data_MC_RunByRun_Comparison("evtNorm");
+  // Draw_Eta_Data_MC_RunByRun_Comparison("evtNorm");
+  Draw_Pt_Data_MC_RunByRun_Comparison("evtNorm");
+
+
   // Draw_Pt_DatasetComparison("entriesNorm");
   for(int iPtBin = 0; iPtBin < nPtBins; iPtBin++){
     jetPtMinCut = jetPtMinCutArray[iPtBin];
     jetPtMaxCut = jetPtMinCutArray[iPtBin+1];
 
     float ptRange[2] = {jetPtMinCut, jetPtMaxCut};
-    Draw_Eta_DatasetComparison(ptRange, "evtNorm");
+    // Draw_Eta_DatasetComparison(ptRange, "evtNorm");
     // Draw_Eta_DatasetComparison(ptRange, "entriesNorm");
-    Draw_Phi_DatasetComparison(ptRange, "evtNorm");
+    // Draw_Phi_DatasetComparison(ptRange, "evtNorm");
     // Draw_Phi_DatasetComparison(ptRange, "entriesNorm");
 
   // Draw_Eta_DatasetComparison_trackSelComp();
@@ -1399,3 +1409,411 @@ void Draw_tracks_2D_profile(std::string options, int refIndex = 0){
 
 }
 
+////////////////////// Pt Tracks Data vs MC Comparison ///////////////////////
+void Draw_Pt_Data_MC_RunByRun_Comparison(std::string options) { 
+  TH3D* H3D_track[nDatasets];
+  TH2D* H2D_centrality_track[nDatasets];
+
+  TH1D* H1D_trackPt[nDatasets];
+  TH1D* H1D_trackPt_rebinned[nDatasets];
+  
+  // MC
+  TH3D* H3D_track_MC[nDatasets];
+  TH2D* H2D_centrality_track_MC[nDatasets];
+
+  TH1D* H1D_trackPt_MC[nDatasets];
+  TH1D* H1D_trackPt_rebinned_MC[nDatasets];
+
+  //ratio 
+  TH1D* H1D_trackPt_rebinned_ratios[nDatasets];
+  
+
+  bool divideSuccess = false;
+
+  double Nevents;
+
+
+  for(int iDataset = 0; iDataset < nDatasets; iDataset++){
+
+  //////////////////////////////////////////////////////////// retrieve Data hisotograms ////////////////////////////////////////////////////////////
+    // H2D_centrality_track[iDataset] = (TH2D*)((TH2D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h2_centrality_track_pt"))->Clone("Draw_Pt_Data_MC_RunByRun_Comparison"+Datasets[iDataset]+DatasetsNames[iDataset]);
+    // H1D_trackPt[iDataset] = (TH1D*)H2D_centrality_track[iDataset]->ProjectionY("trackPt_"+Datasets[iDataset]+DatasetsNames[iDataset], 0, H2D_centrality_track[iDataset]->GetNbinsX(), "e");
+    
+    H1D_trackPt[iDataset] = (TH1D*)((TH1D*)file_O2Analysis_list[iDataset]->Get("jet-spectra-charged/h_track_pt"))->Clone("Draw_Pt_Data_MC_RunByRun_Comparison"+Datasets[iDataset]+DatasetsNames[iDataset]);
+    H1D_trackPt[iDataset]->Scale(-1);    
+
+    H1D_trackPt_rebinned[iDataset] = (TH1D*)H1D_trackPt[iDataset]->Rebin(1.,"trackPt_rebinned_"+Datasets[iDataset]+DatasetsNames[iDataset]);
+    cout << "H1D_trackPt_rebinned[iDataset]->GetEntries() preNorm = " << H1D_trackPt_rebinned[iDataset]->Integral() << endl;
+
+    if (options.find("evtNorm") != std::string::npos) {
+      if (isDatasetWeighted[iDataset]) {
+        Nevents = GetNEventsSelected_JetFramework_weighted(file_O2Analysis_list[iDataset], analysisWorkflow[iDataset]), analysisWorkflow[iDataset];
+      } else {
+        Nevents = GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflow[iDataset]);
+      }
+      NormaliseYieldToNEvents(H1D_trackPt_rebinned[iDataset], Nevents);
+      cout << "H1D_trackPt_rebinned[iDataset]->GetEntries() postNorm = " << H1D_trackPt_rebinned[iDataset]->Integral() << ", Nevents = " << Nevents << endl;
+    }
+    if (options.find("entriesNorm") != std::string::npos) {
+        NormaliseYieldToIntegral(H1D_trackPt_rebinned[iDataset]);
+    }
+  
+
+  //////////////////////////////////////////////////////////// retrieve MC hisotograms ////////////////////////////////////////////////////////////
+    cout << "WARNING: OBSOLETE track histogram version selected, cannot cut on pT" << endl;
+    // H2D_centrality_track_MC[iDataset] = (TH2D*)((TH2D*)file_O2AnalysisMC_list[iDataset]->Get(analysisWorkflowMC[iDataset]+"/h2_centrality_track_pt"))->Clone("Draw_Pt_Data_MC_RunByRun_Comparison"+MC_Datasets[iDataset]);
+    // H1D_trackPt_MC[iDataset] = (TH1D*)H2D_centrality_track_MC[iDataset]->ProjectionY("trackPt_"+MC_Datasets[iDataset], 0, H2D_centrality_track[iDataset]->GetNbinsX(), "e");
+
+    H1D_trackPt_MC[iDataset] = (TH1D*)((TH1D*)file_O2AnalysisMC_list[iDataset]->Get("jet-spectra-charged/h_track_pt"))->Clone("Draw_Pt_Data_MC_RunByRun_Comparison"+MC_Datasets[iDataset]);
+ 
+    
+
+    H1D_trackPt_rebinned_MC[iDataset] = (TH1D*)H1D_trackPt_MC[iDataset]->Rebin(1.,"trackPt_rebinned_"+MC_Datasets[iDataset]);
+    cout << "H1D_trackPt_rebinned_MC[iDataset]->GetEntries() preNorm = " << H1D_trackPt_rebinned_MC[iDataset]->Integral() << endl;
+
+    if (options.find("evtNorm") != std::string::npos) {
+      if (isDatasetWeighted[iDataset]) {
+        Nevents = GetNEventsSelected_JetFramework_weighted(file_O2AnalysisMC_list[iDataset], analysisWorkflowMC[iDataset]), analysisWorkflowMC[iDataset];
+      } else {
+        Nevents = GetNEventsSelected_JetFramework(file_O2AnalysisMC_list[iDataset], analysisWorkflowMC[iDataset]);
+      }
+      NormaliseYieldToNEvents(H1D_trackPt_rebinned_MC[iDataset], Nevents);
+      cout << "H1D_trackPt_rebinned_MC[iDataset]->GetEntries() postNorm = " << H1D_trackPt_rebinned_MC[iDataset]->Integral() << ", Nevents = " << Nevents << endl;
+    }
+    if (options.find("entriesNorm") != std::string::npos) {
+        NormaliseYieldToIntegral(H1D_trackPt_rebinned_MC[iDataset]);
+    }
+
+
+  /////////////////////////////////////////////////////////// Draw pairs of Data MC histograms, same run //////////////////////////////////////////////////////
+    TH1D** PtDataMCpairs = new TH1D*[2];
+    PtDataMCpairs[0] = H1D_trackPt_rebinned[iDataset];
+    PtDataMCpairs[1] = H1D_trackPt_rebinned_MC[iDataset];
+
+    const TString Names[2] = {"Data " + Datasets[iDataset],
+                              "MC " + MC_Datasets[iDataset]};
+
+
+    TString* pdfNamePairs = new TString("tracks_DataMcComp_Pt_"+DatasetsNames[iDataset]);
+    
+    // TString textContext(contextDatasetCompAndRadiusAndVarRange(jetRadius, etaRange, "eta"));
+    // TString textContext(contextCustomThreeFields(" ", " ",  "#splitline{"+contextJetRadius(jetRadius)+"}{"+contextEtaRange(etaRange)+"}", " "));
+    TString textContext(contextTrackDatasetComp(""));
+
+    std::array<std::array<float, 2>, 2> drawnWindow = {{{0, 100},{-999, -999}}};
+    std::array<std::array<float, 2>, 2> legendPlacement = {{{0.5, 0.7}, {0.75, 0.90}}}; // {{{x1, y1}, {x2, y2}}}
+    Draw_TH1_Histograms(PtDataMCpairs, Names, 2, textContext, pdfNamePairs, texPtX, texJetPtYield_EventNorm, texCollisionDataInfo, drawnWindow, legendPlacement, contextPlacementAuto, "logy");
+
+    /////////////////////////////////////////////////////////////////// Draw Ratio plots /////////////////////////////////////////////////////////////////////
+    H1D_trackPt_rebinned_ratios[iDataset] = (TH1D*)PtDataMCpairs[0]->Clone("trackPhi_rebinned_ratios"+Datasets[iDataset]+DatasetsNames[iDataset]);
+    H1D_trackPt_rebinned_ratios[iDataset]->Reset("M");
+    divideSuccess = H1D_trackPt_rebinned_ratios[iDataset]->Divide(PtDataMCpairs[0], PtDataMCpairs[1], 1., 1., datasetsAreSubsetsofId0 ? "b" : ""); // ratio = Data / MC
+
+    TString* pdfName_ratio = new TString((TString)"Ratio_tracks_DataMcComp_Pt_"+DatasetsNames[iDataset]);
+
+    // std::array<std::array<float, 2>, 2> legendPlacementCustom = {{{0.2, 0.2}, {0.4, 0.45}}}; // {{{x1, y1}, {x2, y2}}}
+    TString* texRatioDatasets = new TString("Data / MC");
+    
+    if (divideSuccess == true) {
+        TString textContext_ratio = TString(Datasets[iDataset]);
+        std::array<std::array<float, 2>, 2> drawnWindow_ratio = {{{0, 40},{0.3, 2}}};
+        Draw_TH1_Histogram(H1D_trackPt_rebinned_ratios[iDataset], textContext_ratio, pdfName_ratio, texPtX, texRatioDatasets, texCollisionDataInfo, drawnWindow, legendPlacement, contextPlacementAuto, "ratioLine");
+    }
+    else {
+      cout << "Divide failed " << endl;
+    }
+
+
+    delete[] PtDataMCpairs;
+    delete pdfNamePairs;
+    delete pdfName_ratio;
+  }
+  //enf for loop over datasets
+
+}
+
+////////////////////// Phi Tracks Data vs MC Comparison ///////////////////////
+void Draw_Phi_Data_MC_RunByRun_Comparison(std::string options) { 
+  TH3D* H3D_track[nDatasets];
+  TH2D* H2D_centrality_track[nDatasets];
+
+  TH1D* H1D_trackPhi[nDatasets];
+  TH1D* H1D_trackPhi_rebinned[nDatasets];
+  
+  // MC
+  TH3D* H3D_track_MC[nDatasets];
+  TH2D* H2D_centrality_track_MC[nDatasets];
+
+  TH1D* H1D_trackPhi_MC[nDatasets];
+  TH1D* H1D_trackPhi_rebinned_MC[nDatasets];
+
+  //ratio 
+  TH1D* H1D_trackPhi_rebinned_ratios[nDatasets];
+  
+
+  bool divideSuccess = false;
+
+  double Nevents;
+
+  // float ptCutLow = ptRange[0];
+  // float ptCutHigh = ptRange[1];
+
+  // for(int iDataset = 0; iDataset < nDatasets; iDataset++){
+  for(int iDataset = 0; iDataset < nDatasets; iDataset++){
+
+  //////////////////////////////////////////////////////////// retrieve Data hisotograms ////////////////////////////////////////////////////////////
+    if (trackHistsObsoleteVersion[iDataset]) {
+      // cout << "WARNING: OBSOLETE track histogram version selected, cannot cut on pT" << endl;
+      // H2D_centrality_track[iDataset] = (TH2D*)((TH2D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h2_centrality_track_phi"))->Clone("Draw_Phi_Data_MC_RunByRun_Comparison"+Datasets[iDataset]+DatasetsNames[iDataset]);
+      // H1D_trackPhi[iDataset] = (TH1D*)H2D_centrality_track[iDataset]->ProjectionY("trackPhi_"+Datasets[iDataset]+DatasetsNames[iDataset], 0, H2D_centrality_track[iDataset]->GetNbinsX(), "e");
+
+      H2D_centrality_track[iDataset] = (TH2D*)((TH2D*)file_O2Analysis_list[iDataset]->Get("jet-spectra-charged/h2_track_eta_track_phi"))->Clone("Draw_Phi_Data_MC_RunByRun_Comparison"+Datasets[iDataset]+DatasetsNames[iDataset]);
+      H1D_trackPhi[iDataset] = (TH1D*)H2D_centrality_track[iDataset]->ProjectionY("trackPhi_"+Datasets[iDataset]+DatasetsNames[iDataset], 0, H2D_centrality_track[iDataset]->GetNbinsX(), "e");
+      H1D_trackPhi[iDataset]->Scale(-1);
+    } else {
+      // H3D_track[iDataset] = (TH3D*)((TH3D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h3_track_pt_track_eta_track_phi"))->Clone("Draw_Phi_Data_MC_RunByRun_Comparison"+Datasets[iDataset]+DatasetsNames[iDataset]);
+
+      // int ibinPt_low = H3D_track[iDataset]->GetXaxis()->FindBin(ptCutLow);
+      // int ibinPt_high = H3D_track[iDataset]->GetXaxis()->FindBin(ptCutHigh);
+      // if (ibinPt_low == 0) 
+      //   cout << "WARNING: Eta_DatasetComparison is counting the underflow with the chosen PtRange" << endl;
+      // if (ibinPt_high == H3D_track[iDataset]->GetXaxis()->GetNbins()+1) 
+      //   cout << "WARNING: Eta_DatasetComparison is counting the overflow with the chosen PtRange" << endl;
+
+      // H1D_trackPhi[iDataset] = (TH1D*)H3D_track[iDataset]->ProjectionZ("trackPhi_"+Datasets[iDataset]+DatasetsNames[iDataset], ibinPt_low, ibinPt_high, 1, H3D_track[iDataset]->GetNbinsY(), "e");
+    }
+
+    H1D_trackPhi_rebinned[iDataset] = (TH1D*)H1D_trackPhi[iDataset]->Rebin(1.,"trackPhi_rebinned_"+Datasets[iDataset]+DatasetsNames[iDataset]);
+    cout << "H1D_trackPhi_rebinned[iDataset]->GetEntries() preNorm = " << H1D_trackPhi_rebinned[iDataset]->Integral() << endl;
+
+    if (options.find("evtNorm") != std::string::npos) {
+      if (isDatasetWeighted[iDataset]) {
+        Nevents = GetNEventsSelected_JetFramework_weighted(file_O2Analysis_list[iDataset], analysisWorkflow[iDataset]), analysisWorkflow[iDataset];
+      } else {
+        Nevents = GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflow[iDataset]);
+      }
+      NormaliseYieldToNEvents(H1D_trackPhi_rebinned[iDataset], Nevents);
+      cout << "H1D_trackPhi_rebinned[iDataset]->GetEntries() postNorm = " << H1D_trackPhi_rebinned[iDataset]->Integral() << ", Nevents = " << Nevents << endl;
+    }
+    if (options.find("entriesNorm") != std::string::npos) {
+        NormaliseYieldToIntegral(H1D_trackPhi_rebinned[iDataset]);
+    }
+  
+
+  //////////////////////////////////////////////////////////// retrieve MC hisotograms ////////////////////////////////////////////////////////////
+    if (trackHistsObsoleteVersion[iDataset]) {
+      // cout << "WARNING: OBSOLETE track histogram version selected, cannot cut on pT" << endl;
+      // H2D_centrality_track_MC[iDataset] = (TH2D*)((TH2D*)file_O2AnalysisMC_list[iDataset]->Get(analysisWorkflowMC[iDataset]+"/h2_centrality_track_phi"))->Clone("Draw_Phi_Data_MC_RunByRun_Comparison"+MC_Datasets[iDataset]);
+      // H1D_trackPhi_MC[iDataset] = (TH1D*)H2D_centrality_track_MC[iDataset]->ProjectionY("trackPhi_"+MC_Datasets[iDataset], 0, H2D_centrality_track_MC[iDataset]->GetNbinsX(), "e");
+      // TCanvas* cTest = new TCanvas("cTest", "cTest", 800, 600);
+      // H1D_trackPhi_MC[iDataset]->Draw(); 
+      
+      // If you use the jet-spectra-charged/h2_track_eta_track_phi histogram
+      H2D_centrality_track_MC[iDataset] = (TH2D*)((TH2D*)file_O2AnalysisMC_list[iDataset]->Get("jet-spectra-charged/h2_track_eta_track_phi"))->Clone("Draw_Eta_Data_MC_RunByRun_Comparison"+MC_Datasets[iDataset]);
+      H1D_trackPhi_MC[iDataset] = (TH1D*)H2D_centrality_track_MC[iDataset]->ProjectionY("trackEta_"+Datasets[iDataset]+DatasetsNames[iDataset], 0, H2D_centrality_track_MC[iDataset]->GetNbinsX(), "e");
+      //
+    } else {
+      // H3D_track_MC[iDataset] = (TH3D*)((TH3D*)file_O2AnalysisMC_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h3_track_pt_track_eta_track_phi"))->Clone("Draw_Phi_Data_MC_RunByRun_Comparison"+MC_Datasets[iDataset]);
+
+      // int ibinPt_low = H3D_track_MC[iDataset]->GetXaxis()->FindBin(ptCutLow);
+      // int ibinPt_high = H3D_track_MC[iDataset]->GetXaxis()->FindBin(ptCutHigh);
+      // if (ibinPt_low == 0) 
+      //   cout << "WARNING: Eta_DatasetComparison is counting the underflow with the chosen PtRange" << endl;
+      // if (ibinPt_high == H3D_track_MC[iDataset]->GetXaxis()->GetNbins()+1) 
+      //   cout << "WARNING: Eta_DatasetComparison is counting the overflow with the chosen PtRange" << endl;
+
+      // H1D_trackPhi_MC[iDataset] = (TH1D*)H3D_track_MC[iDataset]->ProjectionZ("trackPhi_"+MC_Datasets[iDataset], ibinPt_low, ibinPt_high, 1, H3D_track[iDataset]->GetNbinsY(), "e");
+    }
+
+    H1D_trackPhi_rebinned_MC[iDataset] = (TH1D*)H1D_trackPhi_MC[iDataset]->Rebin(1.,"trackPhi_rebinned_"+MC_Datasets[iDataset]);
+    cout << "H1D_trackPhi_rebinned_MC[iDataset]->GetEntries() preNorm = " << H1D_trackPhi_rebinned_MC[iDataset]->Integral() << endl;
+
+    if (options.find("evtNorm") != std::string::npos) {
+      if (isDatasetWeighted[iDataset]) {
+        Nevents = GetNEventsSelected_JetFramework_weighted(file_O2AnalysisMC_list[iDataset], analysisWorkflowMC[iDataset]), analysisWorkflowMC[iDataset];
+      } else {
+        Nevents = GetNEventsSelected_JetFramework(file_O2AnalysisMC_list[iDataset], analysisWorkflowMC[iDataset]);
+      }
+      NormaliseYieldToNEvents(H1D_trackPhi_rebinned_MC[iDataset], Nevents);
+      cout << "H1D_trackPhi_rebinned_MC[iDataset]->GetEntries() postNorm = " << H1D_trackPhi_rebinned_MC[iDataset]->Integral() << ", Nevents = " << Nevents << endl;
+    }
+    if (options.find("entriesNorm") != std::string::npos) {
+        NormaliseYieldToIntegral(H1D_trackPhi_rebinned_MC[iDataset]);
+    }
+
+
+  /////////////////////////////////////////////////////////// Draw pairs of Data MC histograms, same run //////////////////////////////////////////////////////
+    TH1D** PhiDataMCpairs = new TH1D*[2];
+    PhiDataMCpairs[0] = H1D_trackPhi_rebinned[iDataset];
+    PhiDataMCpairs[1] = H1D_trackPhi_rebinned_MC[iDataset];
+
+    const TString Names[2] = {"Data " + Datasets[iDataset],
+                              "MC " + MC_Datasets[iDataset]};
+
+
+    TString* pdfNamePairs = new TString("tracks_DataMcComp_Phi_"+DatasetsNames[iDataset]);
+    
+    // TString textContext(contextDatasetCompAndRadiusAndVarRange(jetRadius, etaRange, "eta"));
+    // TString textContext(contextCustomThreeFields(" ", " ",  "#splitline{"+contextJetRadius(jetRadius)+"}{"+contextEtaRange(etaRange)+"}", " "));
+    TString textContext(contextTrackDatasetComp(""));
+
+    std::array<std::array<float, 2>, 2> drawnWindow = {{{-1, 7},{0.6, 1.8}}};
+    std::array<std::array<float, 2>, 2> legendPlacement = {{{0.5, 0.7}, {0.75, 0.90}}}; // {{{x1, y1}, {x2, y2}}}
+    Draw_TH1_Histograms(PhiDataMCpairs, Names, 2, textContext, pdfNamePairs, texPhiX, texJetPhiYield_EventNorm, texCollisionDataInfo, drawnWindow, legendPlacement, contextPlacementAuto, "");
+
+    
+
+
+    /////////////////////////////////////////////////////////////////// Draw Ratio plots /////////////////////////////////////////////////////////////////////
+    H1D_trackPhi_rebinned_ratios[iDataset] = (TH1D*)PhiDataMCpairs[0]->Clone("trackPhi_rebinned_ratios"+Datasets[iDataset]+DatasetsNames[iDataset]);
+    H1D_trackPhi_rebinned_ratios[iDataset]->Reset("M");
+    divideSuccess = H1D_trackPhi_rebinned_ratios[iDataset]->Divide(PhiDataMCpairs[0], PhiDataMCpairs[1], 1., 1., datasetsAreSubsetsofId0 ? "b" : ""); // ratio = Data / MC
+
+    TString* pdfName_ratio = new TString((TString)"Ratio_tracks_DataMcComp_Pt_"+DatasetsNames[iDataset]);
+
+    // std::array<std::array<float, 2>, 2> legendPlacementCustom = {{{0.2, 0.2}, {0.4, 0.45}}}; // {{{x1, y1}, {x2, y2}}}
+    TString* texRatioDatasets = new TString("Data / MC");
+    
+    if (divideSuccess == true) {
+        TString textContext_ratio = TString(Datasets[iDataset]);
+        std::array<std::array<float, 2>, 2> drawnWindow_ratio = {{{-1, 7},{0.5, 1.5}}};
+        Draw_TH1_Histogram(H1D_trackPhi_rebinned_ratios[iDataset], textContext_ratio, pdfName_ratio, texPhiX, texRatioDatasets, texCollisionDataInfo, drawnWindow_ratio, legendPlacement, contextPlacementAuto, "ratioLine");
+    }
+    else {
+      cout << "Divide failed " << endl;
+    }
+
+
+    delete[] PhiDataMCpairs;
+    delete pdfNamePairs;
+    delete pdfName_ratio;
+
+  }
+  
+}
+
+
+////////////////////// Eta Tracks Data vs MC Comparison ///////////////////////
+void Draw_Eta_Data_MC_RunByRun_Comparison(std::string options) { 
+  TH3D* H3D_track[nDatasets];
+  TH2D* H2D_centrality_track[nDatasets];
+
+  TH1D* H1D_trackEta[nDatasets];
+  TH1D* H1D_trackEta_rebinned[nDatasets];
+  
+  // MC
+  TH3D* H3D_track_MC[nDatasets];
+  TH2D* H2D_centrality_track_MC[nDatasets];
+
+  TH1D* H1D_trackEta_MC[nDatasets];
+  TH1D* H1D_trackEta_rebinned_MC[nDatasets];
+
+  //ratio 
+  TH1D* H1D_trackEta_rebinned_ratios[nDatasets];
+  
+
+  bool divideSuccess = false;
+
+  double Nevents;
+
+
+  for(int iDataset = 0; iDataset < nDatasets; iDataset++){
+
+  //////////////////////////////////////////////////////////// retrieve Data hisotograms ////////////////////////////////////////////////////////////
+    // H2D_centrality_track[iDataset] = (TH2D*)((TH2D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h2_centrality_track_eta"))->Clone("Draw_Eta_Data_MC_RunByRun_Comparison"+Datasets[iDataset]+DatasetsNames[iDataset]);
+    // H1D_trackEta[iDataset] = (TH1D*)H2D_centrality_track[iDataset]->ProjectionY("trackEta_"+Datasets[iDataset]+DatasetsNames[iDataset], 0, H2D_centrality_track[iDataset]->GetNbinsX(), "e");
+    //// If you use the jet-spectra-charged/h2_track_eta_track_phi histogram
+    H2D_centrality_track[iDataset] = (TH2D*)((TH2D*)file_O2Analysis_list[iDataset]->Get("jet-spectra-charged/h2_track_eta_track_phi"))->Clone("Draw_Eta_Data_MC_RunByRun_Comparison"+Datasets[iDataset]+DatasetsNames[iDataset]);
+    H1D_trackEta[iDataset] = (TH1D*)H2D_centrality_track[iDataset]->ProjectionX("trackEta_"+Datasets[iDataset]+DatasetsNames[iDataset], 0, H2D_centrality_track[iDataset]->GetNbinsX(), "e");
+    H1D_trackEta[iDataset]->Scale(-1);
+    ///
+
+    H1D_trackEta_rebinned[iDataset] = (TH1D*)H1D_trackEta[iDataset]->Rebin(1.,"trackEta_rebinned_"+Datasets[iDataset]+DatasetsNames[iDataset]);
+    cout << "H1D_trackEta_rebinned[iDataset]->GetEntries() preNorm = " << H1D_trackEta_rebinned[iDataset]->Integral() << endl;
+
+    if (options.find("evtNorm") != std::string::npos) {
+      if (isDatasetWeighted[iDataset]) {
+        Nevents = GetNEventsSelected_JetFramework_weighted(file_O2Analysis_list[iDataset], analysisWorkflow[iDataset]), analysisWorkflow[iDataset];
+      } else {
+        Nevents = GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflow[iDataset]);
+      }
+      NormaliseYieldToNEvents(H1D_trackEta_rebinned[iDataset], Nevents);
+      cout << "H1D_trackEta_rebinned[iDataset]->GetEntries() postNorm = " << H1D_trackEta_rebinned[iDataset]->Integral() << ", Nevents = " << Nevents << endl;
+    }
+    if (options.find("entriesNorm") != std::string::npos) {
+        NormaliseYieldToIntegral(H1D_trackEta_rebinned[iDataset]);
+    }
+  
+
+  //////////////////////////////////////////////////////////// retrieve MC hisotograms ////////////////////////////////////////////////////////////
+    cout << "WARNING: OBSOLETE track histogram version selected, cannot cut on pT" << endl;
+    // H2D_centrality_track_MC[iDataset] = (TH2D*)((TH2D*)file_O2AnalysisMC_list[iDataset]->Get(analysisWorkflowMC[iDataset]+"/h2_centrality_track_eta"))->Clone("Draw_Eta_Data_MC_RunByRun_Comparison"+MC_Datasets[iDataset]);
+    // H1D_trackEta_MC[iDataset] = (TH1D*)H2D_centrality_track_MC[iDataset]->ProjectionY("trackPhi_"+MC_Datasets[iDataset], 0, H2D_centrality_track_MC[iDataset]->GetNbinsX(), "e");
+    //// If you use the jet-spectra-charged/h2_track_eta_track_phi histogram
+    H2D_centrality_track_MC[iDataset] = (TH2D*)((TH2D*)file_O2AnalysisMC_list[iDataset]->Get("jet-spectra-charged/h2_track_eta_track_phi"))->Clone("Draw_Eta_Data_MC_RunByRun_Comparison"+MC_Datasets[iDataset]);
+    H1D_trackEta_MC[iDataset] = (TH1D*)H2D_centrality_track_MC[iDataset]->ProjectionX("trackEta_"+Datasets[iDataset]+DatasetsNames[iDataset], 0, H2D_centrality_track_MC[iDataset]->GetNbinsX(), "e");
+    ///
+    
+
+    H1D_trackEta_rebinned_MC[iDataset] = (TH1D*)H1D_trackEta_MC[iDataset]->Rebin(1.,"trackPt_rebinned_"+MC_Datasets[iDataset]);
+    cout << "H1D_trackEta_rebinned_MC[iDataset]->GetEntries() preNorm = " << H1D_trackEta_rebinned_MC[iDataset]->Integral() << endl;
+
+    if (options.find("evtNorm") != std::string::npos) {
+      if (isDatasetWeighted[iDataset]) {
+        Nevents = GetNEventsSelected_JetFramework_weighted(file_O2AnalysisMC_list[iDataset], analysisWorkflowMC[iDataset]), analysisWorkflowMC[iDataset];
+      } else {
+        Nevents = GetNEventsSelected_JetFramework(file_O2AnalysisMC_list[iDataset], analysisWorkflowMC[iDataset]);
+      }
+      NormaliseYieldToNEvents(H1D_trackEta_rebinned_MC[iDataset], Nevents);
+      cout << "H1D_trackEta_rebinned_MC[iDataset]->GetEntries() postNorm = " << H1D_trackEta_rebinned_MC[iDataset]->Integral() << ", Nevents = " << Nevents << endl;
+    }
+    if (options.find("entriesNorm") != std::string::npos) {
+        NormaliseYieldToIntegral(H1D_trackEta_rebinned_MC[iDataset]);
+    }
+
+
+  /////////////////////////////////////////////////////////// Draw pairs of Data MC histograms, same run //////////////////////////////////////////////////////
+    TH1D** EtaDataMCpairs = new TH1D*[2];
+    EtaDataMCpairs[0] = H1D_trackEta_rebinned[iDataset];
+    EtaDataMCpairs[1] = H1D_trackEta_rebinned_MC[iDataset];
+
+    const TString Names[2] = {"Data " + Datasets[iDataset],
+                              "MC " + MC_Datasets[iDataset]};
+
+
+    TString* pdfNamePairs = new TString("tracks_DataMcComp_Pt_"+DatasetsNames[iDataset]);
+    
+    // TString textContext(contextDatasetCompAndRadiusAndVarRange(jetRadius, etaRange, "eta"));
+    // TString textContext(contextCustomThreeFields(" ", " ",  "#splitline{"+contextJetRadius(jetRadius)+"}{"+contextEtaRange(etaRange)+"}", " "));
+    TString textContext(contextTrackDatasetComp(""));
+    std::array<std::array<float, 2>, 2> drawnWindow = {{{-1, 1},{3.5, 5.5}}};
+    std::array<std::array<float, 2>, 2> legendPlacement = {{{0.5, 0.7}, {0.75, 0.90}}}; // {{{x1, y1}, {x2, y2}}}
+    Draw_TH1_Histograms(EtaDataMCpairs, Names, 2, textContext, pdfNamePairs, texEtaX, texJetEtaYield_EventNorm, texCollisionDataInfo, drawnWindow, legendPlacement, contextPlacementAuto,"");
+
+    /////////////////////////////////////////////////////////////////// Draw Ratio plots /////////////////////////////////////////////////////////////////////
+    H1D_trackEta_rebinned_ratios[iDataset] = (TH1D*)EtaDataMCpairs[0]->Clone("trackEta_rebinned_ratios"+Datasets[iDataset]+DatasetsNames[iDataset]);
+    H1D_trackEta_rebinned_ratios[iDataset]->Reset("M");
+    divideSuccess = H1D_trackEta_rebinned_ratios[iDataset]->Divide(EtaDataMCpairs[0], EtaDataMCpairs[1], 1., 1., datasetsAreSubsetsofId0 ? "b" : ""); // ratio = Data / MC
+
+    TString* pdfName_ratio = new TString((TString)"Ratio_tracks_DataMcComp_Eta_"+DatasetsNames[iDataset]);
+
+    // std::array<std::array<float, 2>, 2> legendPlacementCustom = {{{0.2, 0.2}, {0.4, 0.45}}}; // {{{x1, y1}, {x2, y2}}}
+    TString* texRatioDatasets = new TString("Data / MC");
+    
+    if (divideSuccess == true) {
+        TString textContext_ratio = TString(Datasets[iDataset]);
+        std::array<std::array<float, 2>, 2> drawnWindow_ratio = {{{-1, 1},{0.9, 1.1}}};
+        Draw_TH1_Histogram(H1D_trackEta_rebinned_ratios[iDataset], textContext_ratio, pdfName_ratio, texEtaX, texRatioDatasets, texCollisionDataInfo, drawnWindow_ratio, legendPlacement, contextPlacementAuto, "ratioLine");
+    }
+    else {
+      cout << "Divide failed " << endl;
+    }
+
+
+    delete[] EtaDataMCpairs;
+    delete pdfNamePairs;
+    delete pdfName_ratio;
+  }
+  //enf for loop over datasets
+
+}

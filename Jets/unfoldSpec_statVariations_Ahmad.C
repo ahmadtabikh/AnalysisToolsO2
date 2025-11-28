@@ -43,206 +43,206 @@
 
 using namespace std;
 
-TString strOutDir = "./outSys_varyResp";
 
-//TString baseDir = "/hera/alice/obusch";
-TString baseDir = "~/";
-
-
-TString fnameResp(Form("%s/work/FFprep/miniJets/unfold/files/LHC10f6a/lego733/AnalysisResults.root",baseDir.Data()));
-TString strInFileData(Form("%s/work/FFprep/miniJets/unfold/files/data/lego141/out10de.root",baseDir.Data())); 
-
-
-TString strIDResp 
-= "clustersAOD_ANTIKT04_B0_Filter00272_Cut00150_Skip00_clustersAODMC2_ANTIKT04_B0_Filter00272_Cut00150_Skip00_AODMC2b_AODMC_tpc1_tof3_cl0"; 
-
-TString strIDFFRec
-= "clustersAOD_ANTIKT04_B0_Filter00272_Cut00150_Skip00_clustersAODMC2_ANTIKT04_B0_Filter00272_Cut00150_Skip00_AODMC2b_AODb_tpc1_tof3_cl0";
-
-TString strID_data 
-= "clustersAOD_ANTIKT04_B0_Filter00272_Cut00150_Skip00_noGenJets_trackTypeUndef_jetTypeUndef_tpc1_tof3_cl0";
-
-
-// TString strIDFFGen
-// = "clustersAOD_ANTIKT04_B0_Filter00272_Cut00150_Skip00_clustersAODMC2_ANTIKT04_B0_Filter00272_Cut00150_Skip00_AODMC2b_AODMCb_tpc1_tof3_cl0"; 
-
-// TString strIDFFRec
-// = "clustersAOD_ANTIKT04_B0_Filter00272_Cut00150_Skip00_clustersAODMC2_ANTIKT04_B0_Filter00272_Cut00150_Skip00_AODMC2b_AODb_tpc1_tof3_cl0";
 
 UnfoldHelper *UFH; 
 
-// ---------------------------------------------------
-
-TList* getList(TString name = ""){
-
-  TList* list = 0x0; 
-
-    
-  TString dirName  = "PWGJE_FragmentationFunction_" + name;
-  TString listName = "fracfunc_" + name;    
-
-  gDirectory->cd(dirName);
-
-  list = (TList*) gDirectory->Get(listName);
-
-  return list;
-}
 
 // -------------------------------------------------
 
-void unfoldSpec(RooUnfoldResponse* respJetPt, 
-		TH1D* h1JetPtRec, TH1D** hSpecUnfolded, TH2D** h2Cov, Int_t nIterSpec, Bool_t doBayes = kTRUE, Int_t errTreatment = 0){
+void unfoldSpec(RooUnfoldResponse* response, 
+	 TH1D* measured, TH1D** hist_unfold, TH2D** h2Cov, Int_t unfoldParameterInput, Bool_t doBayes = kTRUE, Int_t errTreatment = 0){
   
+  if (!response || !measured || !hist_unfold || !h2Cov) {
+      cerr << "unfoldSpec: null pointer input." << endl;
+      return;
+  }
+
   // ----------------
+  // --- prepare a RooUnfold object (base pointer) ---
+    RooUnfold* unfold = nullptr;
+    RooUnfoldBayes* unfoldBayes = nullptr;
+    RooUnfoldSvd*   unfoldSvd    = nullptr;
+
   // unfold spectrum 
-  
+  RooUnfoldBayes* unfoldBayes = new RooUnfoldBayes(response, measured, unfoldParameterInput);
+
+  RooUnfold* unfold = unfoldBayes; // default Bayes
+  TH1D* hist_unfold;
+
+  if (options.find("Svd") != std::string::npos) {
+    int unfoldParameterSvdInitial = 1;
+    RooUnfoldSvd* unfoldSvdInit = new RooUnfoldSvd(response, measured, unfoldParameterSvdInitial); 
+    unfoldSvdInit->Hreco(); // necessary to have GetD() give a meaningful output
+    TSVDUnfold *tsvdUnfold = (TSVDUnfold*)unfoldSvdInit->Impl();
+
+    // Optionally draw D distribution if requested (kept from your original)
+    if (tsvdUnfold) {
+      TH1D* H1D_D = tsvdUnfold->GetD(); // may be nullptr if not available
+      if (H1D_D) {
+        TString inputUnfoldingName = (options.find("inputIsMCPFoldedTest") != std::string::npos) ? "_mcpFoldedTestInput" : "";
+        TString* pdfName_regparam = new TString("Svd_regularisationd_distribution_"+(TString)"_R="+Form("%.1f",arrayRadius[iRadius])+"_"+Datasets[iDataset]+DatasetsNames[iDataset]+"_"+(TString)mergingPrior+"_"+(TString)unfoldingPrior+inputUnfoldingName);
+        TString textContext(contextCustomTwoFields(*texDatasetsComparisonCommonDenominator, contextJetRadius(arrayRadius[iRadius]), ""));
+        std::array<std::array<float, 2>, 2> drawnWindowSvdParam = {{{0, 30}, {0.01, 10000}}}; // {{xmin, xmax}, {ymin, ymax}}
+        Draw_TH1_Histogram(H1D_D, textContext, pdfName_regparam, texSvdK, texSvdDvector, texCollisionDataInfo, drawnWindowSvdParam, legendPlacementAuto, contextPlacementAuto, "logy");
+      }
+    }
+    // Now create the real SVD object with the chosen regularisation parameter
+    unfoldSvd = new RooUnfoldSvd(response, measured, unfoldParameterInput);
+    unfold = unfoldSvd;
+    cout<<" SVD unfolding, nIter "<<unfoldParameterInput<<endl;
+    
+    delete unfoldSvdInit;
+  } else if (options.find("Bayes") != std::string::npos) {
+    unfoldBayes = new RooUnfoldBayes(response, measured, unfoldParameterInput);
+    unfold = unfoldBayes;
+    cout<<" Bayes unfolding, nIter "<<unfoldParameterInput<<endl;
+  }
+
+  if (!unfold) {
+        cerr << "unfoldSpec: failed to create RooUnfold object." << endl;
+        // clean up whatever was created
+        delete unfoldBayes;
+        delete unfoldSvd;
+        return;
+  }
+
   cout<<" unfold spectrum "<<endl;
     
-  RooUnfold* unfoldSpec; 
-  if(doBayes){
-    unfoldSpec = new RooUnfoldBayes(respJetPt, h1JetPtRec, nIterSpec); 
-    cout<<" Bayes unfolding, nIter "<<nIterSpec<<endl;
+  // --- Perform unfolding, choose error treatment ---
+  RooUnfold::ErrorTreatment et = RooUnfold::kErrors;
+  switch (errTreatment) {
+    case -1: et = RooUnfold::kCovariance; break;
+    case  1: et = RooUnfold::kErrors;     break;
+    case  2: et = RooUnfold::kNoError;    break;
+    case  3: et = RooUnfold::kCovToy;     break;
+    default: et = RooUnfold::kErrors;     break;
   }
-  else if(nIterSpec){
-    unfoldSpec = new RooUnfoldSvd(respJetPt, h1JetPtRec, nIterSpec); 
-    unfoldSpec->IncludeSystematics (1); // TEST !!! error due to response matrix variations via pseudodata variations 
-    cout<<" SVD unfolding, nIter "<<nIterSpec<<endl;
+
+  // Hreco returns a TH1* (actually a TH1D* for 1D). RooUnfold owns this histogram? Typically
+  // it returns a freshly allocated histogram (check your RooUnfold version). We capture it here.
+  TH1D* hReco = (TH1D*) unfold->Hreco(et);
+  if (!hReco) {
+      cerr << "unfoldSpec: Hreco returned nullptr." << endl;
+      delete unfold; // delete concrete RooUnfold
+      return;
   }
-  else{
-    unfoldSpec = new RooUnfoldBinByBin(respJetPt, h1JetPtRec); 
-    cout<<" use Bin-by-Bin correction "<<endl;
-  }
-    
 
-  if(errTreatment == -1)     *hSpecUnfolded = (TH1D*) unfoldSpec->Hreco(RooUnfold::kCovariance);
-  else if(errTreatment == 1) *hSpecUnfolded = (TH1D*) unfoldSpec->Hreco(RooUnfold::kErrors);
-  else if(errTreatment == 2) *hSpecUnfolded = (TH1D*) unfoldSpec->Hreco(RooUnfold::kNoError);
-  else if(errTreatment == 3) *hSpecUnfolded = (TH1D*) unfoldSpec->Hreco(RooUnfold::kCovToy);
-  else                       *hSpecUnfolded = (TH1D*) unfoldSpec->Hreco();
-
-  cout<<" hSpecUnfolded bin 5 error "<<(*hSpecUnfolded)->GetBinError(5)<<endl;
-
-
-  // covariance matrix
-  *h2Cov = UFH->getCovariance(unfoldSpec);
-
-  delete unfoldSpec;
+  *hist_unfold = hReco;
+  
+  delete unfold;
 }
 
 // ------------------------------------------------------------------------
 //This function takes an original 2D THnSparse histogram (hnResponseOrg) and produces a “smeared” version (hnResponseSmeared) by randomly fluctuating each bin content according to its statistical error.
-void smearResponse(THnSparse* hnResponseOrg, THnSparse* hnResponseSmeared){
+void smearResponseTH2D(TH2D* hOrig, TH2D* hSmeared) {
+    int nBinsX = hOrig->GetNbinsX();
+    int nBinsY = hOrig->GetNbinsY();
 
-  const Int_t axisM0 = 0; 
-  const Int_t axisT0 = 1;
- 
-  Int_t nBinsM0 = hnResponseOrg->GetAxis(axisM0)->GetNbins();
-  Int_t nBinsT0 = hnResponseOrg->GetAxis(axisT0)->GetNbins();
+    cout << "smearResponseTH2D, nBinsX: " << nBinsX << endl;
+    cout << "smearResponseTH2D, nBinsY: " << nBinsY << endl;
 
-  cout<<" smearResponse, nBinsM0 "<<nBinsM0<<endl;
-  cout<<" smearResponse, nBinsT0 "<<nBinsT0<<endl;
+    for (int iY = 1; iY <= nBinsY; iY++) {
+        if (!(iY % 100)) cout << "iY: " << iY << endl;
 
-  for(Int_t iT0=1; iT0<=nBinsT0; iT0++){
+        for (int iX = 1; iX <= nBinsX; iX++) {
+            double resp = hOrig->GetBinContent(iX, iY);
+            double err = hOrig->GetBinError(iX, iY);
+            double relErr = (resp != 0) ? err / resp : 0.0;
 
-    if(!(iT0%100)) cout<<" iT0 "<<iT0<<endl;
+            // Gaussian smearing
+            double contSmeared = gRandom->Gaus(resp, err);
+            double errSmeared = relErr * contSmeared;
 
-    for(Int_t iM0=1; iM0<=nBinsM0; iM0++){
-      
-      Double_t coordM0 = hnResponseOrg->GetAxis(axisM0)->GetBinCenter(iM0);
-      Double_t coordT0 = hnResponseOrg->GetAxis(axisT0)->GetBinCenter(iT0);
-      
-      Double_t binCoord[] = {coordM0,coordT0};
-      
-      Long64_t binIndex = hnResponseOrg->GetBin(binCoord);
-      
-      Double_t resp = hnResponseOrg->GetBinContent(binIndex); 
-      Double_t err  = hnResponseOrg->GetBinError(binIndex); 
-      Double_t relErr = 0; 
-      if(resp) relErr = err/resp; 
-      
-      Double_t contSmeared = gRandom->Gaus(resp,err);
-      Double_t errSmeared  = relErr*contSmeared; // was: elErr * resp ???
+            if (contSmeared < 0) { // keep original if negative
+                contSmeared = resp;
+                errSmeared = err;
+            }
 
-      if(contSmeared < 0){ // if smeared entry < 0, keep original
-	      contSmeared = resp;
-	      errSmeared  = err;
-      }
-      
-      Long64_t binIndexSmeared = hnResponseSmeared->GetBin(binCoord);
-	
-      // if(resp) cout<<" smearResponse: coordM0 "<<coordM0<<" coordT0 "<<coordT0
-      // 		   <<" resp "<<resp<<" err "<<err<<" relErr "<<err/resp<<" contSmeared "
-      // 		   <<contSmeared<<" errSmeared "<<errSmeared<<endl;
-      
-      if(binIndexSmeared != binIndex){
-	      cout<<" smearResponse: mismatch binIndex "<<binIndex<<" binIndexSmeared "<<binIndexSmeared<<endl;
-	      exit(0);
-      }
-      
-      hnResponseSmeared->SetBinContent(binIndex,contSmeared); 
-      hnResponseSmeared->SetBinError(binIndex,errSmeared); 
+            hSmeared->SetBinContent(iX, iY, contSmeared);
+            hSmeared->SetBinError(iX, iY, errSmeared);
+        }
     }
-  } 
 }
 
 // ------------------------------------------------------------------------
 // resetErrors sets all bin errors of a 2D THnSparse histogram to zero
-void resetErrors(THnSparse* hnResponse){
-  
-  const Int_t axisM0 = 0; 
-  const Int_t axisT0 = 1;
-  
-  Int_t nBinsM0 = hnResponse->GetAxis(axisM0)->GetNbins();
-  Int_t nBinsT0 = hnResponse->GetAxis(axisT0)->GetNbins();
+void resetErrorsTH2D(TH2D* h) {
+    int nBinsX = h->GetNbinsX();
+    int nBinsY = h->GetNbinsY();
 
-  cout<<" resetErrors, nBinsM0 "<<nBinsM0<<endl;
-  cout<<" resetErrors, nBinsT0 "<<nBinsT0<<endl;
+    cout << "resetErrorsTH2D, nBinsX: " << nBinsX << endl;
+    cout << "resetErrorsTH2D, nBinsY: " << nBinsY << endl;
 
-  for(Int_t iT0=1; iT0<=nBinsT0; iT0++){
-    for(Int_t iM0=1; iM0<=nBinsM0; iM0++){
-	
-      Double_t coordM0 = hnResponse->GetAxis(axisM0)->GetBinCenter(iM0);
-      Double_t coordT0 = hnResponse->GetAxis(axisT0)->GetBinCenter(iT0);
-      
-      Double_t binCoord[] = {coordM0,coordT0};
-      
-      Long64_t binIndex = hnResponse->GetBin(binCoord);
-      
-      hnResponse->SetBinError(binIndex,0); 
+    for (int iY = 1; iY <= nBinsY; iY++) {
+        for (int iX = 1; iX <= nBinsX; iX++) {
+            h->SetBinError(iX, iY, 0.0);
+        }
     }
-  }
 }
 
 // -------------------------------------------------------------
 // This function reweights a histogram histG using the ratio of smeared to original histograms (histSmear / histOrg).
-void reweightHistG(TH1D* histG, TH1D* histOrg, TH1D* histSmear){
+void reweightHistG(TH1D* histG, TH1D* histOrg, TH1D* histSmear) {
+    Int_t nBins = histG->GetXaxis()->GetNbins();
 
-  Int_t nBins0 = histG->GetXaxis()->GetNbins();
+    for (Int_t bin = 0; bin <= nBins; bin++) { // skip underflow/overflow
+        double contG = histG->GetBinContent(bin);
+        double errG = histG->GetBinError(bin);
+        double contOrg = histOrg->GetBinContent(bin);
+        double contSmear = histSmear->GetBinContent(bin);
 
-  for(Int_t bin0=0; bin0<=nBins0; bin0++){ 
+        if (contOrg != 0) {
+            double weight = contSmear / contOrg;
+            double contNew = contG * weight;
+            double errNew = errG * weight;
 
-    Double_t contG     = histG->GetBinContent(bin0);
-    Double_t errG      = histG->GetBinError(bin0);
-      
-    Double_t contOrg   = histOrg->GetBinContent(bin0);
-      
-    Double_t contSmear = histSmear->GetBinContent(bin0);
-      
-    if(contOrg){
+            cout << "bin " << bin 
+                 << " weight " << weight 
+                 << " contG " << contG 
+                 << " contNew " << contNew 
+                 << " errG " << errG 
+                 << " errNew " << errNew << endl;
 
-      Double_t weight = contSmear / contOrg;
-
-      Double_t contNew = contG * weight;
-      Double_t errNew  = errG * weight;
-
-      cout<<" bin0 "<<bin0<<" weight "<<weight<<" contG "<<contG<<" contNew "<<contNew<<" errG "<<errG<<" errNew "<<errNew<<endl;
-
-      histG->SetBinContent(bin0,contNew);
-      histG->SetBinError(bin0,errNew);
+            histG->SetBinContent(bin, contNew);
+            histG->SetBinError(bin, errNew);
+        }
     }
-  }
 }
 
+void smearTH1(TH1D* hist, TH1D* hSmeared) {
+    hSmeared->Reset();
+
+    int nBins = hist->GetNbinsX();
+    for (int binx = 1; binx <= nBins; binx++) { // main bins
+        double cont = hist->GetBinContent(binx);
+        double err = hist->GetBinError(binx);
+
+        double contSmeared = 0.0;
+        double errCorr = 0.0;
+
+        if (cont != 0.0) {
+            contSmeared = gRandom->Gaus(cont, err);
+            errCorr = err * contSmeared / cont;
+        }
+
+        if (contSmeared < 0.0) { // keep original if negative
+            contSmeared = cont;
+            errCorr = err;
+        }
+
+        cout << "hist: " << hist->GetName() 
+             << " bin " << binx 
+             << " x = " << hist->GetXaxis()->GetBinCenter(binx)
+             << " cont = " << cont 
+             << " err = " << err 
+             << " contSmeared = " << contSmeared 
+             << " errCorr = " << errCorr << endl;
+
+        hSmeared->SetBinContent(binx, contSmeared);
+        hSmeared->SetBinError(binx, errCorr);
+    }
+}
 // ---------------------------------------------------
 // Purpose of the function
 // Reads response histograms from a ROOT file.
@@ -251,151 +251,100 @@ void reweightHistG(TH1D* histG, TH1D* histOrg, TH1D* histSmear){
 // Builds a RooUnfoldResponse object, which can be used for unfolding.
 void GetResponse(RooUnfoldResponse** respJetPt, Int_t nBinsX, Double_t* binsX, Bool_t smearResp, Bool_t resetErr = kFALSE){
   
-  TFile f(fnameResp); 
+  TH1D* mcp;
+  TH1D* mcd;
+  TH1D* mcpGenBin;
+  TH1D* mcdRecBin;  
+  TH1D* H1D_jetPt_projGen;
+  TH1D* H1D_jetPt_smeared_projRec;
+  TH1D* H1D_jetPt_smeared_projGen;
+  TH1D* h1RespJetPt_smeared_projRec  = 0;
+  TH1D* h1RespJetPt_smeared_projGen  = 0;
+  TH1D* h1RespJetPtHistG_rew = 0;
+  TH2D* H2D_jetPtResponseMatrix_fluctuations;
+  TH2D* H2D_jetPtResponseMatrix_detectorResponse;                           // detector response as proba fine binning
+  TH2D* H2D_jetPtResp_Rebinned;                                             // det + fluct response as evnt large binning
+  TH2D* H2D_jetPtResponseMatrix_detectorAndFluctuationsCombined_fineBinning;// det + fluct response as proba fine binning
 
-  TList* list = getList(strIDResp);
+  Get_Pt_spectrum_mcp_fineBinning_preWidthScalingAtEndAndEvtNorm(mcp, iDataset, iRadius, false, options); 
+  Get_Pt_spectrum_mcd_fineBinning_preWidthScalingAtEndAndEvtNorm(mcd, iDataset, iRadius, false, options);
 
-  THnSparse* hnRespJetPt_org      = (THnSparse*) list->FindObject("hnResponseJetPt"); // the main response matrix (gen vs rec)
-  THnSparse* hnRespJetPtHistG_org = (THnSparse*) list->FindObject("hnRespJetPtHistG"); // gen jets gen pt
-  THnSparse* hnRespJetPtHistM_org = (THnSparse*) list->FindObject("hnRespJetPtHistM"); // rec jets rec pt
-  
-  f.Close();
+  Get_PtResponseMatrix_Fluctuations(H2D_jetPtResponseMatrix_fluctuations, iDataset, iRadius);
+  Get_PtResponseMatrix_detectorResponse(H2D_jetPtResponseMatrix_detectorResponse, iDataset, iRadius);
+  Get_PtResponseMatrix_DetectorAndFluctuationsCombined_fineBinning(H2D_jetPtResponseMatrix_detectorAndFluctuationsCombined_fineBinning, H2D_jetPtResponseMatrix_detectorResponse, H2D_jetPtResponseMatrix_fluctuations, iDataset, iRadius, options);
   
   // ---------------------  
   // rebin before smearing
 
-  THnSparse* hnRespJetPt      = UFH->rebinTHn(hnRespJetPt_org,nBinsX,binsX,nBinsX,binsX);
-  THnSparse* hnRespJetPtHistG = UFH->rebinTHn(hnRespJetPtHistG_org,nBinsX,binsX);
-  THnSparse* hnRespJetPtHistM = UFH->rebinTHn(hnRespJetPtHistM_org,nBinsX,binsX);
-  
+  Get_Pt_spectrum_mcp_genBinning_preWidthScalingAtEndAndEvtNorm(mcpGenBin, iDataset, iRadius, false, options); // h1RespJetPtHistG
+  Get_Pt_spectrum_mcd_recBinning_preWidthScalingAtEndAndEvtNorm(mcdRecBin, iDataset, iRadius, options); // h1RespJetPtHistM
+  Get_PtResponseMatrix_DetectorAndFluctuationsCombined(H2D_jetPtResp_Rebinned, H2D_jetPtResponseMatrix_detectorResponse, H2D_jetPtResponseMatrix_fluctuations, iDataset, iRadius, options);
+  // hnRespJetPt
+
   // -------------------------------
-  // projections for RooUResponse
-  
-  TH1D* h1RespJetPtHistG = (TH1D*) hnRespJetPtHistG->Projection(0);  //Projects generator and reconstructed histograms along appropriate axes for RooUnfoldResponse
-  TH1D* h1RespJetPtHistM = (TH1D*) hnRespJetPtHistM->Projection(0); 
+  Get_Pt_spectrum_mcpMatched_genBinning_preWidthScalingAtEndAndEvtNorm(TH1D* &H1D_jetPt_projGen, int iDataset, int iRadius, __attribute__ ((unused)) std::string options) // mcp matched gen pt spectrum //h1RespJetPt_unsmeared_projGen
 
-  TH1D* h1RespJetPt_unsmeared_projGen = hnRespJetPt->Projection(1); // axis 0 -> rec, axis 1 -> gen
-
-  TH1D* h1RespJetPt_smeared_projRec  = 0;
-  TH1D* h1RespJetPt_smeared_projGen  = 0;
-  TH1D* h1RespJetPtHistG_rew = 0;
-  
   if(smearResp){ //Clones the response matrix, applies smearResponse(), then deletes the temporary.
 
-    // smear response
-    THnSparse* hnRespJetPt_tmp = (THnSparse*) hnRespJetPt->Clone("hnRespJetPt_tmp");
-    smearResponse(hnRespJetPt_tmp, hnRespJetPt); // args: org, smeared
-    delete hnRespJetPt_tmp;
+    // smear response 
+    TH2D* Response_temp = (TH2D*) H2D_jetPtResp_Rebinned->Clone("Response_temp");
+    smearResponseTH2D(Response_temp, H2D_jetPtResp_Rebinned); // org, smeared : overwrite the original Matrix with the smeared one
+    delete Response_temp;
 
     // project smeared response on rec axis to replace HistM (avoid spurious 'fakes' correction)
-    h1RespJetPt_smeared_projRec = hnRespJetPt->Projection(0);
-    h1RespJetPt_smeared_projRec->SetName("h1RespJetPt_smeared_projRec");
-
-    cout<<" projection response entries "<<h1RespJetPt_smeared_projRec->GetEntries()<<endl;
-    cout<<"  h1RespJetPtHistM entries "<<h1RespJetPtHistM->GetEntries()<<endl;
+    H1D_jetPt_smeared_projRec = (TH1D*)H2D_jetPtResp_Rebinned->ProjectionX("jetPt_mcdMatched_recBinning_"+RadiusLegend[iRadius]+Datasets[iDataset]+DatasetsNames[iDataset], 1, H2D_jetPtResp_Rebinned->GetNbinsY(), "e");
 
     // project smeared response on gen axis to replace HistG (avoid spurious 'efficiency' correction)
-    h1RespJetPt_smeared_projGen = hnRespJetPt->Projection(1);
-    h1RespJetPtHistG_rew = (TH1D*) h1RespJetPtHistG->Clone("h1RespJetPtHistG_rew");    
-    reweightHistG(h1RespJetPtHistG_rew,h1RespJetPt_unsmeared_projGen,h1RespJetPt_smeared_projGen);
+    H1D_jetPt_smeared_projGen = (TH1D*)H2D_jetPtResp_Rebinned->ProjectionY("jetPt_mcpMatched_GenBinning_"+RadiusLegend[iRadius]+Datasets[iDataset]+DatasetsNames[iDataset], 1, H2D_jetPtResp_Rebinned->GetNbinsX(), "e");
+    
+    mcpGenBin_new = (TH1D*) mcpGenBin->Clone("mcpGenBin_new");    
+    reweightHistG(mcpGenBin_new, H1D_jetPt_projGen , H1D_jetPt_smeared_projGen);
     //Rec axis projection → replaces HistM for unfolding. Gen axis projection → used to reweight HistG to match smeared response.
   }
 
-  if(resetErr) resetErrors(hnRespJetPt);
+  if(resetErr) resetErrorsTH2D(H2D_jetPtResp_Rebinned);
   
-  RooUnfoldResponse* respJetPtp;
-  if(smearResp) respJetPtp = UFH->RooUResponseFromTHn(hnRespJetPt, h1RespJetPt_smeared_projRec, h1RespJetPtHistG_rew, 1, 1, 1, 1); //converts the THnSparse response matrix and projections into a RooUnfoldResponse object.
-  else          respJetPtp = UFH->RooUResponseFromTHn(hnRespJetPt, h1RespJetPtHistM, h1RespJetPtHistG, 1, 1, 1, 1);
+  RooUnfoldResponse* response;
+  response = new RooUnfoldResponse(0, 0, H2D_jetPtResp_Rebinned);
 
-  *respJetPt = respJetPtp;
+  *respJetPt = response;
 
-  delete hnRespJetPt_org;      
-  delete hnRespJetPtHistG_org; 
-  delete hnRespJetPtHistM_org;
-  
-  delete hnRespJetPt;      
-  delete hnRespJetPtHistG; 
-  delete hnRespJetPtHistM; 
+  delete mcp;
+  delete mcd;
+  delete mcpGenBin;
+  delete mcdRecBin;   
 
+  delete H2D_jetPtResponseMatrix_fluctuations;
+  delete H2D_jetPtResponseMatrix_detectorResponse;
+  delete H2D_jetPtResp_Rebinned;
+  delete H2D_jetPtResponseMatrix_detectorAndFluctuationsCombined_fineBinning;
   delete h1RespJetPtHistG;
   delete h1RespJetPtHistM;
 
-  delete h1RespJetPt_smeared_projRec;
-  delete h1RespJetPt_smeared_projGen;
-  delete h1RespJetPtHistG_rew;
-  
+  delete H1D_jetPt_smeared_projRec;
+  delete H1D_jetPt_smeared_projGen;
+  delete mcpGenBin_new;
 }
-//Summary of the workflow
-//Open ROOT file → get TList → retrieve THnSparse histograms.
-//Rebin histograms to desired binning.
-//Project THnSparse → TH1D for RooUnfoldResponse.
-//Optionally:
-//Smear the response matrix (smearResponse)
-//Reweight generator histogram (reweightHistG)
-//Reset errors (resetErrors)
-//Build RooUnfoldResponse.
-//Clean up all temporary THnSparse/TH1D objects.
-//Effectively: this function prepares a fully ready response object for unfolding, with optional statistical fluctuations applied.
-
 // ------------------------------------------------------------
-
-void smearTH1(TH1D* hist, TH1D* hSmeared){
-  // Each bin content is fluctuated according to a Gaussian with width = bin error.
-  // Negative smeared values are corrected back to the original content.
-  // Returns the smeared histogram in hSmeared
-  // smear TH1 entries  according to stat error
-
-  hSmeared->Reset();
-
-  for(Int_t binx=1; binx<=hist->GetNbinsX(); binx++){
-    
-    Double_t cont = hist->GetBinContent(binx); 
-    Double_t err  = hist->GetBinError(binx); 
-      
-    Double_t contSmeared = 0; 
-    Double_t errCorr     = 0;
-
-    if(cont){
-      contSmeared = gRandom->Gaus(cont,err);
-      errCorr = err*contSmeared/cont;
-    }
-
-    if(contSmeared < 0){ // if smeared entry < 0, keep original
-      contSmeared = cont;
-      errCorr     = err;
-    }
-
-    cout<<" hist name "<<hist->GetName()<<" binx "<<binx
-	  <<" cent x "<<hist->GetXaxis()->GetBinCenter(binx)
-	  <<" cont "<<cont<<" err "<<err<<" relErr "<<err/cont<<" contSmeared "<<contSmeared<<" errCorr "<<errCorr<<endl;
-
-    hSmeared->SetBinContent(binx,contSmeared);
-    hSmeared->SetBinError(binx,errCorr);
-  }
-}
 
 
 // -------------------------------------------
-// FillVariations takes a TH1D histogram (hist) and fills a TProfile (histP) with its values.
-// Essentially, it treats the bin contents of hist as "measurements" at the bin centers.
-// This is commonly used to accumulate multiple variations of a histogram into a profile to compute mean and RMS per bin.
-void FillVariations(TH1D* hist, TProfile* histP){
+void FillVariations(TH1D* hist, TProfile* histP) {
+    // Check for consistency
+    if (hist->GetNbinsX() != histP->GetNbinsX() ||
+        hist->GetXaxis()->GetXmin() != histP->GetXaxis()->GetXmin() ||
+        hist->GetXaxis()->GetXmax() != histP->GetXaxis()->GetXmax()) {
+        cout << "FillVariations: discrepancy between hist and histP!" << endl;
+        exit(1);
+    }
 
-  if(hist->GetNbinsX() != histP->GetNbinsX()) { cout<<" discrepancy hist/histP "<<endl; exit(0); }
-  if(hist->GetXaxis()->GetXmin() != histP->GetXaxis()->GetXmin()) { cout<<" discrepancy hist/histP "<<endl; exit(0); }
-  if(hist->GetXaxis()->GetXmax() != histP->GetXaxis()->GetXmax()) { cout<<" discrepancy hist/histP "<<endl; exit(0); }
-  
-  for(Int_t binx=1; binx<hist->GetNbinsX()+1; binx++){
-  
-    Double_t cent = hist->GetXaxis()->GetBinCenter(binx);
-    Double_t cont = hist->GetBinContent(binx); 
-    histP->Fill(cent,cont);
-  }
-} 
-// Adds the value cont at x-coordinate cent into the TProfile.
-// TProfile will accumulate multiple fills per x-bin and calculate:
-// The mean of all values filled into that bin
-// The RMS (standard deviation) if needed
+    int nBins = hist->GetNbinsX();
+    for (int binx = 1; binx <= nBins; binx++) {
+        double cent = hist->GetXaxis()->GetBinCenter(binx);
+        double cont = hist->GetBinContent(binx);
+        histP->Fill(cent, cont);
+    }
+}
 
 // ---------------------------------------------------
 
@@ -533,7 +482,7 @@ void unfoldSpec_statVariations(Int_t nRepeats = 100, Bool_t doBayes = kTRUE, Boo
       Double_t cont = hSpecUnfolded->GetBinContent(bin);
       Double_t poissRelErr = 0;
       if(cont > 0){
-	      poissRelErr = 1/TMath::Sqrt(cont);
+	poissRelErr = 1/TMath::Sqrt(cont);
       }
       hSpecUnfoldedPoissErr->SetBinContent(bin,poissRelErr);
       hSpecUnfoldedPoissErr->SetBinError(bin,0);

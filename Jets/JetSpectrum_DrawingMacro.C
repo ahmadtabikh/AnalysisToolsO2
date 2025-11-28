@@ -54,6 +54,8 @@
 #include <sstream>
 #include <string.h>
 #include <stdlib.h>     /* abort, NULL */
+#include "TRandom.h"
+
 using namespace std;
 
 // Misc utilities
@@ -73,6 +75,8 @@ void Draw_Pt_spectrum_unfolded_FluctResponseOnly(int iDataset, int iRadius, std:
 void Draw_Pt_spectrum_unfolded(int iDataset, int iRadius, int unfoldParameterInput, std::string options);
 void Draw_Pt_TestSpectrum_unfolded(int iDataset, int iRadius, std::string options);
 void Draw_Pt_spectrum_unfolded_parameterVariation(int iDataset, int iRadius, int unfoldIterationMin, int unfoldIterationMax, int step, std::string options);
+void Draw_Pt_spectrum_unfolded_SVDuncertainty(int iDataset, int iRadius, int unfoldParameterInput, std::string options);
+
 
 void Draw_Pt_efficiency_jets(int iDataset, int iRadius, std::string options);
 void Draw_kinematicEfficiency(int iDataset, int iRadius, std::string options);
@@ -107,7 +111,7 @@ void JetSpectrum_DrawingMacro() {
   // Draw_ResponseMatrices_detectorResponse(iDataset, iRadius);
   // Draw_ResponseMatrices_DetectorAndFluctuationsCombined(iDataset, iRadius, optionsAnalysis);
 
-  // // // Draw_Pt_spectrum_unfolded_FluctResponseOnly(iDataset, iRadius, optionsAnalysis); // NOT FIXED YET - result meaningless
+  // // // // // Draw_Pt_spectrum_unfolded_FluctResponseOnly(iDataset, iRadius, optionsAnalysis); // NOT FIXED YET - result meaningless
   // Draw_Pt_spectrum_raw(iDataset, iRadius, optionsAnalysis);
   // Draw_Pt_spectrum_mcp(iDataset, iRadius, optionsAnalysis);
   // Draw_Pt_spectrum_mcdMatched(iDataset, iRadius, optionsAnalysis);
@@ -116,7 +120,7 @@ void JetSpectrum_DrawingMacro() {
   // Draw_kinematicEfficiency(iDataset, iRadius, optionsAnalysis);
   // Draw_FakeRatio(iDataset, iRadius, optionsAnalysis);
 
-  int unfoldParameterInput = 7;
+  int unfoldParameterInput = 3;
   Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput, optionsAnalysis);
   // int unfoldParameterInput2 = 8;
   // Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput2, optionsAnalysis);
@@ -127,6 +131,9 @@ void JetSpectrum_DrawingMacro() {
   // int unfoldParameterInputMax = 16;
   // int unfoldParameterInputStep = 3;
   // Draw_Pt_spectrum_unfolded_parameterVariation(iDataset, iRadius, unfoldParameterInputMin, unfoldParameterInputMax, unfoldParameterInputStep, optionsAnalysis);
+
+  // Draw_Pt_spectrum_unfolded_SVDuncertainty(iDataset, iRadius, unfoldParameterInput, optionsAnalysis);
+
 }
 
 /////////////////////////////////////////////////////
@@ -359,7 +366,7 @@ void Draw_ResponseMatrices_Fluctuations(int iDataset, int iRadius) {
   // if (stat("epsFolder/ResponseMatrices", &st3) == -1) {
   //     mkdir("epsFolder/ResponseMatrices", 0700);
   // }
-
+  
   TString* pdfName_logz = new TString("ResponseMatrices/responseMatrix_fluctuationsBackground_"+(TString)"_R="+Form("%.1f",arrayRadius[iRadius])+"_"+Datasets[iDataset]+DatasetsNames[iDataset]+"_"+priorInfo+"_logz");
   // TString* pdfNameFullRes_logz = new TString("ResponseMatrices/responseMatrix_fluctuationsBackground_"+(TString)"_R="+Form("%.1f",arrayRadius[iRadius])+"_"+Datasets[iDataset]+DatasetsNames[iDataset]+"_"+priorInfo+"FullRes_logz");
   TString* pdfName = new TString("ResponseMatrices/responseMatrix_fluctuationsBackground_"+(TString)"_R="+Form("%.1f",arrayRadius[iRadius])+"_"+Datasets[iDataset]+DatasetsNames[iDataset]+"_"+priorInfo);
@@ -368,6 +375,11 @@ void Draw_ResponseMatrices_Fluctuations(int iDataset, int iRadius) {
 
   TString texCombinedMatrix = contextCustomOneField((TString)"ALICE Performance", ""); // Response matrix - "+(TString)*texEnergy
   TString textContextMatrixDetails = contextCustomFourFields((TString)*texCollisionDataInfo, "", (TString)"Fluctuations response ", contextJetRadius(arrayRadius[iRadius]), "");
+
+  // Draw matrix before transpose
+  TString* pdfName_BeforeTransp_logz = new TString("ResponseMatrices/responseMatrix_fluctuationsBackground_BeforeTRanspose"+(TString)"_R="+Form("%.1f",arrayRadius[iRadius])+"_"+Datasets[iDataset]+DatasetsNames[iDataset]+"_"+priorInfo+"_logz");
+  Draw_TH2_Histogram(H2D_jetPtResponseMatrix_fluctuations, textContextMatrixDetails, pdfName_BeforeTransp_logz, texPtJetBkgCorrX, texPtJetBkgFreeX,  &texCombinedMatrix, drawnWindow2DAuto, th2ContoursNone, contourNumberNone, "logz");
+
 
   // the matrix natural visualisation is actually the transpose of histograms' visualisations we use
   TH2D* MatrixResponse = (TH2D*)GetTransposeHistogram(H2D_jetPtResponseMatrix_fluctuations).Clone("Draw_ResponseMatrices_Fluctuations"+(TString)"_R="+Form("%.1f",arrayRadius[iRadius])+"_"+Datasets[iDataset]+DatasetsNames[iDataset]+"_"+priorInfo);
@@ -423,11 +435,11 @@ void Draw_ResponseMatrices_detectorResponse(int iDataset, int iRadius) {
   Draw_TH2_Histogram(MatrixResponse, textContextMatrixDetails, pdfName_logz, texPtJetGenX, texPtJetRecX, &texCombinedMatrix, drawnWindow2DAuto, th2ContoursNone, contourNumberNone, "logz");
 
 
-  //////////////////////////////// Ahmad : draw reponse matrix before normalization ////////////////////////////////////
-  MatrixResponseBeforeYSliceNorm = (TH2D*)((TH2D*)file_O2Analysis_MCfileForMatrix->Get(analysisWorkflowMC+"/h2_jet_pt_mcd_jet_pt_mcp_matchedgeo_mcpetaconstraint"))->Clone("Get_PtResponseMatrix_detectorResponse_evt"+Datasets[iDataset]+DatasetsNames[iDataset]);
-  TH2D* MatrixResponseEvt = (TH2D*)GetTransposeHistogram(MatrixResponseBeforeYSliceNorm).Clone("Draw_ResponseMatrices_detectorResponse_Evt"+(TString)"_R="+Form("%.1f",arrayRadius[iRadius])+"_"+Datasets[iDataset]+DatasetsNames[iDataset]);
-  TString* pdfName2_logz = new TString("ResponseMatrices/responseMatrixEvt_detectorEffects_"+(TString)"_R="+Form("%.1f",arrayRadius[iRadius])+"_"+Datasets[iDataset]+DatasetsNames[iDataset]+"_logz");
-  Draw_TH2_Histogram(MatrixResponseEvt, textContextMatrixDetails, pdfName2_logz, texPtJetGenX, texPtJetRecX, &texCombinedMatrix, drawnWindow2DAuto, th2ContoursNone, contourNumberNone, "logz");
+  // //////////////////////////////// Ahmad : draw reponse matrix before normalization ////////////////////////////////////
+  // MatrixResponseBeforeYSliceNorm = (TH2D*)((TH2D*)file_O2Analysis_MCfileForMatrix->Get(analysisWorkflowMC+"/h2_jet_pt_mcd_jet_pt_mcp_matchedgeo_mcpetaconstraint"))->Clone("Get_PtResponseMatrix_detectorResponse_evt"+Datasets[iDataset]+DatasetsNames[iDataset]);
+  // TH2D* MatrixResponseEvt = (TH2D*)GetTransposeHistogram(MatrixResponseBeforeYSliceNorm).Clone("Draw_ResponseMatrices_detectorResponse_Evt"+(TString)"_R="+Form("%.1f",arrayRadius[iRadius])+"_"+Datasets[iDataset]+DatasetsNames[iDataset]);
+  // TString* pdfName2_logz = new TString("ResponseMatrices/responseMatrixEvt_detectorEffects_"+(TString)"_R="+Form("%.1f",arrayRadius[iRadius])+"_"+Datasets[iDataset]+DatasetsNames[iDataset]+"_logz");
+  // Draw_TH2_Histogram(MatrixResponseEvt, textContextMatrixDetails, pdfName2_logz, texPtJetGenX, texPtJetRecX, &texCombinedMatrix, drawnWindow2DAuto, th2ContoursNone, contourNumberNone, "logz");
 
 }
 
@@ -1087,3 +1099,267 @@ void DrawRatioWithOffset(TH1D* histList[], int nUnfoldIteration, const TString& 
 
 // WARNING FOR EFFICIENCIES I SHOULD REREAD THIS BELOW!!
 // hMcEfficiency_vsPt->Divide(hMcSignalCount_vsPt,TrueV0PtSpectrum_AnalysisBins, 1., 1., "b"); // option b for binomial because efficiency: https://twiki.cern.ch/twiki/bin/view/ALICE/PWGLFPAGSTRANGENESSEfficiency
+
+void Draw_Pt_spectrum_unfolded_SVDuncertainty(int iDataset, int iRadius, int unfoldParameterInput, std::string options){
+
+  TH1D* H1D_jetPt_defaultBin;
+
+  const int nToys = 15;  // number of smeared copies
+  TH1D* smearedMeasured[nToys];
+  TH1D* smearedMeasured_recbinning[nToys];
+  TH1D* TH1D_unfoldSmeared[nToys];
+
+  TString partialUniqueSpecifier;
+  partialUniqueSpecifier = Datasets[iDataset]+"_R="+Form("%.1f",arrayRadius[iRadius]);
+
+  TString histogramName = "";
+  if (doBkgSubtractionInData) {
+    histogramName = "h_jet_pt_rhoareasubtracted";
+  } else {
+    histogramName = "h_jet_pt";
+  }
+
+
+  // ------------------------------------------------------------------------------------------------------------
+  // ------------------------------------------------------------------------------------------------------------
+  // Smearing the bin content of mesured histogram BEFORE rebinning
+  // ------------------------------------------------------------------------------------------------------------
+  // ------------------------------------------------------------------------------------------------------------
+
+  // H1D_jetPt_defaultBin = (TH1D*)((TH1D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflowData+"/"+histogramName))->Clone("Get_Pt_spectrum_bkgCorrected_recBinning"+Datasets[iDataset]+DatasetsNames[iDataset]);
+  // H1D_jetPt_defaultBin->Sumw2();
+
+  // int unfoldParameter[nToys];
+  // // loop to generate the smeared histograms
+  // for (int itoy = 0; itoy < nToys; ++itoy) {
+    
+  //   // make a deep copy of the original histogram
+  //   smearedMeasured[itoy] = (TH1D*)H1D_jetPt_defaultBin->Clone(Form("H1D_jetPt_smeared_measured_%d", itoy));
+  //   smearedMeasured[itoy]->Reset("ICE"); // clear content, keep binning 
+
+  //   // loop over bins (exclude underflow/overflow)
+  //   for (int i = 1; i <= H1D_jetPt_defaultBin->GetNbinsX(); ++i) {
+  //     double M_i     = H1D_jetPt_defaultBin->GetBinContent(i);
+  //     double sigma_i = H1D_jetPt_defaultBin->GetBinError(i);
+
+  //     // draw smeared value from Gaussian(M_i, sigma_i)
+  //     double M_i_smeared = gRandom->Gaus(M_i, 2*sigma_i);
+
+  //     // fill new histogram bin
+  //     smearedMeasured[itoy]->SetBinContent(i, M_i_smeared);
+  //     smearedMeasured[itoy]->SetBinError(i, sigma_i); // keep original errors
+  //   }
+  //   smearedMeasured_recbinning[itoy] = (TH1D*)smearedMeasured[itoy]->Rebin(nBinPtJetsRec[iRadius],TString::Format("jetPt_smeared_measured_recBinning_%d", itoy) +Datasets[iDataset]+DatasetsNames[iDataset]+RadiusLegend[iRadius], ptBinsJetsRec[iRadius]);
+  //   // int unfoldParameter;
+  //   unfoldParameter[itoy] = Get_Pt_spectrum_unfolded(TH1D_unfoldSmeared[itoy], smearedMeasured_recbinning[itoy], iDataset, iRadius, unfoldParameterInput, options).first; //unfolded spectra is normalized to event and width inside the function.
+
+  //   cout << "/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////" << endl;
+  //   cout << "/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////" << endl;
+  //   cout << "///////////////////////// SVD unfolding: toy " << itoy+1 << " out of " << nToys << ", Done!////////////////////////////////" << endl;
+  //   cout << "/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////" << endl; 
+  //   cout << "/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////" << endl;
+
+  // }
+  // ------------------------------------------------------------------------------------------------------------
+
+
+
+
+  // ------------------------------------------------------------------------------------------------------------
+  // ------------------------------------------------------------------------------------------------------------
+  // New way: smearing the bin content of mesured histogram AFTER rebinning
+  // ------------------------------------------------------------------------------------------------------------
+  // ------------------------------------------------------------------------------------------------------------
+
+  H1D_jetPt_defaultBin = (TH1D*)((TH1D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflowData+"/"+histogramName))->Clone("Get_Pt_spectrum_bkgCorrected_recBinning"+Datasets[iDataset]+DatasetsNames[iDataset]);
+  H1D_jetPt_defaultBin->Sumw2();
+  TH1D* smearedMeasured_recbinningTest;
+  smearedMeasured_recbinningTest = (TH1D*)H1D_jetPt_defaultBin->Rebin(nBinPtJetsRec[iRadius],"jetPt_smeared_measured_recBinning_"+Datasets[iDataset]+DatasetsNames[iDataset]+RadiusLegend[iRadius], ptBinsJetsRec[iRadius]);
+
+  // TString* pdfName = new TString("count_pre_width_scaling_jetPt"+partialUniqueSpecifier);
+  // TString* texPtmesRec = new TString("#it{p}_{T}^{meas, rec} (GeV/#it{c})");
+  // TString* count = new TString("count pre-width scaling");
+  TString textContext(contextCustomOneField(*texDatasetsComparisonCommonDenominator, ""));
+  // Draw_TH1_Histogram(smearedMeasured_recbinningTest, textContext, pdfName, texPtmesRec, count, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "logy");
+
+  TH1D* TH1D_unfold;
+  int unfoldParameterNominal = Get_Pt_spectrum_unfolded(TH1D_unfold, smearedMeasured_recbinningTest, iDataset, iRadius, unfoldParameterInput, options).first; //unfolded spectra is normalized to event and width inside the function.
+  TH1D* hStdUnf = (TH1D*)TH1D_unfold->Clone("hStdunf");
+  hStdUnf->Reset("ICES"); // clear everything but keep structure
+  std::vector<double> binContentUnfNominal;
+  for (int i = 1; i <= TH1D_unfold->GetNbinsX(); ++i) {
+    double sigma_i = TH1D_unfold->GetBinError(i);
+    double M_i = TH1D_unfold->GetBinContent(i);
+    double relStd = (M_i != 0.0) ? sigma_i / M_i : 0.0;
+    hStdUnf->SetBinContent(i, relStd);
+    hStdUnf->SetBinError(i, 0.0); // no error on the stddev itself
+
+    binContentUnfNominal.push_back(M_i);
+  }
+
+  TString* pdfName_hStdUnf = new TString("errors on nominal unfolding"+partialUniqueSpecifier);
+  TString* texPtUnfNominal = new TString("#it{p}_{T}^{unf, nominal} (GeV/#it{c})");
+  TString* errorsNominal = new TString("rel errors unfolding nominal ");
+  Draw_TH1_Histogram(hStdUnf, textContext, pdfName_hStdUnf, texPtUnfNominal, errorsNominal, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "logy");
+
+
+
+  int unfoldParameter[nToys];
+  // loop to generate the smeared histograms
+  for (int itoy = 0; itoy < nToys; ++itoy) {
+    
+    // make a deep copy of the original histogram
+    smearedMeasured[itoy] = (TH1D*)smearedMeasured_recbinningTest->Clone(Form("H1D_jetPt_smeared_measured_%d", itoy));
+    smearedMeasured[itoy]->Reset("ICE"); // clear content, keep binning 
+
+    // loop over bins (exclude underflow/overflow)
+    for (int i = 1; i <= smearedMeasured_recbinningTest->GetNbinsX(); ++i) {
+      double M_i     = smearedMeasured_recbinningTest->GetBinContent(i);
+      double sigma_i = smearedMeasured_recbinningTest->GetBinError(i);
+  
+      // draw smeared value from Gaussian(M_i, sigma_i)
+      double M_i_smeared = gRandom->Gaus(M_i, sigma_i); // Gaussian smearing
+      // double M_i_smeared = gRandom->Poisson(M_i);          // Poisson smearing
+
+      // fill new histogram bin
+      smearedMeasured[itoy]->SetBinContent(i, M_i_smeared);
+      smearedMeasured[itoy]->SetBinError(i, sigma_i); // keep original errors
+    }
+    // smearedMeasured_recbinning[itoy] = (TH1D*)smearedMeasured[itoy]->Rebin(nBinPtJetsRec[iRadius],TString::Format("jetPt_smeared_measured_recBinning_%d", itoy) +Datasets[iDataset]+DatasetsNames[iDataset]+RadiusLegend[iRadius], ptBinsJetsRec[iRadius]);
+    // int unfoldParameter;
+    
+    unfoldParameter[itoy] = Get_Pt_spectrum_unfolded(TH1D_unfoldSmeared[itoy], smearedMeasured[itoy], iDataset, iRadius, unfoldParameterInput, options).first; //unfolded spectra with efficiencies/purity applied, and normalized to event and bin width 
+
+    cout << "/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////" << endl;
+    cout << "/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////" << endl;
+    cout << "///////////////////////// SVD unfolding: toy " << itoy+1 << " out of " << nToys << ", Done!////////////////////////////////" << endl;
+    cout << "/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////" << endl; 
+    cout << "/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////" << endl;
+
+  }
+  const int nAllsmeared = nToys + 1;
+  TH1D* TH1D_measured_nominal_and_Smeared[nAllsmeared];
+  TH1D_measured_nominal_and_Smeared[0] = (TH1D*)smearedMeasured_recbinningTest->Clone("TH1D_measured_nominal");
+  for (int i = 0; i < nToys; ++i) {
+    TH1D_measured_nominal_and_Smeared[i+1] = (TH1D*)smearedMeasured[i]->Clone(Form("TH1D_measured_smeared_%d", i));
+  }
+  TString* Names_smeared = new TString[nAllsmeared];
+  for (int i = 0; i < nAllsmeared; ++i) {
+    if (i == 0) {
+      Names_smeared[i] = "Nominal measured";
+    }
+    else{
+    Names_smeared[i] = Form("smeared Toys%d", i);
+    }
+  }
+  TString* pdfName_smearedToys = new TString("measured smeared"+partialUniqueSpecifier);
+  TString* texPtmeasure = new TString("#it{p}_{T}^{meas} (GeV/#it{c})");
+  TString* measured_smeared = new TString("measured smeared ");
+  Draw_TH1_Histograms(TH1D_measured_nominal_and_Smeared, Names_smeared, nAllsmeared, textContext, pdfName_smearedToys, texPtmeasure, measured_smeared, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "logy");
+
+  // ------------------------------------------------------------------------------------------------------------
+
+  const int nAll = nToys + 1;
+  TH1D* TH1D_unfoldAll[nAll];
+
+  // first element is the nominal one
+  TH1D_unfoldAll[0] = (TH1D*) TH1D_unfold->Clone("TH1D_unfold_nominal");
+
+  // then copy all smeared histos
+  for (int i = 0; i < nToys; ++i) {
+    TH1D_unfoldAll[i+1] = (TH1D*) TH1D_unfoldSmeared[i]->Clone(Form("TH1D_unfoldSmeared_%d", i));
+  }
+  
+
+  TString* pdfName_UnfToy = new TString("Unfold_Toys"+partialUniqueSpecifier);
+  TString* texPtUnf = new TString("#it{p}_{T}^{unf} (GeV/#it{c})");
+  TString* unf_normalized_event_binWidth = new TString("unf norm to events and binWidth");
+  TString* Names = new TString[nAll];
+  for (int i = 0; i < nAll; ++i) {
+    if (i == 0) {
+      Names[i] = "Nominal";
+    }
+    else{
+    Names[i] = Form("Toys%d", i + 1);
+    }
+  }
+  Draw_TH1_Histograms(TH1D_unfoldAll, Names, nAll, textContext, pdfName_UnfToy, texPtUnf, unf_normalized_event_binWidth, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "logy");
+
+
+  int nBins = TH1D_unfoldSmeared[0]->GetNbinsX();
+  cout << "/////////////The number of bins in the TH1D_unfoldSmeared is : " << nBins << " ////////////////////////////////" << endl;
+
+  // Create an output histogram for the std deviation per bin
+  TH1D* hStdPerBin = (TH1D*) TH1D_unfoldSmeared[0]->Clone("hStdPerBin");
+  hStdPerBin->Reset("ICES"); // clear everything but keep structure
+
+  // Loop over bins (excluding under/overflow)
+  for (int iBin = 1; iBin <= nBins; ++iBin) {
+    std::vector<double> values;
+    values.reserve(nToys);
+
+    // collect M_i^k for all toys
+    for (int k = 0; k < nToys; ++k) {
+      values.push_back(TH1D_unfoldSmeared[k]->GetBinContent(iBin));
+    }
+
+    // compute mean
+    double sum = 0.0;
+    for (auto v : values) sum += v;
+    double mean = sum / nToys;
+
+    double nominal = binContentUnfNominal[iBin - 1]; // vector starts at index 0
+
+    // compute variance
+    double var = 0.0;
+    for (auto v : values) var += (v - nominal) * (v - nominal);
+    double stddev = std::sqrt(var / (nToys - 1)); // unbiased estimator : \sigma_i = \sqrt{ 1/(N_{toys} -1) \sum_k (M_i^k - <M_i>)^2 }, where k is the index of toys and i is the bin index
+
+    // fill the standard deviation value into output histogram
+    double relStd = (nominal != 0.0) ? stddev / nominal : 0.0;
+
+    hStdPerBin->SetBinContent(iBin, relStd);
+    hStdPerBin->SetBinError(iBin, 0.0); // no error on the stddev itself
+
+    // // --------------------------------------------------------
+    // // Draw distribution of values for this bin
+    // // --------------------------------------------------------
+    // TString histName = Form("hBin_%d", iBin);
+    // TH1D *hBinDist = new TH1D(histName, Form("Distribution for bin %d;M_{i}^{k};Entries", iBin),
+    //                           50, mean - 5*stddev, mean + 5*stddev); // range adjustable
+
+    // for (auto v : values)
+    //   hBinDist->Fill(v);
+
+    // // Draw the histogram
+    // TCanvas *c = new TCanvas(Form("c%d", iBin), Form("Bin %d distribution", iBin), 800, 600);
+    // hBinDist->Draw();
+    // c->Update();
+    // c->WaitPrimitive();  // pauses until you close/press a key
+  }
+
+
+  TString* pdfName_SVDuncertainty = new TString("SVDuncertainty_as_function_of_jetPt"+partialUniqueSpecifier);
+  TString* texPtUnfol = new TString("#it{p}_{T}^{unf} (GeV/#it{c})");
+  TString* texErrorsSVD = new TString("realtive certitudes from SVD unfolding");
+  // TString textContext(contextCustomOneField(*texDatasetsComparisonCommonDenominator, ""));
+  Draw_TH1_Histogram(hStdPerBin, textContext, pdfName_SVDuncertainty, texPtUnfol, texErrorsSVD, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "logy");
+
+
+  TString* pdfName_realtiveError = new TString("realtive Error, SVD unfolding"+partialUniqueSpecifier);
+  TString* relativeErrors = new TString("realtive errors");
+  const TString LegendRelativeErrors[2] = {"RooUnfold",
+                                            "smeared then unfold "};
+  TH1D** RelativeErrorsSVD = new TH1D*[2];
+    RelativeErrorsSVD[0] = hStdUnf;
+    RelativeErrorsSVD[1] = hStdPerBin;
+  
+  Draw_TH1_Histograms(RelativeErrorsSVD, LegendRelativeErrors, 2, textContext, pdfName_realtiveError, texPtUnfol, relativeErrors, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "logy");
+
+
+
+}
+
+
+
+

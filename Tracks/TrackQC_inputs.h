@@ -692,73 +692,37 @@ TFile* file_AliAnalysis; //dummy
 
 
 
-// // //////// -------- Run 3 LHC24_ppref_pass1 - run by run -------- ////////
-// TString* texCollisionDataInfo = new TString("pp #sqrt{#it{s}} = 5.36 TeV"); 
-// const TString* texDatasetsComparisonType = new TString("run");
-// const TString* texDatasetsComparisonCommonDenominator = new TString("LHC24_ppref_pass1");
-// const int nDatasets = 14;
-// const TString Datasets[nDatasets] = {
-//                                     "",  // not in a folder like others, all merged runs used as reference;  uncomment the line of desired reference and comment the other 
-//                                     // "mergedRuns_woRun559348_&_Run559385", // all runs merged whithout 559348 and 559385 used as reference 
-//                                     "Run559348", 
-//                                     "Run559456", 
-//                                     "Run559437", 
-//                                     "Run559385", 
-//                                     "Run559362", 
-//                                     "Run559387", 
-//                                     "Run559361", 
-//                                     "Run559444", 
-//                                     "Run559443", 
-//                                     "Run559423", 
-//                                     "Run559408", 
-//                                     "Run559410", 
-//                                     "Run559409"
-//                                     };
+// /////////// -------- Run 3 LHC24_ppref_pass1 - run by run - Data/MC comparaison LHC24_ppref_pass1 vs LHC25b4ab6_train549962 ------ ////////
+TString* texCollisionDataInfo = new TString("pp #sqrt{#it{s}} = 5.36 TeV"); 
+const TString* texDatasetsComparisonType = new TString("run");
+const TString* texDatasetsComparisonCommonDenominator = new TString("LHC24_ppref_pass1");
+const int nDatasets = 8;
+const TString Datasets[nDatasets] = {"Run559456", "Run559437", "Run559444", "Run559443", "Run559423", "Run559408", "Run559410", "Run559409"};
 
-// const TString DatasetsNames[nDatasets] = {
-//                                         "All runs",
-//                                         // "All runs wo 559348 and 559385",
-//                                         "490 kHz - Run559348",
-//                                         "1095 kHz - Run559456",
-//                                         "1101 kHz - Run559437",
-//                                         "1101 kHz - Run559385",
-//                                         "1107 kHz - Run559362",
-//                                         "1107 kHz - Run559387",
-//                                         "1109 kHz - Run559361",
-//                                         "1112 kHz - Run559444",
-//                                         "1112 kHz - Run559443",
-//                                         "1115 kHz - Run559423",
-//                                         "1118 kHz - Run559408",
-//                                         "1120 kHz - Run559410",
-//                                         "1146 kHz - Run559409"
-//                                         };
+const TString DatasetsNames[nDatasets] = {
+                                        // "All runs wo 559348 and 559385",
+                                        "1095 kHz - Run559456",
+                                        "1101 kHz - Run559437",
+                                        "1112 kHz - Run559444",
+                                        "1112 kHz - Run559443",
+                                        "1115 kHz - Run559423",
+                                        "1118 kHz - Run559408",
+                                        "1120 kHz - Run559410",
+                                        "1146 kHz - Run559409"
+                                        };
 
-// // excute the macro in the "yyyymmdd_discription" directroies (/home/tabikh/alice/MyWork/yyyymmdd_discription)
+// excute the macro in the "yyyymmdd_discription" directroies (/home/tabikh/alice/MyWork/yyyymmdd_discription)
 // TFile* file_O2Analysis_list[nDatasets] = {
 //                                 new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[0]+"/AnalysisResults.root"),
-//                                 // new TFile("Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[0]+"/AnalysisResults.root"), // all runs merged whithout 559348 and 559385 
 //                                 new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[1]+"/AnalysisResults.root"),
 //                                 new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[2]+"/AnalysisResults.root"),
 //                                 new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[3]+"/AnalysisResults.root"),
 //                                 new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[4]+"/AnalysisResults.root"),
 //                                 new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[5]+"/AnalysisResults.root"),
 //                                 new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[6]+"/AnalysisResults.root"),
-//                                 new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[7]+"/AnalysisResults.root"),
-//                                 new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[8]+"/AnalysisResults.root"),
-//                                 new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[9]+"/AnalysisResults.root"),
-//                                 new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[10]+"/AnalysisResults.root"),
-//                                 new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[11]+"/AnalysisResults.root"),
-//                                 new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[12]+"/AnalysisResults.root"),
-//                                 new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[13]+"/AnalysisResults.root")
+//                                 new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[7]+"/AnalysisResults.root")
 //                                 };
-
 // const TString analysisWorkflow[nDatasets] = {
-//                                             "track-efficiency",
-//                                             "track-efficiency",
-//                                             "track-efficiency",
-//                                             "track-efficiency",
-//                                             "track-efficiency",
-//                                             "track-efficiency",
 //                                             "track-efficiency",
 //                                             "track-efficiency",
 //                                             "track-efficiency",
@@ -768,16 +732,95 @@ TFile* file_AliAnalysis; //dummy
 //                                             "track-efficiency",
 //                                             "track-efficiency"
 //                                             };
-// const TString wagonId[nDatasets] = {"", "", "", "", "", "", "", "", "", "", "", "", "", ""};
+
+// ////////////////////////////////// Use these **instead of the above** for taking the eta and phi track spectrum from the 2D et-phi map in the jet-sprectra-charged workflow ////////
+TFile* file_O2Analysis_list[nDatasets] = { 
+                                new TFile("../Datasets/LHC24_ppref_pass1_train380686/"+Datasets[0]+"/AnalysisResults.root"),
+                                new TFile("../Datasets/LHC24_ppref_pass1_train380686/"+Datasets[1]+"/AnalysisResults.root"),
+                                new TFile("../Datasets/LHC24_ppref_pass1_train380686/"+Datasets[2]+"/AnalysisResults.root"),
+                                new TFile("../Datasets/LHC24_ppref_pass1_train380686/"+Datasets[3]+"/AnalysisResults.root"),
+                                new TFile("../Datasets/LHC24_ppref_pass1_train380686/"+Datasets[4]+"/AnalysisResults.root"),
+                                new TFile("../Datasets/LHC24_ppref_pass1_train380686/"+Datasets[5]+"/AnalysisResults.root"),
+                                new TFile("../Datasets/LHC24_ppref_pass1_train380686/"+Datasets[6]+"/AnalysisResults.root"),
+                                new TFile("../Datasets/LHC24_ppref_pass1_train380686/"+Datasets[7]+"/AnalysisResults.root")
+                                };
+const TString analysisWorkflow[nDatasets] = {
+                                            "jet-spectra-charged",
+                                            "jet-spectra-charged",
+                                            "jet-spectra-charged",
+                                            "jet-spectra-charged",
+                                            "jet-spectra-charged",
+                                            "jet-spectra-charged",
+                                            "jet-spectra-charged",
+                                            "jet-spectra-charged"
+                                            };                                           
+
+// ############################################################################ MONTE CARLO DATASETS ############################################################################
+//////////////////////////////for MC LHC25b4ab6_train549962 ////////////////////////////////
+const TString MC_Datasets[nDatasets] = {"Run559456", "Run559437", "Run559444", "Run559443", "Run559423", "Run559408", "Run559410", "Run559409"};
+
+TFile* file_O2AnalysisMC_list[nDatasets] = {new TFile("../Datasets/LHC25b4b5_train533385/"+MC_Datasets[0]+"/AnalysisResults.root"), 
+                                            new TFile("../Datasets/LHC25b4b5_train533385/"+MC_Datasets[1]+"/AnalysisResults.root"), 
+                                            new TFile("../Datasets/LHC25b4b5_train533385/"+MC_Datasets[2]+"/AnalysisResults.root"), 
+                                            new TFile("../Datasets/LHC25b4b5_train533385/"+MC_Datasets[3]+"/AnalysisResults.root"), 
+                                            new TFile("../Datasets/LHC25b4b5_train533385/"+MC_Datasets[4]+"/AnalysisResults.root"), 
+                                            new TFile("../Datasets/LHC25b4b5_train533385/"+MC_Datasets[5]+"/AnalysisResults.root"), 
+                                            new TFile("../Datasets/LHC25b4b5_train533385/"+MC_Datasets[6]+"/AnalysisResults.root"), 
+                                            new TFile("../Datasets/LHC25b4b5_train533385/"+MC_Datasets[7]+"/AnalysisResults.root")
+                                          };
+
+// const TString analysisWorkflowMC[nDatasets] = {"track-efficiency","track-efficiency","track-efficiency","track-efficiency","track-efficiency","track-efficiency","track-efficiency","track-efficiency"
+//                                             };
+
+const TString analysisWorkflowMC[nDatasets] = {"jet-spectra-charged","jet-spectra-charged","jet-spectra-charged","jet-spectra-charged","jet-spectra-charged","jet-spectra-charged","jet-spectra-charged","jet-spectra-charged"
+                                            };
+const TString wagonId[nDatasets] = {"", "", "", "", "", "", "", ""};
+// const TString wagonId[nDatasets] = {"", "", ""};
+const TString trainId = "";
+const bool isDatasetWeighted[nDatasets] = {false, false, false, false, false, false, false, false};
+// const bool isDatasetWeighted[nDatasets] = {false, false, false};
+
+const std::string histDrawColorsOption = "";
+const bool datasetsAreSubsetsofId0 = false;
+const bool trackHistsObsoleteVersion[nDatasets] = {true, true, true, true ,true, true, true, true};
+// const bool trackHistsObsoleteVersion[nDatasets] = {true, true, true};
+
+const std::string histDatasetComparisonStructure = "";
+
+
+
+
+
+
+
+
+// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                                            
+
+// // //////// -------- Run 3 LHC24_ppref_medium test outout Test -------- ////////
+// TString* texCollisionDataInfo = new TString("pp #sqrt{#it{s}} = 5.36 TeV"); 
+// const TString* texDatasetsComparisonType = new TString("run");
+// const TString* texDatasetsComparisonCommonDenominator = new TString("LHC24_ppref_medium_test output");
+// const int nDatasets = 1;
+// const TString Datasets[nDatasets] = {""};
+
+// const TString DatasetsNames[nDatasets] = {"All runs"};
+
+// // excute the macro in the "yyyymmdd_discription" directroies (/home/tabikh/alice/MyWork/yyyymmdd_discription)
+// TFile* file_O2Analysis_list[nDatasets] = {
+//                                 new TFile("../Datasets/LHC24_ppref_outputTestTracksQA/"+Datasets[0]+"/AnalysisResults.root")};
+
+// const TString analysisWorkflow[nDatasets] = {
+//                                             "track-efficiency"};
+// const TString wagonId[nDatasets] = {""};
 // // const TString wagonId[nDatasets] = {"", "", ""};
 
 // const TString trainId = "";
-// const bool isDatasetWeighted[nDatasets] = {false, false, false, false, false, false, false, false, false, false, false, false, false, false};
+// const bool isDatasetWeighted[nDatasets] = {false};
 // // const bool isDatasetWeighted[nDatasets] = {false, false, false};
 
 // const std::string histDrawColorsOption = "";
 // const bool datasetsAreSubsetsofId0 = false;
-// const bool trackHistsObsoleteVersion[nDatasets] = {true, true, true, true ,true, true, true, true, true, true, true, true, true, true};
+// const bool trackHistsObsoleteVersion[nDatasets] = {true};
 // // const bool trackHistsObsoleteVersion[nDatasets] = {true, true, true};
 
 // const std::string histDatasetComparisonStructure = "";
@@ -785,31 +828,76 @@ TFile* file_AliAnalysis; //dummy
 
 
 
-// //////// -------- Run 3 LHC24_ppref_medium test outout Test -------- ////////
-TString* texCollisionDataInfo = new TString("pp #sqrt{#it{s}} = 5.36 TeV"); 
-const TString* texDatasetsComparisonType = new TString("run");
-const TString* texDatasetsComparisonCommonDenominator = new TString("LHC24_ppref_medium_test output");
-const int nDatasets = 1;
-const TString Datasets[nDatasets] = {""};
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const TString DatasetsNames[nDatasets] = {"All runs"};
 
-// excute the macro in the "yyyymmdd_discription" directroies (/home/tabikh/alice/MyWork/yyyymmdd_discription)
-TFile* file_O2Analysis_list[nDatasets] = {
-                                new TFile("../Datasets/LHC24_ppref_outputTestTracksQA/"+Datasets[0]+"/AnalysisResults.root")};
+// // // /////////// -------- Run 3 LHC24_ppref_pass1 - run by run - Data/MC comparaison LHC24_ppref_pass1 vs LHC25b4a5_train558017_tracksQA ------ ////////
+// TString* texCollisionDataInfo = new TString("pp #sqrt{#it{s}} = 5.36 TeV"); 
+// const TString* texDatasetsComparisonType = new TString("run");
+// const TString* texDatasetsComparisonCommonDenominator = new TString("LHC24_ppref_pass1");
+// const int nDatasets = 5;
+// const TString Datasets[nDatasets] = {"Run559348", "Run559361", "Run559362", "Run559385", "Run559387"
+//                                      }; 
 
-const TString analysisWorkflow[nDatasets] = {
-                                            "track-efficiency"};
-const TString wagonId[nDatasets] = {""};
-// const TString wagonId[nDatasets] = {"", "", ""};
+// const TString DatasetsNames[nDatasets] = {
+//                                         // "All runs wo 559348 and 559385",
+//                                         "490 kHz - Run559348",
+//                                         "1109 kHz - Run559361",
+//                                         "1107 kHz - Run559362",
+//                                         "1101 kHz - Run559385",
+//                                         "1107 kHz - Run559387"
+//                                         };
 
-const TString trainId = "";
-const bool isDatasetWeighted[nDatasets] = {false};
-// const bool isDatasetWeighted[nDatasets] = {false, false, false};
+// // excute the macro in the "yyyymmdd_discription" directroies (/home/tabikh/alice/MyWork/yyyymmdd_discription)
+// TFile* file_O2Analysis_list[nDatasets] = {
+//                                 new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[0]+"/AnalysisResults.root"),
+//                                 new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[1]+"/AnalysisResults.root"),
+//                                 new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[2]+"/AnalysisResults.root"),
+//                                 new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[3]+"/AnalysisResults.root"),
+//                                 new TFile("../Datasets/LHC24_ppref_pass1_train387507_tracksQA/"+Datasets[4]+"/AnalysisResults.root")
+//                                 };
+// // TFile* file_O2Analysis_list[nDatasets] = {
+// //                                 new TFile("../Datasets/LHC24_ppref_pass1_train380686/"+Datasets[0]+"/AnalysisResults.root"),
+// //                                 new TFile("../Datasets/LHC24_ppref_pass1_train380686/"+Datasets[1]+"/AnalysisResults.root"),
+// //                                 new TFile("../Datasets/LHC24_ppref_pass1_train380686/"+Datasets[2]+"/AnalysisResults.root"),
+// //                                 new TFile("../Datasets/LHC24_ppref_pass1_train380686/"+Datasets[3]+"/AnalysisResults.root"),
+// //                                 new TFile("../Datasets/LHC24_ppref_pass1_train380686/"+Datasets[4]+"/AnalysisResults.root")
+// //                                 };
+// const TString analysisWorkflow[nDatasets] = {"track-efficiency","track-efficiency","track-efficiency","track-efficiency","track-efficiency"
+//                                             };
+// // const TString analysisWorkflow[nDatasets] = {"jet-spectra-charged", "jet-spectra-charged", "jet-spectra-charged", "jet-spectra-charged", "jet-spectra-charged"
+// //                                             };  
 
-const std::string histDrawColorsOption = "";
-const bool datasetsAreSubsetsofId0 = false;
-const bool trackHistsObsoleteVersion[nDatasets] = {true};
-// const bool trackHistsObsoleteVersion[nDatasets] = {true, true, true};
+// //////////////////////////////for MC LHC25b4a5_train558017_tracksQA ////////////////////////////////
+// const TString MC_Datasets[nDatasets] = {"Run559348", "Run559361", "Run559362", "Run559385", "Run559387"
+//                                         };                     
+// TFile* file_O2AnalysisMC_list[nDatasets] = {new TFile("../Datasets/LHC25b4a5_train558017_tracksQA/"+MC_Datasets[0]+"/AnalysisResults.root"), 
+//                                             new TFile("../Datasets/LHC25b4a5_train558017_tracksQA/"+MC_Datasets[1]+"/AnalysisResults.root"), 
+//                                             new TFile("../Datasets/LHC25b4a5_train558017_tracksQA/"+MC_Datasets[2]+"/AnalysisResults.root"),
+//                                             new TFile("../Datasets/LHC25b4a5_train558017_tracksQA/"+MC_Datasets[3]+"/AnalysisResults.root"), 
+//                                             new TFile("../Datasets/LHC25b4a5_train558017_tracksQA/"+MC_Datasets[4]+"/AnalysisResults.root")
+//                                           };
 
-const std::string histDatasetComparisonStructure = "";
+// // TFile* file_O2AnalysisMC_list[nDatasets] = {new TFile("../Datasets/LHC25b4a5_train535170/"+MC_Datasets[0]+"/AnalysisResults.root"), 
+// //                                             new TFile("../Datasets/LHC25b4a5_train535170/"+MC_Datasets[1]+"/AnalysisResults.root"), 
+// //                                             new TFile("../Datasets/LHC25b4a5_train535170/"+MC_Datasets[2]+"/AnalysisResults.root"),
+// //                                             new TFile("../Datasets/LHC25b4a5_train535170/"+MC_Datasets[3]+"/AnalysisResults.root"), 
+// //                                             new TFile("../Datasets/LHC25b4a5_train535170/"+MC_Datasets[4]+"/AnalysisResults.root")
+// //                                           };
+
+// const TString analysisWorkflowMC[nDatasets] = {"track-efficiency","track-efficiency","track-efficiency","track-efficiency","track-efficiency"
+//                                             };
+// // const TString analysisWorkflowMC[nDatasets] = {"jet-spectra-charged", "jet-spectra-charged", "jet-spectra-charged", "jet-spectra-charged", "jet-spectra-charged"
+// //                                             };                                            
+// const TString wagonId[nDatasets] = {"", "", "", "", ""};
+// // const TString wagonId[nDatasets] = {"", "", ""};
+// const TString trainId = "";
+// const bool isDatasetWeighted[nDatasets] = {false, false, false, false, false};
+// // const bool isDatasetWeighted[nDatasets] = {false, false, false};
+
+// const std::string histDrawColorsOption = "";
+// const bool datasetsAreSubsetsofId0 = false;
+// const bool trackHistsObsoleteVersion[nDatasets] = {true, true, true, true ,true};
+// // const bool trackHistsObsoleteVersion[nDatasets] = {true, true, true};
+
+// const std::string histDatasetComparisonStructure = "";

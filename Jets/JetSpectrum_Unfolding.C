@@ -248,7 +248,35 @@ std::pair<int, RooUnfold*> Get_Pt_spectrum_unfolded_preWidthScalingAtEndAndEvtNo
     RooUnfoldSvd* unfoldSvd = new RooUnfoldSvd(response, measured, unfoldParameter); // the RooUnfoldSvd instance that is actually used to unfold, with the best regularisation parameter
 
     // unfoldSvd->SetRegParm(-200);  // doesnt seem to change anything, even if I put 0 here ... annoying; but accoring to mailing list of roounfold it doesn't work well
+    // unfoldSvd->SetNtoysSVD(1000);
     hist_unfold = (TH1D*)(unfoldSvd->Hreco());
+    // /////////////////////////////////////////////////////////////////////// Print Error /////////////////////////////////////////////////////////////////////
+    // TVectorD errVec = unfoldSvd->ErecoV(RooUnfold::kCovToy);
+    // TH1D* hErrorToys = (TH1D*)hist_unfold->Clone("hErrorToys");
+    // hErrorToys->Reset("ICES"); // clear everything but keep structure
+    // for (int i = 1; i <= hist_unfold->GetNbinsX(); ++i) {
+    //   double sigma_i = errVec[i-1];
+    //   double M_i = hist_unfold->GetBinContent(i);
+    //   double relStd = (M_i != 0.0) ? sigma_i / M_i : 0.0;
+    //   hErrorToys->SetBinContent(i, relStd);
+    //   hErrorToys->SetBinError(i, 0.0); // no error on the stddev itself
+    // }
+
+    // TString* pdfName_hErrorToys = new TString("errors on nominal unfolding hErrorToys"+partialUniqueSpecifier);
+    // TString* PtUnfNominal = new TString("#it{p}_{T}^{unf, nominal} (GeV/#it{c})");
+    // TString* ErecoVNominal = new TString("ErecoV rel errors unfolding nominal ");
+    // TString textContext1(contextCustomTwoFields(*texDatasetsComparisonCommonDenominator, contextJetRadius(arrayRadius[iRadius]), ""));
+    // Draw_TH1_Histogram(hErrorToys, textContext1, pdfName_hErrorToys, PtUnfNominal, ErecoVNominal, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "logy");
+    // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    // cout << "/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////" << endl;
+    // cout << "/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////" << endl;
+    // cout << "Number of toy experiments used: " << unfoldSvd->GetNtoysSVD() << endl;
+    // cout << "/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////" << endl;
+    // cout << "/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////" << endl;
+    
+    
     unfold = unfoldSvd;
 
     // plot svd d distribution
@@ -259,7 +287,6 @@ std::pair<int, RooUnfold*> Get_Pt_spectrum_unfolded_preWidthScalingAtEndAndEvtNo
     std::array<std::array<float, 2>, 2> drawnWindowSvdParam = {{{0, 30}, {0.01, 10000}}}; // {{xmin, xmax}, {ymin, ymax}}
     // Draw_TH1_Histogram(H1D_D, textContext, pdfName_regparam, texSvdDvector, texSvdK, texCollisionDataInfo, drawnWindowSvdParam, legendPlacementAuto, contextPlacementAuto, "logy");
     Draw_TH1_Histogram(H1D_D, textContext, pdfName_regparam, texSvdK, texSvdDvector, texCollisionDataInfo, drawnWindowSvdParam, legendPlacementAuto, contextPlacementAuto, "logy");
-
 
   } else if (options.find("Bayes") != std::string::npos) {
     unfoldParameter = unfoldParameterInput;
@@ -779,9 +806,9 @@ void Get_Pt_spectrum_mcpFoldedWithFluctuations_preWidthScalingAtEnd(TH1D* &H1D_j
 
   if (normaliseDistribsBeforeUnfolding) {
     if (mcIsWeighted) {
-      NormaliseRawHistToNEvents(H1D_jetPt_mcpFolded, GetNEventsSelected_JetFramework_gen_weighted( file_O2Analysis_ppSimDetectorEffect_unfoldingControl[iDataset], analysisWorkflow_unfoldingControl));
+      NormaliseRawHistToNEvents(H1D_jetPt_mcpFolded, GetNEventsSelected_JetFramework_gen_weighted( file_O2Analysis_ppSimDetectorEffect_unfoldingControl, analysisWorkflow_unfoldingControl));
     } else {
-      NormaliseRawHistToNEvents(H1D_jetPt_mcpFolded, GetNEventsSelected_JetFramework_gen( file_O2Analysis_ppSimDetectorEffect_unfoldingControl[iDataset], analysisWorkflow_unfoldingControl));
+      NormaliseRawHistToNEvents(H1D_jetPt_mcpFolded, GetNEventsSelected_JetFramework_gen( file_O2Analysis_ppSimDetectorEffect_unfoldingControl, analysisWorkflow_unfoldingControl));
     }
   }
 }
