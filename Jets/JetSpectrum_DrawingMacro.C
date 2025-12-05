@@ -120,7 +120,7 @@ void JetSpectrum_DrawingMacro() {
   // Draw_kinematicEfficiency(iDataset, iRadius, optionsAnalysis);
   // Draw_FakeRatio(iDataset, iRadius, optionsAnalysis);
 
-  int unfoldParameterInput = 3;
+  int unfoldParameterInput = 7;
   Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput, optionsAnalysis);
   // int unfoldParameterInput2 = 8;
   // Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput2, optionsAnalysis);

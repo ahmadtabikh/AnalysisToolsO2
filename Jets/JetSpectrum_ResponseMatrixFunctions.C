@@ -409,7 +409,7 @@ void Get_PtResponseMatrix_detectorResponse(TH2D* &H2D_jetPtResponseMatrix_detect
     H2D_jetPtMcdjetPtMcdSecond->Sumw2();
 
     TH2D *H2D_jetPtMcdjetPtMcd = (TH2D*)H2D_jetPtMcdjetPtMcdFirst->Clone("H2D_jetPtMcdjetPtMcd_Sum");
-    H2D_jetPtMcdjetPtMcd->Add(H2D_jetPtMcdjetPtMcdSecond);  // This does content + error^2 propagation
+    H2D_jetPtMcdjetPtMcd->Add(H2D_jetPtMcdjetPtMcdSecond);  // This does content addition + error^2 propagation
 
     H2D_gen_det_geoMatched = (TH2D*)H2D_jetPtMcdjetPtMcd->Clone(partialUniqueSpecifier+"_genrec");
 

@@ -294,8 +294,14 @@ std::pair<int, RooUnfold*> Get_Pt_spectrum_unfolded_preWidthScalingAtEndAndEvtNo
     unfold = unfoldBayes;
   } 
 
-
   H1D_jetPt_unfolded = (TH1D*)hist_unfold->Clone("H1D_jetPt_unfolded"+partialUniqueSpecifier);
+
+  // //// temporary: draw unfolded before efficiency division ////
+  // TH1D* TH1D_Unfolded_original = (TH1D*)H1D_jetPt_unfolded->Clone("TH1D_Unfolded_original"+partialUniqueSpecifier);
+  // TString* pdfName = new TString("Aiemric code : Original_Unfolded_Spectrum before normalizing width and event and efficiency application"); 
+  // TString textContext(contextCustomTwoFields(*texDatasetsComparisonCommonDenominator, contextJetRadius(arrayRadius[iRadius]), ""));
+  // Draw_TH1_Histogram(TH1D_Unfolded_original, textContext, pdfName, texPtX, texJetPtYield_EventNorm, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "logy");
+  // ///////////////////////////////////////////////////////////////
 
   bool divideSuccessEff;
   TH1D* H1D_jetEfficiency;
