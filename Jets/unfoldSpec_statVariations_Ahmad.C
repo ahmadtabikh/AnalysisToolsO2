@@ -83,8 +83,8 @@ void unfoldSpec_statVariations_Ahmad(){
 
   int iDataset = 0;
   int iRadius = 1;
-  int nRepeats = 5;
-  bool doBayes = false;
+  int nRepeats = 100;
+  bool doBayes = true;
   bool varySpec = true;
   bool varyResp = false;
   int errTreatment = 1;
@@ -102,36 +102,25 @@ void unfoldSpec_statVariations_Ahmad(){
   bool resetErr = false;
   GetResponse(&OrgResponse, &TH2D_Response_fine, smearResp, iDataset, iRadius, resetErr);
 
-  // Make sure the histogram is valid
   if (!TH2D_Response_fine) {
       cout << "TH2D_Response_fine is NULL!" << endl;
   } else {
       cout << "############# Jet TH2D_Response_fine exist #############" << endl;
-      // TCanvas* Matrix = new TCanvas("Matrix", "Response Matrix", 800, 600);
-      // TH2D_Response_fine->Draw("COLZ"); // COLZ option gives a color map
   }
 
   // --- Get Measured Spectrum (rec binning, pre width scaling)
   TH1D* measuredInput = nullptr;
   Get_Pt_spectrum_bkgCorrected_recBinning_preWidthScalingAtEndAndEvtNorm(measuredInput, iDataset, iRadius, ""); //Good 
-  // TCanvas* c_measuredInput = new TCanvas("c_measuredInput", "measuredInput", 800, 600);
-  // measuredInput->SetTitle("measuredInput;pT [GeV/c];purity");
-  // measuredInput->Draw();
   
   // --- Correct measured for Purity 
   TH1D* mcdRecBin = nullptr;
   TH1D* purity = nullptr;
-
   Get_Pt_spectrum_mcd_recBinning_preWidthScalingAtEndAndEvtNorm(mcdRecBin, iDataset, iRadius, ""); // Good 
-
   GetJetPurity(&purity, TH2D_Response_fine, mcdRecBin, iRadius); // Good
   if (!purity) {
       cout << "purity is NULL!" << endl;
   } else {
       cout << "############# Jet purity exist #############" << endl;
-    // TString* pdfName = new TString("fakeRatio");
-    // TString textContext(contextCustomOneField(*texDatasetsComparisonCommonDenominator, ""));
-    // Draw_TH1_Histogram(purity, textContext, pdfName, texPtJetRecX, texFakeRatio, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "");
   }
 
   TH1D* measured = (TH1D*) measuredInput->Clone("measured_correctedForPurity");
@@ -140,9 +129,6 @@ void unfoldSpec_statVariations_Ahmad(){
         cout << "measured is NULL, before the for loop!" << endl;
     } else {
         cout << "############# Jet measured exist #############" << endl;
-        // TCanvas* c_measured = new TCanvas("c_measured", "Response Matrix", 800, 600);
-        // measured->SetTitle("Measured Spectrum after Purity Correction;pT [GeV/c];Counts");
-        // measured->Draw();
   }
 
   // --- Unfold Priginal spectrum
@@ -152,25 +138,19 @@ void unfoldSpec_statVariations_Ahmad(){
       cout << "TH1D_Unfolded_original is NULL, before the for loop!" << endl;
     } else {
       cout << "############# Jet TH1D_Unfolded_original exist #############" << endl;
-      // TString* pdfName = new TString("Original_Unfolded_Spectrum before normalizing width and event and efficiency application"); 
-      // TString textContext(contextCustomTwoFields(*texDatasetsComparisonCommonDenominator, contextJetRadius(arrayRadius[iRadius]), ""));
-      // Draw_TH1_Histogram(TH1D_Unfolded_original, textContext, pdfName, texPtX, texJetPtYield_EventNorm, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "logy");
   }
 
-  // --- Kinematic efficiency
-  TH1D* kinematicEfficiency;
-  TString name_H1D_kinematicEfficiency = Datasets[iDataset]+"_R="+Form("%.1f",arrayRadius[iRadius]);
-  TH2D* Response_normYslice = (TH2D*) TH2D_Response_fine->Clone("response normYslice");
-  NormaliseYSlicesToOne(Response_normYslice); 
-  Get_ResponseMatrix_Pt_KinematicEffiency(kinematicEfficiency, Response_normYslice, name_H1D_kinematicEfficiency, iRadius); // Good
-  if (!kinematicEfficiency) {
-      cout << "kinematicEfficiency is NULL!" << endl;
-  } else {
-      cout << "############# Jet kinematicEfficiency exist #############" << endl;
-      // TString* pdfName = new TString("kinematicEfficiency");
-      // TString textContext(contextCustomOneField(*texDatasetsComparisonCommonDenominator, ""));
-      // Draw_TH1_Histogram(kinematicEfficiency, textContext, pdfName, texPtJetGenX, texJetKinematicEfficiency, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
-  }
+  // // --- Kinematic efficiency
+  // TH1D* kinematicEfficiency;
+  // TString name_H1D_kinematicEfficiency = Datasets[iDataset]+"_R="+Form("%.1f",arrayRadius[iRadius]);
+  // TH2D* Response_normYslice = (TH2D*) TH2D_Response_fine->Clone("response normYslice");
+  // NormaliseYSlicesToOne(Response_normYslice); 
+  // Get_ResponseMatrix_Pt_KinematicEffiency(kinematicEfficiency, Response_normYslice, name_H1D_kinematicEfficiency, iRadius); // Good
+  // if (!kinematicEfficiency) {
+  //     cout << "kinematicEfficiency is NULL!" << endl;
+  // } else {
+  //     cout << "############# Jet kinematicEfficiency exist #############" << endl;
+  // }
 
   // --- Matched efficiency
   TH1D* jetEfficiency = nullptr;
@@ -180,14 +160,10 @@ void unfoldSpec_statVariations_Ahmad(){
       cout << "jetEfficiency is NULL!" << endl;
   } else {
       cout << "############# Jet Efficiency exist #############" << endl;
-      // TString* pdfName = new TString("Matching Efficiency");
-      // TString textContext(contextCustomOneField(*texDatasetsComparisonCommonDenominator, ""));
-      // Draw_TH1_Histogram(jetEfficiency, textContext, pdfName, texPtJetGenX, texJetEfficiency, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "efficiency");
   }
     
   
   TH1D_Unfolded_original->Divide(jetEfficiency);
-  // TH1D_Unfolded_original->Divide(kinematicEfficiency);
   NormaliseRawHistToNEvents(TH1D_Unfolded_original, GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflowData));
   TransformRawHistToYield(TH1D_Unfolded_original); // final unfolded spectrum
 
@@ -195,9 +171,6 @@ void unfoldSpec_statVariations_Ahmad(){
         cout << "TH1D_Unfolded_original is NULL, before the for loop!" << endl;
     } else {
         cout << "############# Jet TH1D_Unfolded_original exist #############" << endl;
-        // TString* pdfName = new TString("Original_Unfolded_Spectrum");
-        // TString textContext(contextCustomTwoFields(*texDatasetsComparisonCommonDenominator, contextJetRadius(arrayRadius[iRadius]), ""));
-        // Draw_TH1_Histogram(TH1D_Unfolded_original, textContext, pdfName, texPtX, texJetPtYield_EventNorm, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "logy");
   }
 
   // ---------------------------
@@ -206,8 +179,9 @@ void unfoldSpec_statVariations_Ahmad(){
   TProfile* TProfile_JetPtVar = new TProfile("TProfile_JetPtVar","",nBinPtJetsGen[iRadius], ptBinsJetsGen[iRadius],"S");   
     
   for(int rep=0; rep < nRepeats; rep++){
-
-    cout<<" ############################## unfold repetition "<<rep << " ############################## " <<endl;
+    cout<<" ########################################################################################### " <<endl;
+    cout<<" ############################## UNFOLD REPETATION "<<rep << " ############################## " <<endl;
+    cout<<" ########################################################################################### " <<endl;
 
     TH1D* TH1D_Unfolded = nullptr; 
     RooUnfoldResponse* SmearedResponse = nullptr;
@@ -253,16 +227,18 @@ void unfoldSpec_statVariations_Ahmad(){
 
   TProfile* TProfile_MatrixVar = new TProfile("TProfile_MatrixVar","",nBinPtJetsGen[iRadius], ptBinsJetsGen[iRadius],"S"); 
   for(int rep=0; rep < nRepeats; rep++){
+    cout<<" ################################################################################################### " <<endl;
+    cout<<" ############################## MATRIX SMEARED REPETATION "<<rep << " ############################## " <<endl;
+    cout<<" ################################################################################################### " <<endl;
 
-    cout<<"unfold Smeared Resp and Nominal measured rep "<< rep<<endl;
     TH1D* TH1D_Unfolded = nullptr; 
     RooUnfoldResponse* SmearedResponse = nullptr;
     TH2D* Response_fine_Smeared = nullptr;
     TH1D* measuredSmeared = nullptr;
-    GetResponse(&SmearedResponse, &Response_fine_Smeared, true, iDataset, iRadius, resetErr);
-    unfoldSpec(SmearedResponse, measured, &TH1D_Unfolded, nIterSpec, errTreatment, iRadius, doBayes);
+    GetResponse(&SmearedResponse, &Response_fine_Smeared, true, iDataset, iRadius, resetErr); // true to smear
+    unfoldSpec(SmearedResponse, measured, &TH1D_Unfolded, nIterSpec, errTreatment, iRadius, doBayes); // unfold with smeared response and nominal measured
     TH1D* jetEfficiency = nullptr;
-    GetJetEfficiency(&jetEfficiency, (varyResp ? Response_fine_Smeared : TH2D_Response_fine) , TH2D_Response_fine, iDataset, iRadius);
+    GetJetEfficiency(&jetEfficiency, Response_fine_Smeared, TH2D_Response_fine, iDataset, iRadius);
     TH1D_Unfolded->Divide(jetEfficiency);
     NormaliseRawHistToNEvents(TH1D_Unfolded, GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflowData));
     TransformRawHistToYield(TH1D_Unfolded); // final smeared unfolded spectrum
@@ -275,113 +251,136 @@ void unfoldSpec_statVariations_Ahmad(){
   // --------------------------------------
 
   // unfolded spec errors as assigned by RooUnfold
-  TH1D* TH1D_Unfolded_original_error = (TH1D*) TH1D_Unfolded_original->Clone("TH1D_Unfolded_original_error");
-  TH1D_Unfolded_original_error->Reset();
+  // TH1D* TH1D_Unfolded_original_error = (TH1D*) TH1D_Unfolded_original->Clone("TH1D_Unfolded_original_error");
+  // TH1D_Unfolded_original_error->Reset();
   
-  for(int bin=1; bin<=TH1D_Unfolded_original->GetNbinsX(); bin++){ 
-    if(TH1D_Unfolded_original->GetBinContent(bin)){
-      TH1D_Unfolded_original_error->SetBinContent(bin,TH1D_Unfolded_original->GetBinError(bin)/TH1D_Unfolded_original->GetBinContent(bin));
-      TH1D_Unfolded_original_error->SetBinError(bin,0);
-    }
-  }
+  // for(int bin=1; bin<=TH1D_Unfolded_original->GetNbinsX(); bin++){ 
+  //   if(TH1D_Unfolded_original->GetBinContent(bin)){
+  //     TH1D_Unfolded_original_error->SetBinContent(bin,TH1D_Unfolded_original->GetBinError(bin)/TH1D_Unfolded_original->GetBinContent(bin));
+  //     TH1D_Unfolded_original_error->SetBinError(bin,0);
+  //   }
+  // }
 
   
-  // error from variations 
+  // // error from variations 
+  // TH1D* hRelUncert = (TH1D*) TH1D_Unfolded_original->Clone("hRelUncert");
+  // hRelUncert->Reset();
+
+  // int nBins = hRelUncert->GetNbinsX();
+
+  // for (int bin = 1; bin <= nBins; bin++) {
+  //     double mean = TProfile_JetPtVar->GetBinContent(bin);
+  //     double rms  = TProfile_JetPtVar->GetBinError(bin);  // because of option "S"
+
+  //     if (mean > 0) {
+  //         hRelUncert->SetBinContent(bin, rms / mean);
+  //     } else {
+  //         hRelUncert->SetBinContent(bin, 0);
+  //     }
+  //     hRelUncert->SetBinError(bin, 0);
+  // }
+
+  // TH1D* hRelUncertSmearedMatrix = (TH1D*) TH1D_Unfolded_original->Clone("hRelUncert");
+  // hRelUncertSmearedMatrix->Reset();
+
+  // int nBins2 = hRelUncertSmearedMatrix->GetNbinsX();
+
+  // for (int bin = 1; bin <= nBins2; bin++) {
+  //     double mean = TProfile_MatrixVar->GetBinContent(bin);
+  //     double rms  = TProfile_MatrixVar->GetBinError(bin);  // because of option "S"
+
+  //     if (mean > 0) {
+  //         hRelUncertSmearedMatrix->SetBinContent(bin, rms / mean);
+  //     } else {
+  //         hRelUncertSmearedMatrix->SetBinContent(bin, 0);
+  //     }
+  //     hRelUncertSmearedMatrix->SetBinError(bin, 0);
+  // }
+  // === 1) Define / clone the histograms ===
+
+  TH1D* TH1D_Unfolded_original_error = (TH1D*) TH1D_Unfolded_original->Clone("TH1D_Unfolded_original_error");
+  TH1D_Unfolded_original_error->Reset();
+
   TH1D* hRelUncert = (TH1D*) TH1D_Unfolded_original->Clone("hRelUncert");
   hRelUncert->Reset();
 
-  int nBins = hRelUncert->GetNbinsX();
-
-  for (int bin = 1; bin <= nBins; bin++) {
-      double mean = TProfile_JetPtVar->GetBinContent(bin);
-      double rms  = TProfile_JetPtVar->GetBinError(bin);  // because of option "S"
-
-      if (mean > 0) {
-          hRelUncert->SetBinContent(bin, rms / mean);
-      } else {
-          hRelUncert->SetBinContent(bin, 0);
-      }
-      hRelUncert->SetBinError(bin, 0);
-  }
-
-  TH1D* hRelUncertSmearedMatrix = (TH1D*) TH1D_Unfolded_original->Clone("hRelUncert");
+  TH1D* hRelUncertSmearedMatrix = (TH1D*) TH1D_Unfolded_original->Clone("hRelUncertSmearedMatrix");
   hRelUncertSmearedMatrix->Reset();
 
-  int nBins2 = hRelUncertSmearedMatrix->GetNbinsX();
+  // === 2) Combined single loop for all three calculations ===
+  int nBins = TH1D_Unfolded_original->GetNbinsX();
+  for (int bin = 1; bin <= nBins; bin++) {
+      // --------------------------------------------------------
+      // A) Original relative error (statistical)
+      // --------------------------------------------------------
+      double val = TH1D_Unfolded_original->GetBinContent(bin);
+      double err = TH1D_Unfolded_original->GetBinError(bin);
 
-  for (int bin = 1; bin <= nBins2; bin++) {
-      double mean = TProfile_MatrixVar->GetBinContent(bin);
-      double rms  = TProfile_MatrixVar->GetBinError(bin);  // because of option "S"
+      if (val > 0)
+          TH1D_Unfolded_original_error->SetBinContent(bin, err / val);
+      else
+          TH1D_Unfolded_original_error->SetBinContent(bin, 0);
 
-      if (mean > 0) {
-          hRelUncertSmearedMatrix->SetBinContent(bin, rms / mean);
-      } else {
+      TH1D_Unfolded_original_error->SetBinError(bin, 0);
+
+      // --------------------------------------------------------
+      // B) Relative uncertainty from spectrum variations (TProfile_JetPtVar)
+      // --------------------------------------------------------
+      double mean_spec = TProfile_JetPtVar->GetBinContent(bin);   // ⟨x⟩
+      double rms_spec  = TProfile_JetPtVar->GetBinError(bin);     // RMS ("S" option)
+
+      if (mean_spec > 0)
+          hRelUncert->SetBinContent(bin, rms_spec / mean_spec);
+      else
+          hRelUncert->SetBinContent(bin, 0);
+
+      hRelUncert->SetBinError(bin, 0);
+
+      // --------------------------------------------------------
+      // C) Relative uncertainty from smeared matrix variations
+      // --------------------------------------------------------
+      double mean_mat = TProfile_MatrixVar->GetBinContent(bin);
+      double rms_mat  = TProfile_MatrixVar->GetBinError(bin);
+
+      if (mean_mat > 0)
+          hRelUncertSmearedMatrix->SetBinContent(bin, rms_mat / mean_mat);
+      else
           hRelUncertSmearedMatrix->SetBinContent(bin, 0);
-      }
+
       hRelUncertSmearedMatrix->SetBinError(bin, 0);
   }
- 
+
 
   // ----- Drawing -----
-  TString* pdfName_realtiveError = new TString("realtive Error, SVD unfolding");
-  TString* texPtUnfol = new TString("#it{p}_{T}^{unf} (GeV/#it{c})");
-  TString* relativeErrors = new TString("realtive errors");
-  TString textContext = TString("SVD ");
-
-  // TString LegendRelativeErrors[2] = {
-  //   "RooUnfold original error",   // fixed
-  //   ""                            // placeholder for the dynamic text
-  // };
+  // TString* pdfName_realtiveError = new TString("realtive Error, SVD unfolding");
+  // TString* texPtUnfol = new TString("#it{p}_{T}^{unf} (GeV/#it{c})");
+  // TString* relativeErrors = new TString("realtive errors");
+  // TString textContext = TString("SVD ");
+  // std::array<std::array<float, 2>, 2> drawnWindow = {{{0, 100},{-999, -999}}};
+  // std::array<std::array<float, 2>, 2> legendPlacement = {{{0.15, 0.75}, {0.45, 0.88}}}; // {{{x1, y1}, {x2, y2}}}
 
   // // Determine the third legend dynamically
-  // if (varySpec && varyResp) {
-  //     LegendRelativeErrors[1] = "Smeared measured, Smeared Matrix";
-  // } else if (varySpec) {
-  //     LegendRelativeErrors[1] = "Smeared measured, Nominal Matrix";
-  // } else if (varyResp) {
-  //     LegendRelativeErrors[1] = "Nominal measured, Smeared Matrix";
-  // } else {
-  //     LegendRelativeErrors[1] = "Nominal measured, Nominal Matrix"; // optional default
-  // }
+  // const TString LegendRelativeErrors[3] = {"RooUnfold orginal error", "Smeared measured, Nominal Matrix", "Nominal measured, Smeared Matrix"};
 
-  // TH1D** RelativeErrorsSVD = new TH1D*[2];
+  // TH1D** RelativeErrorsSVD = new TH1D*[3];
   // RelativeErrorsSVD[0] = TH1D_Unfolded_original_error;
-  // // RelativeErrorsSVD[1] = TH1D_Unfolded_original_PoissErr;
   // RelativeErrorsSVD[1] = hRelUncert;
-
-  // TString LegendRelativeErrors[2] = {
-  //   "RooUnfold original error",   // fixed
-  //   ""                            // placeholder for the dynamic text
-  // };
-
-  // Determine the third legend dynamically
-  const TString LegendRelativeErrors[3] = {"RooUnfold orginal error", "Smeared measured, Nominal Matrix", "Nominal measured, Smeared Matrix"};
-
-  TH1D** RelativeErrorsSVD = new TH1D*[3];
-  RelativeErrorsSVD[0] = TH1D_Unfolded_original_error;
-  RelativeErrorsSVD[1] = hRelUncert;
-  RelativeErrorsSVD[2] = hRelUncertSmearedMatrix;
+  // RelativeErrorsSVD[2] = hRelUncertSmearedMatrix;
   
-  // Draw_TH1_Histograms(RelativeErrorsSVD, LegendRelativeErrors, 3, textContext, pdfName_realtiveError, texPtUnfol, relativeErrors, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "logy");
-  TCanvas* c = new TCanvas("c", "Relative Errors SVD", 800, 600);
-  c->SetLogy();
+  // Draw_TH1_Histograms(RelativeErrorsSVD, LegendRelativeErrors, 3, textContext, pdfName_realtiveError, texPtUnfol, relativeErrors, texCollisionDataInfo, drawnWindow, legendPlacement, contextPlacementAuto, "logy");
 
-  RelativeErrorsSVD[0]->SetLineColor(kBlack);
-  RelativeErrorsSVD[0]->SetLineWidth(2);
+  // Put histograms in an array
+  TH1D* RelativeErrorsSVD[3] = {TH1D_Unfolded_original_error, hRelUncert, hRelUncertSmearedMatrix };
 
-  RelativeErrorsSVD[1]->SetLineColor(kRed);
-  RelativeErrorsSVD[1]->SetLineWidth(2);
-  RelativeErrorsSVD[1]->SetLineStyle(2);
+  Color_t colors[3] = { kBlack, kRed, kBlue };
 
-  RelativeErrorsSVD[2]->SetLineColor(kBlue);
-  RelativeErrorsSVD[2]->SetLineWidth(2);
-  RelativeErrorsSVD[2]->SetLineStyle(3);
+  TString labels[3] = {
+      "RooUnfold error",           // later append error treatment
+      "Smeared measured, Nominal Matrix",
+      "Nominal measured, Smeared Matrix"
+  };
 
-  RelativeErrorsSVD[0]->Draw("HIST");
-  RelativeErrorsSVD[1]->Draw("HIST SAME");
-  RelativeErrorsSVD[2]->Draw("HIST SAME");
-
-  // Determine error treatment name
+  // === Build the full legend name for the first histogram ===
   TString etName;
   switch (errTreatment) {
       case -1: etName = "kCovariance"; break;
@@ -391,14 +390,34 @@ void unfoldSpec_statVariations_Ahmad(){
       default: etName = "kErrors";     break;
   }
 
-  // Add legend
-  TLegend* leg = new TLegend(0.6,0.7,0.88,0.88);
-  leg->AddEntry(RelativeErrorsSVD[0], "Original error (" + etName + ")", "l");
-  leg->AddEntry(RelativeErrorsSVD[1], "Poissonian error", "l");
-  leg->AddEntry(RelativeErrorsSVD[2], "Smeared Matrix", "l");
-  leg->Draw();
+  labels[0] += " (" + etName + ")";
 
-  
+
+  // === Canvas ===
+  gStyle->SetOptStat(0);
+  TCanvas* c = new TCanvas("c", "Relative Errors SVD", 800, 800);
+  c->SetLogy();
+
+  // === Loop over histograms to configure and draw ===
+  for (int i = 0; i < 3; i++) {
+      RelativeErrorsSVD[i]->SetStats(0);
+      RelativeErrorsSVD[i]->SetLineColor(colors[i]);
+      RelativeErrorsSVD[i]->SetLineWidth(2);
+
+      RelativeErrorsSVD[i]->SetTitle("Relative Uncertainties; p_{T}^{jet} [GeV]; Relative error");
+      if (i == 0)
+          RelativeErrorsSVD[i]->Draw("HIST");
+      else
+          RelativeErrorsSVD[i]->Draw("HIST SAME");
+  }
+
+  // === Legend ===
+  TLegend* leg = new TLegend(0.15, 0.75, 0.6, 0.88);
+
+  for (int i = 0; i < 3; i++)
+      leg->AddEntry(RelativeErrorsSVD[i], labels[i], "l");
+
+  leg->Draw();
 
 }
 
@@ -462,9 +481,6 @@ void SetStyle(Bool_t graypalette) {
   //  gStyle->SetFillColor(kWhite);
   gStyle->SetLegendFont(42);
 }
-
-
-
 
 void IterationLegend(TString* iterationLegend, int unfoldIterationMin, int unfoldIterationMax, int step){
   const int nUnfoldIteration = std::floor((unfoldIterationMax - unfoldIterationMin + 1)/step);

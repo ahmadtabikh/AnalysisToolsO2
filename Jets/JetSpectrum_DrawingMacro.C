@@ -120,17 +120,17 @@ void JetSpectrum_DrawingMacro() {
   // Draw_kinematicEfficiency(iDataset, iRadius, optionsAnalysis);
   // Draw_FakeRatio(iDataset, iRadius, optionsAnalysis);
 
-  int unfoldParameterInput = 7;
-  Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput, optionsAnalysis);
+  // int unfoldParameterInput = 7;
+  // Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput, optionsAnalysis);
   // int unfoldParameterInput2 = 8;
   // Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput2, optionsAnalysis);
   // int unfoldParameterInput3 = 10;
   // Draw_Pt_spectrum_unfolded(iDataset, iRadius, unfoldParameterInput3, optionsAnalysis);
 
-  // int unfoldParameterInputMin = 4;
-  // int unfoldParameterInputMax = 16;
-  // int unfoldParameterInputStep = 3;
-  // Draw_Pt_spectrum_unfolded_parameterVariation(iDataset, iRadius, unfoldParameterInputMin, unfoldParameterInputMax, unfoldParameterInputStep, optionsAnalysis);
+  int unfoldParameterInputMin = 6;
+  int unfoldParameterInputMax = 8;
+  int unfoldParameterInputStep = 1;
+  Draw_Pt_spectrum_unfolded_parameterVariation(iDataset, iRadius, unfoldParameterInputMin, unfoldParameterInputMax, unfoldParameterInputStep, optionsAnalysis);
 
   // Draw_Pt_spectrum_unfolded_SVDuncertainty(iDataset, iRadius, unfoldParameterInput, optionsAnalysis);
 
@@ -869,7 +869,6 @@ void Draw_Pt_spectrum_unfolded_parameterVariation(int iDataset, int iRadius, int
     yAxisLabel = texJetPtYield_EventNorm;
   }
   Draw_TH1_Histograms(H1D_jetPt_unfolded, unfoldingIterationLegend, nUnfoldIteration, textContext, pdfName, texPtX, yAxisLabel, texCollisionDataInfo, drawnWindowUnfoldedMeasurement, legendPlacementAuto, contextPlacementAuto, "logy");
-
 
     // comparison with raw measured
   // TString unfoldedMeasuredCompLegend[2] = {"unfolded data", "measured raw (gen binning)"};
