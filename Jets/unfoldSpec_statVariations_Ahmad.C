@@ -370,14 +370,14 @@ void unfoldSpec_statVariations_Ahmad(){
   // Draw_TH1_Histograms(RelativeErrorsSVD, LegendRelativeErrors, 3, textContext, pdfName_realtiveError, texPtUnfol, relativeErrors, texCollisionDataInfo, drawnWindow, legendPlacement, contextPlacementAuto, "logy");
 
   // Put histograms in an array
-  TH1D* RelativeErrorsSVD[3] = {TH1D_Unfolded_original_error, hRelUncert, hRelUncertSmearedMatrix };
+  TH1D* RelativeErrorsSVD[3] = {hRelUncertSmearedMatrix, TH1D_Unfolded_original_error, hRelUncert  };
 
-  Color_t colors[3] = { kBlack, kRed, kBlue };
+  Color_t colors[3] = { kBlack , kRed, kBlue };
 
   TString labels[3] = {
+      "Nominal measured, Smeared Matrix",
       "RooUnfold error",           // later append error treatment
-      "Smeared measured, Nominal Matrix",
-      "Nominal measured, Smeared Matrix"
+      "Smeared measured, Nominal Matrix"
   };
 
   // === Build the full legend name for the first histogram ===
@@ -584,6 +584,10 @@ void unfoldSpec(RooUnfoldResponse* response, TH1D* measured, TH1D** hist_unfold,
   }
 
   *hist_unfold = (TH1D*) hReco->Clone("unfolded histogram before efficiencies correction and normalization (bin widht and event)");  // Important: clone it!
+  // covariance matrix
+  // TMatrixD covarianceMatrix = unfoldSpec->Ereco(RooUnfold::kCovToy);
+  // *h2Cov = new TH2D(covarianceMatrix);
+
 
   // delete unfold;
   cout<<" ############# unfolding done properly with unfoldSpec function #################"<<endl;
