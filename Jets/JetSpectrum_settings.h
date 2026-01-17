@@ -42,7 +42,7 @@ const bool matrixTransformationOrder = 0; // use 0
  //1: rebin, then YSliceNorm and scaleRespByXYWidth, then reweight; 
  //2: rebin, then reweight, then YSliceNorm and scaleRespByXYWidth
 
-char unfoldingMethod[] = "Bayes"; // unfolding method options: Bayes, Svd
+char unfoldingMethod[] = "Svd"; // unfolding method options: Bayes, Svd
 char optionsAnalysis[100] = "";
 
 const bool isDataPbPb = false; // if false -> pp

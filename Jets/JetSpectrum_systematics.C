@@ -57,7 +57,9 @@ void LoadLibs_Systematics();
 
 void Get_systematics_UnfoldMethod(TH1D* &hSystematicUncertainty, TH1D* &hSystematicUncertainty_PreBarlow, int iDataset, int iRadius, char** unfoldingMethodList, int* unfoldParameterInputList, int nUnfoldingMethods, std::string options);
 void Draw_Systematics_UnfoldMethod(int iDataset, int iRadius, char** unfoldingMethodList, int* unfoldParameterInputList, int nUnfoldingMethods, std::string options);
-void Draw_Syatematics_parameterVariation(int iDataset, int iRadius, int unfoldIterationMin, int unfoldIterationMax, int step, std::string options);
+void Draw_Systematics_parameterVariation(int iDataset, int iRadius, int unfoldIterationMin, int unfoldIterationMax, int step, std::string options);
+void Draw_Systematics_trackefficiency(int iDataset, int iRadius, char** unfoldingMethodList, int* unfoldParameterInputList, int nUnfoldingMethods, std::string options);
+void Draw_TrackEfficiency_systematics();
 
 
 /////////////////////////////////////////////////////
@@ -87,15 +89,26 @@ void JetSpectrum_systematics() {
 
   const int nUnfoldingMethods = 2;
   char* unfoldingMethodList[nUnfoldingMethods] = {"Svd", "Bayes"}; // default is the first one in this list
-  int unfoldParameterInputList[2] = {7, 5};
-
+  int unfoldParameterInputList[2] = {7, 4}; // first and third for nominal, second and fourth for systematics variation
   Draw_Systematics_UnfoldMethod(iDataset, iRadius, unfoldingMethodList, unfoldParameterInputList, nUnfoldingMethods, optionsAnalysis_withoutUnfoldingMethod);
+
+
   // char optionsAnalysis[100] = "";
   // snprintf(optionsAnalysis, sizeof(optionsAnalysis), "%s,%s,%s", mergingPrior, unfoldingPrior, unfoldingMethod);
   // int unfoldParameterInputMin = 6;
   // int unfoldParameterInputMax = 8;
   // int unfoldParameterInputStep = 1;
-  // Draw_Syatematics_parameterVariation(iDataset, iRadius, unfoldParameterInputMin, unfoldParameterInputMax, unfoldParameterInputStep, optionsAnalysis);
+  // Draw_Systematics_parameterVariation(iDataset, iRadius, unfoldParameterInputMin, unfoldParameterInputMax, unfoldParameterInputStep, optionsAnalysis);
+
+
+  // Draw_TrackEfficiency_systematics(); // use a root file with all unfolded spectra with methods and track efficiency variations
+
+
+  // const int nUnfoldingMethodsTrackeff = 4;
+  // char* unfoldingMethodListTrackeff[nUnfoldingMethodsTrackeff] = {"Svd", "Svd", "Bayes", "Bayes"}; // default is the first one in this list
+  // int unfoldParameterInputListTrackeff[4] = {7, 4, 4, 2}; // first and third for nominal, second and fourth for systematics variation
+  // Draw_Systematics_trackefficiency(iDataset, iRadius, unfoldingMethodListTrackeff, unfoldParameterInputListTrackeff, nUnfoldingMethodsTrackeff, optionsAnalysis);
+
 
 }
 
@@ -169,7 +182,7 @@ void Get_systematics_UnfoldMethod(TH1D* &hSystematicUncertainty, TH1D* &hSystema
   hTempSystematicUncertainty_PreBarlow->Sumw2();
   hTempSystematicUncertainty->Reset("M");
   hTempSystematicUncertainty_PreBarlow->Reset("M");
-  TString partialUniqueSpecifier = Datasets[iDataset]+"_R="+Form("%.1f",arrayRadius[iRadius]);
+  TString partialUniqueSpecifier = Datasets[iDataset]+DatasetsMC[0]+"_R="+Form("%.1f",arrayRadius[iRadius]);
 
   // return histogram that has the systematics in its contents
   TH1D* H1D_jetPt_unfolded[nUnfoldingMethods];
@@ -194,6 +207,18 @@ void Get_systematics_UnfoldMethod(TH1D* &hSystematicUncertainty, TH1D* &hSystema
   for(int iMethod = 0; iMethod < nUnfoldingMethods; iMethod++){
     snprintf(optionsAnalysis_withUnfoldingMethod, sizeof(optionsAnalysis_withUnfoldingMethod), "%s,%s", options.c_str(), (const char*)unfoldingMethodList[iMethod]);
     Get_Pt_spectrum_unfolded(H1D_jetPt_unfolded[iMethod], measuredInput, iDataset, iRadius, unfoldParameterInputList[iMethod], optionsAnalysis_withUnfoldingMethod);
+
+    // write in root file the unfolded spectra
+    // TFile* outputFile_UnfoldedSpectra = new TFile("TrackEff_Systematics.root","UPDATE");
+    // std::string histName = "H1D_jetPt_unfolded_" + 
+    //                    std::string(unfoldingMethodList[iMethod]) + 
+    //                    "_param" + 
+    //                    std::to_string(unfoldParameterInputList[iMethod]) + 
+    //                    "_" + 
+    //                    std::string(partialUniqueSpecifier.Data());
+
+    // H1D_jetPt_unfolded[iMethod]->Write(histName.c_str());
+    // outputFile_UnfoldedSpectra->Close();  
 
     // --- DIFFERENCE histogram (method_i - method_0)
     if (iMethod != 0) {
@@ -232,7 +257,7 @@ void Get_systematics_UnfoldMethod(TH1D* &hSystematicUncertainty, TH1D* &hSystema
     Double_t StatUncertainty_MaxDeviationCase = H1D_jetPt_unfolded[id_SignalExtractionType_maxDeviation]->GetBinError(iBinPt);
  
     int PtArrayIterator = iBinPt - 1;
-    hSigmaBarlow[PtArrayIterator] = sqrt(abs(StatUncertainty_MaxDeviationCase*StatUncertainty_MaxDeviationCase - StatUncertainty_REF*StatUncertainty_REF)); //stat error of the difference in the case of subsample : sqrt( | sigma1_{unfBayes}^2 - sigma_{unfSVD}^2 | )
+    hSigmaBarlow[PtArrayIterator] = sqrt(abs(StatUncertainty_MaxDeviationCase*StatUncertainty_MaxDeviationCase + StatUncertainty_REF*StatUncertainty_REF)); //stat error of the difference in the case of subsample : sqrt( | sigma1_{unfBayes}^2 - sigma_{unfSVD}^2 | )
  
     hTempSystematicUncertainty_PreBarlow->SetBinContent(iBinPt,SystUncertainty);
     hTempSystematicUncertainty_PreBarlow->SetBinError(iBinPt,hSigmaBarlow[PtArrayIterator]);
@@ -288,14 +313,25 @@ void Draw_Systematics_UnfoldMethod(int iDataset, int iRadius, char** unfoldingMe
   TString* pdfName = new TString("Systematics_UnfoldMethod_"+partialUniqueSpecifier);
   TString* pdfName_PreBarlow = new TString("Systematics_UnfoldMethod_"+partialUniqueSpecifier+"_PreBarlow");
 
-  TString textContext("");
+  // TString textContext("sys. unfolding method");
+  // TString textContext =
+  // "#splitline{sys. unfolding method}"
+  //            "{k_{svd} = 7, k_{bayes} = 4}";
+  TString textContext = Form(
+    "#splitline{sys. unfolding method}"
+    "{k_{svd} = %d, k_{bayes} = %d}",
+    unfoldParameterInputList[0],
+    unfoldParameterInputList[1]
+  );
 
-  Draw_TH1_Histogram(hSystematicUncertainty, textContext, pdfName, texPtJetRecX, texSystematicsPercent, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
-  Draw_TH1_Histogram(hSystematicUncertainty_PreBarlow, textContext, pdfName_PreBarlow, texPtJetRecX, texSystematicsPercent, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
+  TString* texRelativeErrPercent = new TString ("relative error (%)");
+  std::array<std::array<float, 2>, 2> drawnWindow = {{{5, 200}, {0, 25}}};
+  Draw_TH1_Histogram(hSystematicUncertainty, textContext, pdfName, texPtJetRecX, texRelativeErrPercent, texCollisionDataInfo, drawnWindow, legendPlacementAuto, contextPlacementAuto, "");
+  Draw_TH1_Histogram(hSystematicUncertainty_PreBarlow, textContext, pdfName_PreBarlow, texPtJetRecX, texRelativeErrPercent, texCollisionDataInfo, drawnWindow, legendPlacementAuto, contextPlacementAuto, "");
 }
 
 
-void Draw_Syatematics_parameterVariation(int iDataset, int iRadius, int unfoldIterationMin, int unfoldIterationMax, int step, std::string options) {
+void Draw_Systematics_parameterVariation(int iDataset, int iRadius, int unfoldIterationMin, int unfoldIterationMax, int step, std::string options) {
   cout << "########### Drawing systematics from parameter variation ###############" << endl;
   const int nUnfoldIteration = std::floor((unfoldIterationMax - unfoldIterationMin + 1)/step);
 
@@ -373,10 +409,244 @@ void Draw_Syatematics_parameterVariation(int iDataset, int iRadius, int unfoldIt
   TString textContext("SVD unfolding");
   TString* sigma = new TString("#sigma interation variation");
   TString* relativeErrors = new TString("realtive errors (%) ");
+  std::array<std::array<float, 2>, 2> drawnWindow = {{{5, 200}, {0, 1.6}}};
   // Draw_TH1_Histogram(hSys_envelope, textContext, pdfName_envolope, texPtJetRecX, sigma, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
-  Draw_TH1_Histogram(hSys_rel, textContext, pdfName_relUnc, texPtJetRecX, relativeErrors, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
+  Draw_TH1_Histogram(hSys_rel, textContext, pdfName_relUnc, texPtJetRecX, relativeErrors, texCollisionDataInfo, drawnWindow, legendPlacementAuto, contextPlacementAuto, "");
   
 }
+
+
+void Draw_TrackEfficiency_systematics()
+{
+    // Open the ROOT file
+    TFile *f = TFile::Open("TrackEff_Systematics.root", "READ");
+    if (!f || f->IsZombie()) {
+        Error("Draw_TrackEfficiency_systematics", "Cannot open file TrackEff_Systematics.root");
+        return;
+    }
+
+    // Get histograms
+    TH1D *H1D_Nominal_SVD = (TH1D*)f->Get("H1D_jetPt_unfolded_Svd_param7_LHC24_ppref_pass1_train380686LHC25b4b5_train533385_R=0.4"); //Svd 7 with nominal track efficiency
+    TH1D *H1D_Nominal_Bayes = (TH1D*)f->Get("H1D_jetPt_unfolded_Bayes_param4_LHC24_ppref_pass1_train380686LHC25b4b5_train533385_R=0.4"); //Bayes 4 with nominal track efficiency
+    TH1D *H1D_Reduced_SVD = (TH1D*)f->Get("H1D_jetPt_unfolded_Svd_param4_LHC24_ppref_pass1_train380686LHC25b4b5_train533385ReducedTrackEff_R=0.4");  //Svd 4 with reduced track efficiency
+    TH1D *H1D_Reduced_Bayes = (TH1D*)f->Get("H1D_jetPt_unfolded_Bayes_param2_LHC24_ppref_pass1_train380686LHC25b4b5_train533385ReducedTrackEff_R=0.4"); //Bayes 2 with reduced track efficiency
+
+    if (!H1D_Nominal_SVD || !H1D_Nominal_Bayes || !H1D_Reduced_SVD || !H1D_Reduced_Bayes) {
+        Error("Draw_TrackEfficiency_systematics", "One or more histograms not found");
+        f->Close();
+        return;
+    }
+
+    // TString* pdfName_svdNominal = new TString("Nominal_SVD7");
+    // TString* pdfName_bayesNominal = new TString("Nominal_Bayes4");
+    // TString textContext("");
+    // Draw_TH1_Histogram(H1D_Nominal_SVD, textContext, pdfName_svdNominal, texPtJetRecX, texJetPtYield_EventNorm, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "logy");
+    // Draw_TH1_Histogram(H1D_Nominal_Bayes, textContext, pdfName_bayesNominal, texPtJetRecX, texJetPtYield_EventNorm, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "logy");
+
+    // TString* pdfName_svdReduced = new TString("Reduced_SVD4");
+    // TString* pdfName_bayesReduced = new TString("Reduced_Bayes2");
+    // Draw_TH1_Histogram(H1D_Reduced_SVD, textContext, pdfName_svdReduced, texPtJetRecX, texJetPtYield_EventNorm, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "logy");
+    // Draw_TH1_Histogram(H1D_Reduced_Bayes, textContext, pdfName_bayesReduced, texPtJetRecX, texJetPtYield_EventNorm, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "logy");
+
+
+
+    // Create histograms for absolute differences and relative uncertainties
+    TH1D *H1D_Delta_SVD = (TH1D*)H1D_Nominal_SVD->Clone("hDiff_NominalReduced_SVD");
+    H1D_Delta_SVD->Reset();
+    TH1D *H1D_RelativeUncertainty_SVD = (TH1D*)H1D_Nominal_SVD->Clone("H1D_RelativeUncertainty_SVD");
+    H1D_RelativeUncertainty_SVD->Reset();
+
+    TH1D *H1D_Delta_Bayes = (TH1D*)H1D_Nominal_Bayes->Clone("H1D_Delta_Bayes");
+    H1D_Delta_Bayes->Reset();
+    TH1D *H1D_RelativeUncertainty_Bayes = (TH1D*)H1D_Nominal_Bayes->Clone("H1D_RelativeUncertainty_Bayes");
+    H1D_RelativeUncertainty_Bayes->Reset();
+
+    // Compute absolute differences bin by bin and compute relative uncertainties
+    for (int i = 1; i <= H1D_Nominal_SVD->GetNbinsX(); ++i) {
+        H1D_Delta_SVD->SetBinContent(i, abs(H1D_Nominal_SVD->GetBinContent(i) - H1D_Reduced_SVD->GetBinContent(i)));
+        H1D_Delta_SVD->SetBinError(i, 0.0);
+
+        if (H1D_Nominal_SVD->GetBinContent(i) != 0) {
+            double relUnc = (H1D_Delta_SVD->GetBinContent(i) / H1D_Nominal_SVD->GetBinContent(i)) * 100.0; // in percent
+            H1D_RelativeUncertainty_SVD->SetBinContent(i, relUnc);
+            H1D_RelativeUncertainty_SVD->SetBinError(i, 0.0);
+        } else {
+            H1D_RelativeUncertainty_SVD->SetBinContent(i, 0.0);
+            H1D_RelativeUncertainty_SVD->SetBinError(i, 0.0);
+        }
+    }
+
+    for (int i = 1; i <= H1D_Nominal_Bayes->GetNbinsX(); ++i) {
+        H1D_Delta_Bayes->SetBinContent(i, abs(H1D_Nominal_Bayes->GetBinContent(i) - H1D_Reduced_Bayes->GetBinContent(i)));
+        H1D_Delta_Bayes->SetBinError(i, 0.0);
+
+        if (H1D_Nominal_Bayes->GetBinContent(i) != 0) {
+            double relUnc = (H1D_Delta_Bayes->GetBinContent(i) / H1D_Nominal_Bayes->GetBinContent(i)) * 100.0; // in percent
+            H1D_RelativeUncertainty_Bayes->SetBinContent(i, relUnc);
+            H1D_RelativeUncertainty_Bayes->SetBinError(i, 0.0);
+        } else {
+            H1D_RelativeUncertainty_Bayes->SetBinContent(i, 0.0);
+            H1D_RelativeUncertainty_Bayes->SetBinError(i, 0.0);
+        }
+    }
+    TString textContextSVD("with 3% reduced track efficiency (SVD)");
+    TString textContextBayes("with 3% reduced track efficiency (Bayes)");
+
+    TString* pdfName_relUncSvd_logx = new TString("Relative_uncert_Svd_Data_train380686_Nominal_train533385_param7_ReducedTrackEff3perCent_train564527_param4_R=0.4_logx");
+    TString* pdfName_relUncBayes_logx = new TString("Relative_uncert_Bayes_Data_train380686_Nominal_train533385_param4_ReducedTrackEff3perCent_train564527_param2_R=0.4_logx");
+    TString* pdfName_relUncSvd = new TString("Relative_uncert_Svd_Data_train380686_Nominal_train533385_param7_ReducedTrackEff3perCent_train564527_param4_R=0.4");
+    TString* pdfName_relUncBayes = new TString("Relative_uncert_Bayes_Data_train380686_Nominal_train533385_param4_ReducedTrackEff3perCent_train564527_param2_R=0.4");
+    std::array<std::array<float, 2>, 2> drawnWindow = {{{5, 200}, {0, 80}}};
+
+    Draw_TH1_Histogram(H1D_RelativeUncertainty_SVD, textContextSVD, pdfName_relUncSvd_logx, texPtJetRecX, texSystematicsPercent, texCollisionDataInfo, drawnWindow, legendPlacementAuto, contextPlacementAuto, "logx");
+    Draw_TH1_Histogram(H1D_RelativeUncertainty_Bayes, textContextBayes, pdfName_relUncBayes_logx, texPtJetRecX, texSystematicsPercent, texCollisionDataInfo, drawnWindow, legendPlacementAuto, contextPlacementAuto, "logx");
+    Draw_TH1_Histogram(H1D_RelativeUncertainty_SVD, textContextSVD, pdfName_relUncSvd, texPtJetRecX, texSystematicsPercent, texCollisionDataInfo, drawnWindow, legendPlacementAuto, contextPlacementAuto, "");
+    Draw_TH1_Histogram(H1D_RelativeUncertainty_Bayes, textContextBayes, pdfName_relUncBayes, texPtJetRecX, texSystematicsPercent, texCollisionDataInfo, drawnWindow, legendPlacementAuto, contextPlacementAuto, "");
+
+    ///
+    // TString* pdfName_Svd = new TString(Form( "Systematics_Trackeff_SVD_R%d_Dataset%d_NominalK=%d_VarK=%d", iRadius, iDataset, unfoldParameterInputList[0], unfoldParameterInputList[1] ));
+    // TString* pdfName_Bayes = new TString(Form( "Systematics_Trackeff_Bayes_R%d_Dataset%d_NominalK=%d_VarK=%d", iRadius, iDataset, unfoldParameterInputList[2], unfoldParameterInputList[3]));
+
+    // TString textContext("");
+    // TString* AbsoluteDifference = new TString ("Absolute difference");
+
+
+    // Draw_TH1_Histogram(H1D_jetPt_unfolded_absDiff_01, textContext, pdfName_Svd, texPtJetRecX, AbsoluteDifference, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
+    // Draw_TH1_Histogram(H1D_jetPt_unfolded_absDiff_23, textContext, pdfName_Bayes, texPtJetRecX, AbsoluteDifference, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
+
+}
+
+
+
+void Draw_Systematics_trackefficiency(int iDataset, int iRadius, char** unfoldingMethodList, int* unfoldParameterInputList, int nUnfoldingMethods, std::string options){
+
+  TH1D* hTempSystematicUncertainty = new TH1D("hTempSystematicUncertainty", "hTempSystematicUncertainty", nBinPtJetsGen[iRadius], ptBinsJetsGen[iRadius]);
+  hTempSystematicUncertainty->Sumw2();
+  hTempSystematicUncertainty->Reset("M");
+  TString partialUniqueSpecifier = Datasets[iDataset]+"_R="+Form("%.1f",arrayRadius[iRadius]);
+
+  // return histogram that has the systematics in its contents
+  TH1D* H1D_jetPt_unfolded[nUnfoldingMethods];
+  TH1D* H1D_jetPt_unfolded_differences[nUnfoldingMethods-2];
+  TH1D* H1D_jetPt_unfolded_ratio[nUnfoldingMethods-1];
+
+
+  TH1D* measuredInput;
+  if (!normGenAndMeasByNEvtsBeforeUnfolding) {
+    Get_Pt_spectrum_bkgCorrected_recBinning_preWidthScalingAtEndAndEvtNorm(measuredInput, iDataset, iRadius, options); 
+    if (useFineBinningTest) {
+      Get_Pt_spectrum_bkgCorrected_fineBinning_preWidthScalingAtEndAndEvtNorm(measuredInput, iDataset, iRadius, options);
+    }
+  } else{
+    Get_Pt_spectrum_bkgCorrected_recBinning_preWidthScalingAtEnd(measuredInput, iDataset, iRadius, options);
+    if (useFineBinningTest) {
+      Get_Pt_spectrum_bkgCorrected_fineBinning_preWidthScalingAtEnd(measuredInput, iDataset, iRadius, options);
+    }
+  }
+
+  char optionsAnalysis_withUnfoldingMethod[100] = "";
+  for(int iMethod = 0; iMethod < nUnfoldingMethods; iMethod++){
+    if (file_O2Analysis_MCfileForMatrix) {
+        file_O2Analysis_MCfileForMatrix->Close();
+        delete file_O2Analysis_MCfileForMatrix;
+        file_O2Analysis_MCfileForMatrix = nullptr;
+    }
+
+    if (iMethod == 0 || iMethod == 2) {
+        file_O2Analysis_MCfileForMatrix = new TFile("../Datasets/LHC25b4b5_train588753/AnalysisResults.root");
+    } else {
+        file_O2Analysis_MCfileForMatrix = new TFile("../Datasets/LHC25b4ab6_train564527_trackLoss3perCent/AnalysisResults.root");
+    }
+    snprintf(optionsAnalysis_withUnfoldingMethod, sizeof(optionsAnalysis_withUnfoldingMethod), "%s,%s", options.c_str(), (const char*)unfoldingMethodList[iMethod]);
+    Get_Pt_spectrum_unfolded(H1D_jetPt_unfolded[iMethod], measuredInput, iDataset, iRadius, unfoldParameterInputList[iMethod], optionsAnalysis_withUnfoldingMethod);
+  }
+  
+
+  TH1D* H1D_Nominal_SVD = (TH1D*)H1D_jetPt_unfolded[0]->Clone("H1D_Nominal_SVD");
+  TH1D* H1D_Reduced_SVD = (TH1D*)H1D_jetPt_unfolded[1]->Clone("H1D_Reduced_SVD"); 
+
+  TH1D* H1D_Nominal_Bayes = (TH1D*)H1D_jetPt_unfolded[2]->Clone("H1D_Nominal_Bayes"); 
+  TH1D* H1D_Reduced_Bayes = (TH1D*)H1D_jetPt_unfolded[3]->Clone("H1D_Reduced_Bayes"); 
+
+  TH1D *H1D_Delta_SVD = (TH1D*)H1D_Nominal_SVD->Clone("hDiff_NominalReduced_SVD");
+  H1D_Delta_SVD->Reset();
+  TH1D *H1D_RelativeUncertainty_SVD = (TH1D*)H1D_Nominal_SVD->Clone("H1D_RelativeUncertainty_SVD");
+  H1D_RelativeUncertainty_SVD->Reset();
+
+  TH1D *H1D_Delta_Bayes = (TH1D*)H1D_Nominal_Bayes->Clone("H1D_Delta_Bayes");
+  H1D_Delta_Bayes->Reset();
+  TH1D *H1D_RelativeUncertainty_Bayes = (TH1D*)H1D_Nominal_Bayes->Clone("H1D_RelativeUncertainty_Bayes");
+  H1D_RelativeUncertainty_Bayes->Reset();
+
+  // Compute absolute differences bin by bin and compute relative uncertainties
+  for (int i = 1; i <= H1D_Nominal_SVD->GetNbinsX(); ++i) {
+      H1D_Delta_SVD->SetBinContent(i, abs(H1D_Nominal_SVD->GetBinContent(i) - H1D_Reduced_SVD->GetBinContent(i)));
+      H1D_Delta_SVD->SetBinError(i, 0.0);
+
+      if (H1D_Nominal_SVD->GetBinContent(i) != 0) {
+          double relUnc = (H1D_Delta_SVD->GetBinContent(i) / H1D_Nominal_SVD->GetBinContent(i)) * 100.0; // in percent
+          H1D_RelativeUncertainty_SVD->SetBinContent(i, relUnc);
+          H1D_RelativeUncertainty_SVD->SetBinError(i, 0.0);
+      } else {
+          H1D_RelativeUncertainty_SVD->SetBinContent(i, 0.0);
+          H1D_RelativeUncertainty_SVD->SetBinError(i, 0.0);
+      }
+  }
+
+  for (int i = 1; i <= H1D_Nominal_Bayes->GetNbinsX(); ++i) {
+      H1D_Delta_Bayes->SetBinContent(i, abs(H1D_Nominal_Bayes->GetBinContent(i) - H1D_Reduced_Bayes->GetBinContent(i)));
+      H1D_Delta_Bayes->SetBinError(i, 0.0);
+
+      if (H1D_Nominal_Bayes->GetBinContent(i) != 0) {
+          double relUnc = (H1D_Delta_Bayes->GetBinContent(i) / H1D_Nominal_Bayes->GetBinContent(i)) * 100.0; // in percent
+          H1D_RelativeUncertainty_Bayes->SetBinContent(i, relUnc);
+          H1D_RelativeUncertainty_Bayes->SetBinError(i, 0.0);
+      } else {
+          H1D_RelativeUncertainty_Bayes->SetBinContent(i, 0.0);
+          H1D_RelativeUncertainty_Bayes->SetBinError(i, 0.0);
+      }
+  }
+  TString textContextSVD("with 3% reduced track efficiency (SVD)");
+  TString textContextBayes("with 3% reduced track efficiency (Bayes)");
+
+  TString* pdfName_relUncSvd_logx = new TString("Relative_uncert_Svd_Data_train380686_Nominal_train533385_param7_ReducedTrackEff3perCent_train564527_param4_R=0.4_logx");
+  TString* pdfName_relUncBayes_logx = new TString("Relative_uncert_Bayes_Data_train380686_Nominal_train533385_param4_ReducedTrackEff3perCent_train564527_param2_R=0.4_logx");
+  TString* pdfName_relUncSvd = new TString("Relative_uncert_Svd_Data_train380686_Nominal_train533385_param7_ReducedTrackEff3perCent_train564527_param4_R=0.4");
+  TString* pdfName_relUncBayes = new TString("Relative_uncert_Bayes_Data_train380686_Nominal_train533385_param4_ReducedTrackEff3perCent_train564527_param2_R=0.4");
+  std::array<std::array<float, 2>, 2> drawnWindow = {{{5, 200}, {0, 80}}};
+
+  Draw_TH1_Histogram(H1D_RelativeUncertainty_SVD, textContextSVD, pdfName_relUncSvd_logx, texPtJetRecX, texSystematicsPercent, texCollisionDataInfo, drawnWindow, legendPlacementAuto, contextPlacementAuto, "logx");
+  Draw_TH1_Histogram(H1D_RelativeUncertainty_Bayes, textContextBayes, pdfName_relUncBayes_logx, texPtJetRecX, texSystematicsPercent, texCollisionDataInfo, drawnWindow, legendPlacementAuto, contextPlacementAuto, "logx");
+  Draw_TH1_Histogram(H1D_RelativeUncertainty_SVD, textContextSVD, pdfName_relUncSvd, texPtJetRecX, texSystematicsPercent, texCollisionDataInfo, drawnWindow, legendPlacementAuto, contextPlacementAuto, "");
+  Draw_TH1_Histogram(H1D_RelativeUncertainty_Bayes, textContextBayes, pdfName_relUncBayes, texPtJetRecX, texSystematicsPercent, texCollisionDataInfo, drawnWindow, legendPlacementAuto, contextPlacementAuto, "");
+
+
+  // TString* pdfName_Svd = new TString(Form( "Systematics_Trackeff_SVD_R%d_Dataset%d_NominalK=%d_VarK=%d",
+  //       iRadius, iDataset,
+  //       unfoldParameterInputList[0],
+  //       unfoldParameterInputList[1]
+  //   )
+  // );
+
+
+  // TString* pdfName_Bayes = new TString(Form( "Systematics_Trackeff_Bayes_R%d_Dataset%d_NominalK=%d_VarK=%d",
+  //     iRadius, iDataset,
+  //     unfoldParameterInputList[2],
+  //     unfoldParameterInputList[3]
+  // ));
+
+  // TString textContext("");
+  // TString* AbsoluteDifference = new TString ("Absolute difference");
+
+
+  // Draw_TH1_Histogram(H1D_jetPt_unfolded_absDiff_01, textContext, pdfName_Svd, texPtJetRecX, AbsoluteDifference, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
+  // Draw_TH1_Histogram(H1D_jetPt_unfolded_absDiff_23, textContext, pdfName_Bayes, texPtJetRecX, AbsoluteDifference, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "");
+
+
+
+
+}
+
 
 
 // Assume Get_Pt_spectrum_unfolded(TH1D* out, TH1D* measured, ...)
@@ -496,3 +766,20 @@ void Draw_SvdBayesRatioWithCovariance(int iDataset, int iRadius, char** unfoldin
     hRatio->Draw("E1");
 }
 */
+
+
+  // for(int iMethod = 0; iMethod < nUnfoldingMethods; iMethod++){
+  //   if (iMethod == 0 || iMethod == 2) {
+  //     TFile* file_O2Analysis_MCfileForMatrix = new TFile("../Datasets/LHC25b4b5_train533385/AnalysisResults.root");
+  //     // oldformatNEventsGenInO2Analysis = true;
+  //     snprintf(optionsAnalysis_withUnfoldingMethod, sizeof(optionsAnalysis_withUnfoldingMethod), "%s,%s", options.c_str(), (const char*)unfoldingMethodList[iMethod]);
+  //     Get_Pt_spectrum_unfolded(H1D_jetPt_unfolded[iMethod], measuredInput, iDataset, iRadius, unfoldParameterInputList[iMethod], optionsAnalysis_withUnfoldingMethod);
+  //   } else if (iMethod == 1 || iMethod == 3) {
+  //     // TFile* file_O2Analysis_MCfileForMatrix = new TFile("../Datasets/LHC25b4ab6_train564527_trackLoss3perCent/AnalysisResults.root");
+  //       TFile* file_O2Analysis_MCfileForMatrix = new TFile("../Datasets/LHC25b4b5_train533385/AnalysisResults.root");
+  //     // oldformatNEventsGenInO2Analysis = false;
+
+  //     snprintf(optionsAnalysis_withUnfoldingMethod, sizeof(optionsAnalysis_withUnfoldingMethod), "%s,%s", options.c_str(), (const char*)unfoldingMethodList[iMethod]);
+  //     Get_Pt_spectrum_unfolded(H1D_jetPt_unfolded[iMethod], measuredInput, iDataset, iRadius, unfoldParameterInputList[iMethod], optionsAnalysis_withUnfoldingMethod);  
+  //   }
+  // }
