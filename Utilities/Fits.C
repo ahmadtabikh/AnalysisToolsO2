@@ -242,4 +242,117 @@ std::pair<TH1D*, TGraphErrors*> RebinWithFit(TH1D* &histogramInput, int nBinsX, 
   return rebinResultAndFitFunction;
 }
 
+
+
+// Fit a histogram with a double Tsallis-like function and return everything needed to propagate uncertainties
+std::tuple<TF1*, TMatrixDSym, TFitResultPtr> FitDoubleTsallis(TH1D* &histogramInput, int nBinsX, double* binsX, double* xRangeFit) {
+  TF1 *fitFunctionInit;
+  TF1 *fitFunctionFinal;
+  TF1 *fitFunctionDrawn; // drawn over the full range
+  TFitResultPtr fFitResult;
+
+  // double parfitFunctionInit[4];
+  // double parfitFunctionFinal[4];
+  double parfitFunctionInit[8];
+  double parfitFunctionFinal[8];
+  const char* doubleTsallis = "([2]+[3]*x)*pow(1 + x/([0]*[1]), -[1]) + ([6]+[7]*x)*pow(1 + x/([4]*[5]), -[5])";
+  // const char* doubleTsallis = "([2]+[3]*x)*pow(1 + x/([0]*[1]), -[1])";
+
+
+  ////////////////////////////////////////////////////////////////////
+  //////////////////////////// Fit start /////////////////////////////
+  ////////////////////////////////////////////////////////////////////
+  
+  fitFunctionInit = new TF1("fitFunctionInit_", doubleTsallis, xRangeFit[0], xRangeFit[1]);
+  
+  // Set parameter names
+  fitFunctionInit->SetParName(0, "p0");
+  fitFunctionInit->SetParName(1, "p1");
+  fitFunctionInit->SetParName(2, "p2");
+  fitFunctionInit->SetParName(3, "p3");
+  fitFunctionInit->SetParName(4, "p4");
+  fitFunctionInit->SetParName(5, "p5");
+  fitFunctionInit->SetParName(6, "p6");
+  fitFunctionInit->SetParName(7, "p7");
+
+  fitFunctionInit->SetParameters(0.44,  5.53,   4.58,  0.09,  0.63,  9.48,  3.78, -0,56);  
+  //                             p0,   p1,   p2,  p3,  p4,  p5,  p6,  p7
+
+  fitFunctionInit->SetParLimits(0, 0.05, 1.0);
+  fitFunctionInit->SetParLimits(1, 4.0, 6.0);
+  fitFunctionInit->SetParLimits(2, 3.0, 5.0);
+  fitFunctionInit->SetParLimits(3, 0.0, 0.1);
+  fitFunctionInit->SetParLimits(4, 0.05, 1.0);
+  fitFunctionInit->SetParLimits(5, 9.0, 10.0);
+  fitFunctionInit->SetParLimits(6, 2.0, 4.0);
+  fitFunctionInit->SetParLimits(7, -0.9, 0.5);
+
+  histogramInput->Fit(fitFunctionInit, "SR0Q"); // R = fit range, Q = quiet, L = likelihood
+  fitFunctionInit->GetParameters(&parfitFunctionInit[0]); // Save initial parameters
+
+  fitFunctionFinal = new TF1("fitFunctionFinal_", doubleTsallis, xRangeFit[0], xRangeFit[1]);
+  
+  for(int i=0; i<8; i++) fitFunctionFinal->SetParameter(i, parfitFunctionInit[i]);
+  // fitFunctionFinal->SetParLimits(0, 0.05, 1.0);
+  // fitFunctionFinal->SetParLimits(1, 4.0, 6.0);
+  // fitFunctionFinal->SetParLimits(2, 2.0, 5.0);
+  // fitFunctionFinal->SetParLimits(3, -0.5, 0.1);
+  // fitFunctionFinal->SetParLimits(4, 0.05, 1.0);
+  // fitFunctionFinal->SetParLimits(5, 9.0, 12.0);
+  // fitFunctionFinal->SetParLimits(6, 1.0, 4.0);
+  // fitFunctionFinal->SetParLimits(7, -0.9, 0.5);
+  
+
+  fFitResult = histogramInput->Fit(fitFunctionFinal, "RS");  
+  fitFunctionFinal->GetParameters(&parfitFunctionFinal[0]);
+
+  // Check covariance availability
+  TMatrixDSym covMatrixFit; // default empty
+  if (fFitResult && fFitResult->CovMatrixStatus() == 3) {
+      covMatrixFit = fFitResult->GetCovarianceMatrix();
+  } else {
+      // std::cout << "Warning: Covariance matrix not available!" << std::endl;
+      std::cout << "Covariance Status: " << fFitResult->CovMatrixStatus() << std::endl;
+  }
+
+  // TMatrixDSym covMatrixFit = fFitResult->GetCovarianceMatrix();
+
+  // Double_t *pDataSmall = covMatrixFit.GetMatrixArray();
+  // for (int i = 0; i < 2*2; i++) {
+  //   cout << "i = " << i << ", covMatrixFit[i]" << pDataSmall[i] << endl;
+  // }
+
+  fitFunctionDrawn = new TF1("fitFunctionDrawn_", doubleTsallis, xRangeFit[0], xRangeFit[1]);
+  for(int i=0; i<8; i++) fitFunctionDrawn->SetParameter(i, parfitFunctionFinal[i]);
+
+  std::tuple<TF1*, TMatrixDSym, TFitResultPtr> fitFunctionAndFitParams(fitFunctionDrawn, covMatrixFit, fFitResult);
+  return fitFunctionAndFitParams;
+}
+
+// Use the fitted function to rebin a histogram and propagate fit uncertainties to the new bins
+std::tuple<TH1D*, TGraphErrors*, TF1*> RebinWithDoubleTsallisFit(TH1D* &histogramInput, int nBinsX, double* binsX, double* xRangeFit) {
+  std::tuple<TF1*, TMatrixDSym, TFitResultPtr> tsallisFitFunctionResult = FitDoubleTsallis(histogramInput, nBinsX, binsX, xRangeFit);
+  TF1* fitFunctionDrawn = std::get<0>(tsallisFitFunctionResult);
+  TFitResultPtr fitResult = std::get<2>(tsallisFitFunctionResult);
+  TGraphErrors* fitFunctionTGraphErrors = GetFunctionTGraphErrorsFromFitResult(xRangeFit, fitFunctionDrawn, fitResult);
+  
+  //////////////////////////// Rebin of input histogram /////////////////////////////
+
+  TH1D* histogramRebinned = new TH1D("Unfolded: fit sampling", "Unfolded: fit sampling", nBinsX, binsX);
+  for(int iBin = 0; iBin < nBinsX; iBin++){
+    double xCenter = histogramRebinned->GetXaxis()->GetBinCenter(iBin);
+    histogramRebinned->SetBinContent(iBin, fitFunctionDrawn->Eval(xCenter)); 
+    double oneSigmaInterval = 0.683;
+    double errorEval[1] = {0};
+    double xEval[1] = {xCenter};
+    fitResult->GetConfidenceIntervals(1, 1, 1, xEval, errorEval, oneSigmaInterval, false);
+    histogramRebinned->SetBinError(iBin, errorEval[0]);
+  }
+
+  std::tuple<TH1D*, TGraphErrors*, TF1*> rebinResultAndFitFunction(histogramRebinned, fitFunctionTGraphErrors, fitFunctionDrawn);
+  return rebinResultAndFitFunction;
+}
+
+//////////////////////////////////////////////////////////////
+
 #endif

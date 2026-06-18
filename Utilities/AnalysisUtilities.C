@@ -45,13 +45,29 @@ long int GetNEventsSel8(TFile* file_O2Analysis) {
   return ((TH1I*)file_O2Analysis->Get("event-selection-task/hColCounterAcc"))->GetEntries(); //this is only sel8 (no sel8Full for example) and doesn't exclude collisions cut by the vertexZ pos cut
 }
 
-long int GetNEventsSelected_JetFramework(TFile* file_O2Analysis, const char analysisWorkflow[], bool collHistIsObsolete = false) {
-  if (collHistIsObsolete) {
-    return ((TH1I*)file_O2Analysis->Get((TString)analysisWorkflow+"/h_collisions"))->GetBinContent(3); //this takes the actual selection AND vertexZ into account;
-  } else {
-    return ((TH1I*)file_O2Analysis->Get((TString)analysisWorkflow+"/h_collisions"))->GetBinContent(4); //this takes the actual selection AND vertexZ into account;
+// long int GetNEventsSelected_JetFramework(TFile* file_O2Analysis, const char analysisWorkflow[], bool collHistIsObsolete = false) {
+//   if (collHistIsObsolete) {
+//     return ((TH1I*)file_O2Analysis->Get((TString)analysisWorkflow+"/h_collisions"))->GetBinContent(3); //this takes the actual selection AND vertexZ into account;
+//   } else {
+//     return ((TH1I*)file_O2Analysis->Get((TString)analysisWorkflow+"/h_collisions"))->GetBinContent(4); //this takes the actual selection AND vertexZ into account;
+//   }
+// }
+long int GetNEventsSelected_JetFramework(TFile* file_O2Analysis,
+                                         const char analysisWorkflow[],
+                                         bool collHistIsObsolete = false,
+                                         bool isDerived = false) {
+
+  if (isDerived) {
+    return ((TH1I*)file_O2Analysis->Get("jet-luminosity-calculator/counter"))->GetBinContent(8);
   }
+
+  TH1I* h = (TH1I*)file_O2Analysis->Get((TString)analysisWorkflow + "/h_collisions");
+
+  if (!h) return -1;
+
+  return collHistIsObsolete ? h->GetBinContent(3) : h->GetBinContent(4);
 }
+
 double GetNEventsSelected_JetFramework_weighted(TFile* file_O2Analysis, const char analysisWorkflow[], bool collHistIsObsolete = false) {
   if (collHistIsObsolete) {
     return ((TH1F*)file_O2Analysis->Get((TString)analysisWorkflow+"/h_collisions_weighted"))->GetBinContent(3); //this takes the actual selection AND vertexZ into account;

@@ -114,19 +114,20 @@ void TrackQC() {
   const int nPtBins = 1;
   float jetPtMinCut, jetPtMaxCut;
   // float jetPtMinCutArray[nPtBins+1] = {0.15, 1, 2, 4, 6, 20, 100};
-  float jetPtMinCutArray[nPtBins+1] = {0.15, 100};
+  float jetPtMinCutArray[nPtBins+1] = {0, 200};
 
 
-  // Draw_Pt_DatasetCompari.son("entriesNorm");
+  // Draw_Pt_DatasetComparison("evtNorm");
   // Draw_Pt_DatasetComparison("entriesNorm");
+  Draw_Pt_DatasetComparison("20GevNorm");
   for(int iPtBin = 0; iPtBin < nPtBins; iPtBin++){
     jetPtMinCut = jetPtMinCutArray[iPtBin];
     jetPtMaxCut = jetPtMinCutArray[iPtBin+1];
 
     float ptRange[2] = {jetPtMinCut, jetPtMaxCut};
+    // Draw_Eta_DatasetComparison(ptRange, "evtNorm");
     // Draw_Eta_DatasetComparison(ptRange, "entriesNorm");
-    // Draw_Eta_DatasetComparison(ptRange, "entriesNorm");
-    // Draw_Phi_DatasetComparison(ptRange, "entriesNorm");
+    // Draw_Phi_DatasetComparison(ptRange, "evtNorm");
     // Draw_Phi_DatasetComparison(ptRange, "entriesNorm");
 
     // Draw_Eta_DatasetComparison_trackSelComp();
@@ -144,7 +145,7 @@ void TrackQC() {
 
   // Draw_SelectedMultiplicity_DatasetComp();
   for(int iDataset = 0; iDataset < nDatasets; iDataset++){
-    Draw_SelectedMultiplicity_CentralityComp(iDataset, "normEvents");
+    // Draw_SelectedMultiplicity_CentralityComp(iDataset, "normEvents");
   }
 
   // Draw_Mean_Pt_vs_Dataset();
@@ -348,6 +349,12 @@ void Draw_Pt_DatasetComparison(std::string options) {
     if (options.find("entriesNorm") != std::string::npos) {
         NormaliseYieldToIntegral(H1D_trackPt_rebinned[iDataset]);
     }
+    if (options.find("20GevNorm") != std::string::npos) {
+      double pt20GeV = 20;
+      int iBinAt20GeV = H1D_trackPt_rebinned[iDataset]->GetXaxis()->FindBin(pt20GeV);
+      int nTracksAt20GeV = H1D_trackPt_rebinned[iDataset]->GetBinContent(iBinAt20GeV);
+      NormaliseAsYieldToInputN(H1D_trackPt_rebinned[iDataset], nTracksAt20GeV);
+    }
   }
   TString DatasetsNamesPairRatio[nDatasets];
   int nHistPairRatio = (int)nDatasets / 2;;
@@ -376,6 +383,11 @@ void Draw_Pt_DatasetComparison(std::string options) {
   if (options.find("entriesNorm") != std::string::npos) {
     textYaxis = texTrackPtYield_EntriesNorm;
     pdfNameNorm = (TString)"_EntriesNorm";
+  }
+
+  if (options.find("20GevNorm") != std::string::npos) {
+    textYaxis = texTrackPtYield_20GevNorm;
+    pdfNameNorm = (TString)"_20GevNorm";
   }
 
   TString* pdfName = new TString("track_Pt_DataComp"+pdfNameNorm);

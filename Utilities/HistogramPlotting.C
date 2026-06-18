@@ -683,7 +683,7 @@ void Draw_TH1_Histograms_MasterFunction(TH1D** histograms_collection, const TStr
   if (options.find("fitCollection") != std::string::npos) {
     for (int i = 0; i < collectionSize; i++) {
       // optionalFitCollection[i]->SetNpx(2000);
-      optionalFitCollection[i]->Draw("E, same");
+      // optionalFitCollection[i]->Draw("E, same");
       optionalFitCollection[i]->SetLineColorAlpha(histograms_collection[i]->GetLineColor(), 0.08);
     }
   }
@@ -1010,11 +1010,422 @@ void Draw_TH2_Histogram(TH2D* histogram, TString Context, TString* pdfName, TStr
 }
 
 
+//=============================================================================
+//  Generic spectrum-comparison plotter with ratio panel.
+//
+//  Each entry = one curve. Two render styles:
+//    kData   -> markers + stat error bars (TH1 "E1 P")
+//    kTheory -> solid/dashed line "hist" (e.g. POWHEG central)
+//  Optional per-entry systematic band (TGraphAsymmErrors box, "2"/"E2").
+//  Optional per-entry vdM/lumi band tracking the curve.
+//
+//  Ratio panel: ratio[i] = entry[i] / entry[refIndex], for every i != refIndex.
+//
+//  *** DECORRELATED systematics in the ratio ***
+//   - the REFERENCE's own relative systematic is drawn as a band around UNITY
+//   - each OTHER entry's own relative systematic is drawn around its ratio point
+//   - the two are NOT combined in quadrature: overlap of a ratio-point band with
+//     the unity band shows consistency within independent systematics.
+//
+//  *** Global normalization box ***
+//   - pass globalNormRel >= 0 to draw a custom full-width TBox around 1 in the
+//     ratio pad of half-height globalNormRel (e.g. 0.05 for a 5% global-norm unc).
+//=============================================================================
 
 
 
+enum EDrawStyle { kData, kTheory };
+enum ESysKind   { kSysNone, kSysRelative, kSysAbsolute }; // how hSys is stored
 
+struct SpecEntry {
+  // --- central spectrum ---
+  TH1*        h        = nullptr;        // bin contents = values, bin errors = STAT
+  EDrawStyle  style    = kData;
 
+  // --- systematic (optional) ---
+  ESysKind    sysKind  = kSysNone;
+  TH1*        hSys      = nullptr;        // kSysRelative: rel unc per bin
+                                          // kSysAbsolute: absolute unc per bin
+  // --- lumi / vdM band (optional) ---
+  double      vdmRel    = 0.;             // 0 = no vdM band
 
+  // --- cosmetics ---
+  int         color    = kBlack;
+  int         sysColor  = kGray+1;
+  int         marker    = 20;
+  double      msize     = 1.1;
+  int         lstyle    = 1;             // line style for theory curves
+  int         lwidth     = 3;
+  TString     label     = "";            // legend (central)
+  TString     sysLabel   = "";           // legend (sys band), "" = skip
+  TString     legOpt     = "";           // override legend marker option
+};
+
+void DrawSpectraWithRatio(
+    std::vector<SpecEntry> entries,
+    int          refIndex,                 // denominator for the ratio panel
+    double       xMin, double xMax,
+    TString      yTitle,
+    TString      xTitle      = "#it{p}_{T} (GeV/#it{c})",
+    TString      ratioTitle   = "Ratio",
+    std::vector<TString> labels = {},      // extra TLatex context lines (top pad)
+    TString      canvasName     = "cSpecRatio",
+    double       ratioMin       = 0.0,
+    double       ratioMax       = 2.5,
+    double       split          = 0.30,    // bottom-pad fraction
+    double       vdmRatioRel    = -1.,     // >=0 -> combined vdM TBox at unity
+    double       globalNormRel  = -1.,     // >=0 -> global-norm TBox at unity
+    TString      globalNormLabel = "",     // legend text for the global-norm box
+    double       yMinUser       = 0.,      // 0 -> auto
+    double       yMaxUser       = 0.,      // 0 -> auto
+    double       vdmBoxRel      = -1.,     // >=0 -> small localized vdM box at unity
+    double       vdmBoxXpos     = 0.)      // pT position for the box (0 -> auto)
+{
+  if (entries.empty() || refIndex < 0 || refIndex >= (int)entries.size()) {
+    std::cerr << "DrawSpectraWithRatio: bad entries / refIndex" << std::endl; return;
+  }
+
+  // ---- global style ----
+  gStyle->SetOptStat(0);
+  gStyle->SetOptTitle(0);
+  gStyle->SetPadTickX(1);
+  gStyle->SetPadTickY(1);
+  gStyle->SetTickLength(0.02, "X");
+  gStyle->SetTickLength(0.02, "Y");
+  gStyle->SetEndErrorSize(0);
+
+  //---------------------------------------------------------------------------
+  // helper: relative systematic of an entry at pT = xx (value yy)
+  //---------------------------------------------------------------------------
+  auto relSysAt = [](const SpecEntry& s, double xx, double yy) -> double {
+    if (s.sysKind == kSysNone || !s.hSys) return 0.;
+    double v = s.hSys->GetBinContent(s.hSys->FindBin(xx));
+    return (s.sysKind == kSysRelative) ? v : (yy > 0 ? v / yy : 0.);
+  };
+
+  //---------------------------------------------------------------------------
+  // helper: build an absolute sys-band (around the spectrum) from an entry
+  //---------------------------------------------------------------------------
+  auto MakeSysBand = [&](const SpecEntry& e) -> TGraphAsymmErrors* {
+    if (e.sysKind == kSysNone || !e.hSys) return nullptr;
+    auto* g = new TGraphAsymmErrors();
+    int k = 0;
+    for (int ib = 1; ib <= e.h->GetNbinsX(); ++ib) {
+      double x = e.h->GetBinCenter(ib);
+      double y = e.h->GetBinContent(ib);
+      if (y <= 0) continue;
+      double exLo = x - e.h->GetBinLowEdge(ib);
+      double exHi = e.h->GetBinLowEdge(ib) + e.h->GetBinWidth(ib) - x;
+      double sAbs = relSysAt(e, x, y) * y;
+      g->SetPoint(k, x, y);
+      g->SetPointError(k, exLo, exHi, sAbs, sAbs);
+      ++k;
+    }
+    g->SetFillColorAlpha(e.sysColor, 0.45);
+    g->SetLineColor(e.sysColor);
+    g->SetFillStyle(1001);
+    g->SetMarkerSize(0);
+    return g;
+  };
+
+  //---------------------------------------------------------------------------
+  // helper: vdM band tracking a curve
+  //---------------------------------------------------------------------------
+  auto MakeVdmBand = [](const SpecEntry& e) -> TGraphErrors* {
+    if (e.vdmRel <= 0.) return nullptr;
+    auto* g = new TGraphErrors(e.h->GetNbinsX());
+    for (int ib = 1; ib <= e.h->GetNbinsX(); ++ib) {
+      double x = e.h->GetBinCenter(ib);
+      double y = e.h->GetBinContent(ib);
+      g->SetPoint(ib-1, x, y);
+      g->SetPointError(ib-1, e.h->GetBinWidth(ib)/2., y*e.vdmRel);
+    }
+    g->SetFillColorAlpha(e.color, 0.18);
+    g->SetLineColorAlpha(e.color, 0.55);
+    g->SetMarkerSize(0);
+    return g;
+  };
+
+  //---------------------------------------------------------------------------
+  // Canvas + pads
+  //---------------------------------------------------------------------------
+  TCanvas* c = new TCanvas(canvasName, canvasName, 800, 900);
+  c->SetFillStyle(0);
+
+  TPad* pTop = new TPad("pTop", "pTop", 0., split, 1., 1.);
+  pTop->SetLeftMargin(0.14);  pTop->SetRightMargin(0.05);
+  pTop->SetTopMargin(0.05);   pTop->SetBottomMargin(0.015);
+  pTop->SetLogy();  pTop->SetTickx(1); pTop->SetTicky(1);
+  pTop->Draw();
+
+  TPad* pBot = new TPad("pBot", "pBot", 0., 0., 1., split);
+  pBot->SetLeftMargin(0.14);  pBot->SetRightMargin(0.05);
+  pBot->SetTopMargin(0.015);  pBot->SetBottomMargin(0.32);
+  pBot->SetTickx(1); pBot->SetTicky(1);
+  pBot->Draw();
+
+  const double sf = (1. - split) / split;  // font scale for bottom pad
+
+  //---------------------------------------------------------------------------
+  // Style entries + auto y-range
+  //---------------------------------------------------------------------------
+  std::vector<TGraphAsymmErrors*> sysBands(entries.size(), nullptr);
+  std::vector<TGraphErrors*>      vdmBands(entries.size(), nullptr);
+  double yMax = -1e30, yMin = 1e30;
+
+  for (size_t i = 0; i < entries.size(); ++i) {
+    auto& e = entries[i];
+    e.h->SetStats(0);
+    e.h->SetLineColor(e.color);
+    e.h->SetLineWidth(e.lwidth);
+    if (e.style == kData) {
+      e.h->SetMarkerStyle(e.marker);
+      e.h->SetMarkerColor(e.color);
+      e.h->SetMarkerSize(e.msize);
+    } else {
+      e.h->SetLineStyle(e.lstyle);
+      e.h->SetMarkerSize(0);
+    }
+    sysBands[i] = MakeSysBand(e);
+    vdmBands[i] = MakeVdmBand(e);
+
+    yMax = std::max(yMax, e.h->GetMaximum());
+    double mn = e.h->GetMinimum(0.);
+    if (mn > 0) yMin = std::min(yMin, mn);
+  }
+  if (yMaxUser > 0) yMax = yMaxUser; else yMax *= 8.;
+  if (yMinUser > 0) yMin = yMinUser; else yMin = (yMin > 0 ? yMin*0.2 : 1e-9);
+
+  //---------------------------------------------------------------------------
+  // TOP PAD
+  //---------------------------------------------------------------------------
+  pTop->cd();
+  TH1* hFrame = entries[refIndex].h;       // reference defines the frame
+  hFrame->GetYaxis()->SetTitle(yTitle);
+  hFrame->GetYaxis()->SetTitleSize(0.058);
+  hFrame->GetYaxis()->SetTitleOffset(1.15);
+  hFrame->GetYaxis()->SetLabelSize(0.050);
+  hFrame->GetXaxis()->SetLabelSize(0.);
+  hFrame->GetXaxis()->SetTitleSize(0.);
+  hFrame->GetXaxis()->SetLimits(xMin, xMax);
+  hFrame->SetMinimum(yMin);
+  hFrame->SetMaximum(yMax);
+
+  hFrame->Draw(entries[refIndex].style == kData ? "E1 P" : "hist");
+
+  // bands first (vdM outermost, then sys), then curves on top
+  for (auto* g : vdmBands) if (g) g->Draw("E2 SAME");
+  for (auto* g : sysBands) if (g) g->Draw("2 SAME");
+  for (auto& e : entries)
+    e.h->Draw(e.style == kData ? "E1 P SAME" : "hist SAME");
+
+  // Legend
+  TLegend* leg = new TLegend(0.50, 0.55, 0.92, 0.92);
+  leg->SetBorderSize(0); leg->SetFillStyle(0);
+  leg->SetTextFont(42);  leg->SetTextSize(0.034);
+  for (size_t i = 0; i < entries.size(); ++i) {
+    auto& e = entries[i];
+    TString opt = e.legOpt.IsNull()
+                  ? TString(e.style == kData ? "lep" : "l") : e.legOpt;
+    if (!e.label.IsNull()) leg->AddEntry(e.h, e.label, opt);
+    if (sysBands[i] && !e.sysLabel.IsNull())
+      leg->AddEntry(sysBands[i], e.sysLabel, "f");
+  }
+  leg->Draw();
+
+  // Context labels
+  TLatex tex; tex.SetNDC(); tex.SetTextFont(42); tex.SetTextSize(0.040);
+  double y0 = 0.90;
+  for (auto& s : labels) { tex.DrawLatex(0.18, y0, s); y0 -= 0.05; }
+
+  pTop->RedrawAxis();
+
+  //---------------------------------------------------------------------------
+  // BOTTOM PAD : ratios vs entries[refIndex]
+  //---------------------------------------------------------------------------
+  pBot->cd();
+  TH1* hRef = entries[refIndex].h;
+
+  // --- reference's OWN systematic, drawn as a band around UNITY ---
+  TGraphAsymmErrors* gRefSys = nullptr;
+  {
+    const SpecEntry& r = entries[refIndex];
+    if (r.sysKind != kSysNone && r.hSys) {
+      gRefSys = new TGraphAsymmErrors();
+      int k = 0;
+      for (int ib = 1; ib <= r.h->GetNbinsX(); ++ib) {
+        double x = r.h->GetBinCenter(ib);
+        double y = r.h->GetBinContent(ib);
+        if (y <= 0) continue;
+        double rel = relSysAt(r, x, y);
+        double exLo = x - r.h->GetBinLowEdge(ib);
+        double exHi = r.h->GetBinLowEdge(ib) + r.h->GetBinWidth(ib) - x;
+        gRefSys->SetPoint(k, x, 1.0);
+        gRefSys->SetPointError(k, exLo, exHi, rel, rel);
+        ++k;
+      }
+      gRefSys->SetFillColorAlpha(r.sysColor, 0.45);
+      gRefSys->SetLineColor(r.sysColor);
+      gRefSys->SetFillStyle(1001);
+      gRefSys->SetMarkerSize(0);
+    }
+  }
+
+  // --- reference's STATISTICAL uncertainty, as bars around UNITY ---
+  TH1* hRefStat = (TH1*)hRef->Clone("hRefStat_atUnity");
+  hRefStat->SetDirectory(0); hRefStat->Reset("ICES");
+  for (int ib = 1; ib <= hRef->GetNbinsX(); ++ib) {
+    double y = hRef->GetBinContent(ib);
+    double e = hRef->GetBinError(ib);
+    if (y <= 0) continue;
+    hRefStat->SetBinContent(ib, 1.0);
+    hRefStat->SetBinError(ib, e / y);      // relative stat error around 1
+  }
+  hRefStat->SetMarkerStyle(entries[refIndex].marker);
+  hRefStat->SetMarkerColor(entries[refIndex].color);
+  hRefStat->SetMarkerSize(entries[refIndex].msize);
+  hRefStat->SetLineColor(entries[refIndex].color);
+
+  // --- combined vdM TBox at unity (linear scale) ---
+  TBox* vdmBox = nullptr;
+//   if (vdmRatioRel >= 0.) {
+//     vdmBox = new TBox(xMin, 1.-vdmRatioRel, xMax, 1.+vdmRatioRel);
+//     vdmBox->SetFillColorAlpha(kOrange+1, 0.45);
+//     vdmBox->SetLineColorAlpha(kOrange+1, 0.70);
+//   }
+
+  // --- custom global-normalization TBox at unity ---
+  TBox* normBox = nullptr;
+//   if (globalNormRel >= 0.) {
+//     normBox = new TBox(xMin, 1.-globalNormRel, xMax, 1.+globalNormRel);
+//     normBox->SetFillColorAlpha(kGreen+2, 0.25);
+//     normBox->SetLineColorAlpha(kGreen+2, 0.60);
+//     normBox->SetLineWidth(1);
+//   }
+
+  TLine* unity = new TLine(xMin, 1., xMax, 1.);
+  unity->SetLineStyle(2); unity->SetLineColor(kBlack);
+
+  TLegend* legR = new TLegend(0.50, 0.74, 0.92, 0.98);
+  legR->SetBorderSize(0); legR->SetFillStyle(0);
+  legR->SetTextFont(42);  legR->SetTextSize(0.040*sf);
+
+  bool firstRatio = true;
+  for (size_t i = 0; i < entries.size(); ++i) {
+    if ((int)i == refIndex) continue;
+    auto& e = entries[i];
+
+    // ratio histogram (matched by pT center)
+    TH1* hR = (TH1*)e.h->Clone(Form("hRatio_%zu", i));
+    hR->SetDirectory(0); hR->Reset("ICES");
+    TGraphAsymmErrors* gRsys = new TGraphAsymmErrors();
+    int kr = 0;
+
+    for (int ib = 1; ib <= e.h->GetNbinsX(); ++ib) {
+      double x  = e.h->GetBinCenter(ib);
+      double yN = e.h->GetBinContent(ib);
+      int    jb = hRef->FindBin(x);
+      double yD = hRef->GetBinContent(jb);
+      if (yN <= 0 || yD <= 0) continue;
+      double r = yN / yD;
+      hR->SetBinContent(ib, r);
+
+      // STAT in quadrature
+      double eN = e.h->GetBinError(ib), eD = hRef->GetBinError(jb);
+      hR->SetBinError(ib, r*TMath::Sqrt((eN>0?eN*eN/(yN*yN):0)+(eD>0?eD*eD/(yD*yD):0)));
+
+      // SYS: this entry's OWN relative sys only (NOT combined with reference)
+      double relS = relSysAt(e, x, yN);
+      if (relS > 0) {
+        double exLo = x - e.h->GetBinLowEdge(ib);
+        double exHi = e.h->GetBinLowEdge(ib)+e.h->GetBinWidth(ib)-x;
+        gRsys->SetPoint(kr, x, r);
+        gRsys->SetPointError(kr, exLo, exHi, r*relS, r*relS);
+        ++kr;
+      }
+    }
+
+    if (e.style == kData) {
+      hR->SetMarkerStyle(e.marker); hR->SetMarkerColor(e.color);
+      hR->SetMarkerSize(e.msize);   hR->SetLineColor(e.color);
+    } else {
+      hR->SetLineStyle(e.lstyle); hR->SetLineColor(e.color); hR->SetMarkerSize(0);
+    }
+
+    gRsys->SetFillColorAlpha(e.sysColor, 0.45);
+    gRsys->SetLineColor(e.sysColor);
+    gRsys->SetFillStyle(1001); gRsys->SetMarkerSize(0);
+
+    if (firstRatio) {
+      // use hRefStat as the frame so reference stat bars sit at unity
+      hRefStat->GetXaxis()->SetLimits(xMin, xMax);
+      hRefStat->GetXaxis()->SetTitle(xTitle);
+      hRefStat->GetYaxis()->SetTitle(ratioTitle);
+      hRefStat->GetYaxis()->CenterTitle();
+      hRefStat->GetYaxis()->SetNdivisions(505);
+      hRefStat->GetXaxis()->SetTitleSize(0.058*sf); hRefStat->GetXaxis()->SetLabelSize(0.050*sf);
+      hRefStat->GetXaxis()->SetTitleOffset(0.95);
+      hRefStat->GetYaxis()->SetTitleSize(0.048*sf); hRefStat->GetYaxis()->SetLabelSize(0.044*sf);
+      hRefStat->GetYaxis()->SetTitleOffset(0.55);
+      hRefStat->GetXaxis()->SetTickLength(0.05);
+      hRefStat->SetMinimum(ratioMin); hRefStat->SetMaximum(ratioMax);
+
+      hRefStat->Draw("E1 P");                  // frame + reference stat bars at unity
+      if (normBox) normBox->Draw("SAME");
+      if (vdmBox)  vdmBox->Draw("SAME");
+      if (gRefSys) gRefSys->Draw("2 SAME");    // reference sys band around unity
+      hR->Draw(e.style==kData ? "E1 P SAME" : "hist SAME");
+    } else {
+      hR->Draw(e.style==kData ? "E1 P SAME" : "hist SAME");
+    }
+
+    if (gRsys->GetN() > 0) gRsys->Draw("2 SAME");        // this entry's own sys
+    hR->Draw(e.style==kData ? "E1 P SAME" : "hist SAME"); // points/line on top
+
+    // ratio-pad legend entries
+    TString rOpt = (e.style==kData) ? "lep" : "l";
+    legR->AddEntry(hR, e.label, rOpt);
+    firstRatio = false;
+  }
+
+  unity->Draw("SAME");
+
+  // --- small localized vdM/lumi box at unity ---
+  TBox* vdmSmall = nullptr;
+  if (vdmBoxRel >= 0.) {
+    // box width = ~4% of the x-range, parked near the left edge by default
+    double w  = 0.02 * (xMax - xMin);
+    double x0 = (vdmBoxXpos > 0.) ? vdmBoxXpos : xMin + 0.02*(xMax - xMin);
+    vdmSmall = new TBox(x0, 1.-vdmBoxRel, x0 + w, 1.+vdmBoxRel);
+    vdmSmall->SetFillColorAlpha(kRed+2, 0.65);   // small DARK box
+    vdmSmall->SetLineColor(kRed+2);
+    vdmSmall->SetLineWidth(1);
+    vdmSmall->Draw("SAME");
+  }
+
+   if (vdmSmall) {
+    TLegend* legLumi = new TLegend(0.16, 0.86, 0.42, 0.92);
+    legLumi->SetBorderSize(0);
+    legLumi->SetFillStyle(0);
+    legLumi->SetTextFont(42);
+    legLumi->SetTextSize(0.034*sf);     // smaller than the 0.040*sf default
+    legLumi->SetMargin(0.18);            // shrink swatch column (default ~0.25)
+    legLumi->AddEntry(vdmSmall, Form("Lumi. #pm%.1f%%", vdmBoxRel*100.), "f");
+    legLumi->Draw();
+  }
+
+  // reference + box legend entries
+//   if (gRefSys && !entries[refIndex].sysLabel.IsNull())
+//     legR->AddEntry(gRefSys, Form("%s sys. (ref.)", entries[refIndex].label.Data()), "f");
+//   if (normBox)
+//     legR->AddEntry(normBox,
+//         globalNormLabel.IsNull()
+//           ? Form("Global norm. (#pm%.1f%%)", globalNormRel*100.)
+//           : globalNormLabel, "f");
+//   legR->Draw();
+
+  pBot->RedrawAxis();
+  c->Update();
+}
 
 #endif

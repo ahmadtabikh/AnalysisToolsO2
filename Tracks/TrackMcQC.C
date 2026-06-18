@@ -183,14 +183,16 @@ void TrackMcQC() {
   // // Draw_Phi_tracksReco_fromEffWorkflow_DatasetComparison(ptRange, etaRange, "primaries, secondaries, nonassociatedtrack, ratio, entriesNorm");
   // Draw_Phi_tracksReco_fromEffWorkflow_DatasetComparison(ptRange, etaRange, "primaries, secondaries, nonassociatedtrack, ratio, evtNorm");
 
+  // ##### WARNING: I changed the projection interval from bin = 0 instead of 1 ##### 
+  Draw_Pt_gen_DatasetComparison_H2CentVersion("20GevNorm, ratio");
+  // Draw_Pt_gen_DatasetComparison_H2CentVersion("entriesNorm, ratio");
+  Draw_Eta_gen_DatasetComparison_H2CentVersion("entriesNorm, ratio"); // evtNorm
+  Draw_Phi_gen_DatasetComparison_H2CentVersion("entriesNorm, ratio");
 
-  // Draw_Pt_gen_DatasetComparison_H2CentVersion("20GevNorm, ratio");
-  // Draw_Eta_gen_DatasetComparison_H2CentVersion("entriesNorm, ratio");
-  // Draw_Phi_gen_DatasetComparison_H2CentVersion("entriesNorm, ratio");
   // Draw_PtResolution_Residuals("ptRes_vs_pt");
 
-  Draw_Systematics_trackSelectionVariation_pt(etaRange, "");
-  Draw_Systematics_trackSelectionVariation_eta(ptRange, "");
+  // Draw_Systematics_trackSelectionVariation_pt(etaRange, "");
+  // Draw_Systematics_trackSelectionVariation_eta(ptRange, "");
 
   // Draw_PtHard_DatasetComparison("ratio");
   // Draw_PtHard_DatasetComparison("calculatePtHardFromWeight");
@@ -1084,9 +1086,9 @@ void Draw_Efficiency_Phi_PtRangeComparison(float* ptRange, int nPtRanges, float*
     ss.str("");
     ss.clear();
   }
-//   for(int iBinPt = 0; iBinPt < nPtRanges; iBinPt++){
-//     H1D_trackPhi_efficiency[iBinPt]->Scale(H1D_trackPhi_efficiency[nPtRanges-1]->GetEntries()/H1D_trackPhi_efficiency[iBinPt]->GetEntries(),"width"); // If option contains "width" the bin contents and errors are divided by the bin width.
-//   }
+  //   for(int iBinPt = 0; iBinPt < nPtRanges; iBinPt++){
+  //     H1D_trackPhi_efficiency[iBinPt]->Scale(H1D_trackPhi_efficiency[nPtRanges-1]->GetEntries()/H1D_trackPhi_efficiency[iBinPt]->GetEntries(),"width"); // If option contains "width" the bin contents and errors are divided by the bin width.
+  //   }
 
   TString optDelimiter;
   options.find("scaled") == std::string::npos ? optDelimiter = "_" : optDelimiter = "";
@@ -2558,7 +2560,7 @@ void Draw_Pt_gen_DatasetComparison_H2CentVersion(std::string options) {
     H2D_centrality_track[iDataset] = (TH2D*)((TH2D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h2_centrality_particle_pt"))->Clone("Draw_Pt_DatasetComparison"+Datasets[iDataset]+DatasetsNames[iDataset]);
         cout << "test1" << endl;
 
-    H1D_trackPt[iDataset] = (TH1D*)H2D_centrality_track[iDataset]->ProjectionY("trackPt_"+Datasets[iDataset]+DatasetsNames[iDataset], 1, H2D_centrality_track[iDataset]->GetNbinsX(), "e");
+    H1D_trackPt[iDataset] = (TH1D*)H2D_centrality_track[iDataset]->ProjectionY("trackPt_"+Datasets[iDataset]+DatasetsNames[iDataset], 0, H2D_centrality_track[iDataset]->GetNbinsX(), "e");
 
 
     H1D_trackPt_rebinned[iDataset] = (TH1D*)H1D_trackPt[iDataset]->Rebin(2.,"trackPt_rebinned_"+Datasets[iDataset]+DatasetsNames[iDataset]);
@@ -2636,7 +2638,7 @@ void Draw_Eta_gen_DatasetComparison_H2CentVersion(std::string options) {
   for(int iDataset = 0; iDataset < nDatasets; iDataset++){
     H2D_centrality_track[iDataset] = (TH2D*)((TH2D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h2_centrality_particle_eta"))->Clone("Draw_Eta_DatasetComparison"+Datasets[iDataset]+DatasetsNames[iDataset]);
 
-    H1D_trackEta[iDataset] = (TH1D*)H2D_centrality_track[iDataset]->ProjectionY("trackEta_"+Datasets[iDataset]+DatasetsNames[iDataset], 1, H2D_centrality_track[iDataset]->GetNbinsX(), "e");
+    H1D_trackEta[iDataset] = (TH1D*)H2D_centrality_track[iDataset]->ProjectionY("trackEta_"+Datasets[iDataset]+DatasetsNames[iDataset], 0, H2D_centrality_track[iDataset]->GetNbinsX(), "e");
 
     H1D_trackEta_rebinned[iDataset] = (TH1D*)H1D_trackEta[iDataset]->Rebin(5.,"trackEta_rebinned"+Datasets[iDataset]+DatasetsNames[iDataset]);
 
@@ -2699,7 +2701,7 @@ void Draw_Phi_gen_DatasetComparison_H2CentVersion(std::string options) {
 
     H2D_centrality_track[iDataset] = (TH2D*)((TH2D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h2_centrality_particle_phi"))->Clone("Draw_Phi_DatasetComparison"+Datasets[iDataset]+DatasetsNames[iDataset]);
 
-    H1D_trackPhi[iDataset] = (TH1D*)H2D_centrality_track[iDataset]->ProjectionY("trackPhi_"+Datasets[iDataset]+DatasetsNames[iDataset], 1, H2D_centrality_track[iDataset]->GetNbinsX(), "e");
+    H1D_trackPhi[iDataset] = (TH1D*)H2D_centrality_track[iDataset]->ProjectionY("trackPhi_"+Datasets[iDataset]+DatasetsNames[iDataset], 0, H2D_centrality_track[iDataset]->GetNbinsX(), "e");
     H1D_trackPhi_rebinned[iDataset] = (TH1D*)H1D_trackPhi[iDataset]->Rebin(5.,"trackPhi_rebinned_"+Datasets[iDataset]+DatasetsNames[iDataset]);
 
     if (options.find("evtNorm") != std::string::npos) {
@@ -3650,96 +3652,96 @@ void Draw_PtHard_DatasetComparison(std::string options) {
 
 
 
-void Draw_ParticleProcessesRatios_DatasetComparison() {
+// void Draw_ParticleProcessesRatios_DatasetComparison() {
 
-  TH1D* H1D_pdgcode[nDatasets];
-  TH1D* H1D_genstatuscode[nDatasets];
-  TH1D* H1D_hepmcstatuscode[nDatasets];
-  TH1D* H1D_process[nDatasets];
-  TH1D* H1D_producedbygenerator[nDatasets];
+//   TH1D* H1D_pdgcode[nDatasets];
+//   TH1D* H1D_genstatuscode[nDatasets];
+//   TH1D* H1D_hepmcstatuscode[nDatasets];
+//   TH1D* H1D_process[nDatasets];
+//   TH1D* H1D_producedbygenerator[nDatasets];
 
-  TH1D* H1D_pdgcode_ratios[nDatasets];
-  TH1D* H1D_genstatuscode_ratios[nDatasets];
-  TH1D* H1D_hepmcstatuscode_ratios[nDatasets];
-  TH1D* H1D_process_ratios[nDatasets];
-  TH1D* H1D_producedbygenerator_ratios[nDatasets];
+//   TH1D* H1D_pdgcode_ratios[nDatasets];
+//   TH1D* H1D_genstatuscode_ratios[nDatasets];
+//   TH1D* H1D_hepmcstatuscode_ratios[nDatasets];
+//   TH1D* H1D_process_ratios[nDatasets];
+//   TH1D* H1D_producedbygenerator_ratios[nDatasets];
   
-  bool divideSuccess_pdgcode, divideSuccess_genstatuscode, divideSuccess_hepmcstatuscode, divideSuccess_process, divideSuccess_producedbygenerator;
-  for(int iDataset = 0; iDataset < nDatasets; iDataset++){
-    H1D_pdgcode[iDataset] = (TH1D*)((TH1D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h_particle_pdgcode"))->Clone("h_particle_pdgcode"+Datasets[iDataset]+DatasetsNames[iDataset]);
-    H1D_genstatuscode[iDataset] = (TH1D*)((TH1D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h_particle_genstatuscode"))->Clone("h_particle_genstatuscode"+Datasets[iDataset]+DatasetsNames[iDataset]);
-    H1D_hepmcstatuscode[iDataset] = (TH1D*)((TH1D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h_particle_hepmcstatuscode"))->Clone("h_particle_hepmcstatuscode"+Datasets[iDataset]+DatasetsNames[iDataset]);
-    H1D_process[iDataset] = (TH1D*)((TH1D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h_particle_process"))->Clone("h_particle_process"+Datasets[iDataset]+DatasetsNames[iDataset]);
-    H1D_producedbygenerator[iDataset] = (TH1D*)((TH1D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h_particle_producedbygenerator"))->Clone("h_particle_producedbygenerator"+Datasets[iDataset]+DatasetsNames[iDataset]);
+//   bool divideSuccess_pdgcode, divideSuccess_genstatuscode, divideSuccess_hepmcstatuscode, divideSuccess_process, divideSuccess_producedbygenerator;
+//   for(int iDataset = 0; iDataset < nDatasets; iDataset++){
+//     H1D_pdgcode[iDataset] = (TH1D*)((TH1D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h_particle_pdgcode"))->Clone("h_particle_pdgcode"+Datasets[iDataset]+DatasetsNames[iDataset]);
+//     H1D_genstatuscode[iDataset] = (TH1D*)((TH1D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h_particle_genstatuscode"))->Clone("h_particle_genstatuscode"+Datasets[iDataset]+DatasetsNames[iDataset]);
+//     H1D_hepmcstatuscode[iDataset] = (TH1D*)((TH1D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h_particle_hepmcstatuscode"))->Clone("h_particle_hepmcstatuscode"+Datasets[iDataset]+DatasetsNames[iDataset]);
+//     H1D_process[iDataset] = (TH1D*)((TH1D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h_particle_process"))->Clone("h_particle_process"+Datasets[iDataset]+DatasetsNames[iDataset]);
+//     H1D_producedbygenerator[iDataset] = (TH1D*)((TH1D*)file_O2Analysis_list[iDataset]->Get(analysisWorkflow[iDataset]+"/h_particle_producedbygenerator"))->Clone("h_particle_producedbygenerator"+Datasets[iDataset]+DatasetsNames[iDataset]);
 
-    NormaliseRawHistToNEntries(H1D_pdgcode[iDataset]);
-    NormaliseRawHistToNEntries(H1D_genstatuscode[iDataset]);
-    NormaliseRawHistToNEntries(H1D_hepmcstatuscode[iDataset]);
-    NormaliseRawHistToNEntries(H1D_process[iDataset]);
-    NormaliseRawHistToNEntries(H1D_producedbygenerator[iDataset]);
+//     NormaliseRawHistToNEntries(H1D_pdgcode[iDataset]);
+//     NormaliseRawHistToNEntries(H1D_genstatuscode[iDataset]);
+//     NormaliseRawHistToNEntries(H1D_hepmcstatuscode[iDataset]);
+//     NormaliseRawHistToNEntries(H1D_process[iDataset]);
+//     NormaliseRawHistToNEntries(H1D_producedbygenerator[iDataset]);
 
-    H1D_pdgcode_ratios[iDataset] = (TH1D*)H1D_pdgcode[iDataset]->Clone("h_particle_pdgcode_ratios"+Datasets[iDataset]+DatasetsNames[iDataset]);
-    H1D_pdgcode_ratios[iDataset]->Reset("M");
-    divideSuccess_pdgcode = H1D_pdgcode_ratios[iDataset]->Divide(H1D_pdgcode[iDataset], H1D_pdgcode[0], 1., 1., "");
+//     H1D_pdgcode_ratios[iDataset] = (TH1D*)H1D_pdgcode[iDataset]->Clone("h_particle_pdgcode_ratios"+Datasets[iDataset]+DatasetsNames[iDataset]);
+//     H1D_pdgcode_ratios[iDataset]->Reset("M");
+//     divideSuccess_pdgcode = H1D_pdgcode_ratios[iDataset]->Divide(H1D_pdgcode[iDataset], H1D_pdgcode[0], 1., 1., "");
 
-    H1D_genstatuscode_ratios[iDataset] = (TH1D*)H1D_genstatuscode[iDataset]->Clone("h_particle_genstatuscode_ratios"+Datasets[iDataset]+DatasetsNames[iDataset]);
-    H1D_genstatuscode_ratios[iDataset]->Reset("M");
-    divideSuccess_genstatuscode = H1D_genstatuscode_ratios[iDataset]->Divide(H1D_genstatuscode[iDataset], H1D_genstatuscode[0], 1., 1., "");
+//     H1D_genstatuscode_ratios[iDataset] = (TH1D*)H1D_genstatuscode[iDataset]->Clone("h_particle_genstatuscode_ratios"+Datasets[iDataset]+DatasetsNames[iDataset]);
+//     H1D_genstatuscode_ratios[iDataset]->Reset("M");
+//     divideSuccess_genstatuscode = H1D_genstatuscode_ratios[iDataset]->Divide(H1D_genstatuscode[iDataset], H1D_genstatuscode[0], 1., 1., "");
 
-    H1D_hepmcstatuscode_ratios[iDataset] = (TH1D*)H1D_hepmcstatuscode[iDataset]->Clone("h_particle_hepmcstatuscode_ratios"+Datasets[iDataset]+DatasetsNames[iDataset]);
-    H1D_hepmcstatuscode_ratios[iDataset]->Reset("M");
-    divideSuccess_hepmcstatuscode = H1D_hepmcstatuscode_ratios[iDataset]->Divide(H1D_hepmcstatuscode[iDataset], H1D_hepmcstatuscode[0], 1., 1., "");
+//     H1D_hepmcstatuscode_ratios[iDataset] = (TH1D*)H1D_hepmcstatuscode[iDataset]->Clone("h_particle_hepmcstatuscode_ratios"+Datasets[iDataset]+DatasetsNames[iDataset]);
+//     H1D_hepmcstatuscode_ratios[iDataset]->Reset("M");
+//     divideSuccess_hepmcstatuscode = H1D_hepmcstatuscode_ratios[iDataset]->Divide(H1D_hepmcstatuscode[iDataset], H1D_hepmcstatuscode[0], 1., 1., "");
 
-    H1D_process_ratios[iDataset] = (TH1D*)H1D_process[iDataset]->Clone("h_particle_process_ratios"+Datasets[iDataset]+DatasetsNames[iDataset]);
-    H1D_process_ratios[iDataset]->Reset("M");
-    divideSuccess_process = H1D_process_ratios[iDataset]->Divide(H1D_process[iDataset], H1D_process[0], 1., 1., "");
+//     H1D_process_ratios[iDataset] = (TH1D*)H1D_process[iDataset]->Clone("h_particle_process_ratios"+Datasets[iDataset]+DatasetsNames[iDataset]);
+//     H1D_process_ratios[iDataset]->Reset("M");
+//     divideSuccess_process = H1D_process_ratios[iDataset]->Divide(H1D_process[iDataset], H1D_process[0], 1., 1., "");
     
-    H1D_producedbygenerator_ratios[iDataset] = (TH1D*)H1D_producedbygenerator[iDataset]->Clone("h_particle_producedbygenerator_ratios"+Datasets[iDataset]+DatasetsNames[iDataset]);
-    H1D_producedbygenerator_ratios[iDataset]->Reset("M");
-    divideSuccess_producedbygenerator = H1D_producedbygenerator_ratios[iDataset]->Divide(H1D_producedbygenerator[iDataset], H1D_producedbygenerator[0], 1., 1., "");
-  }
+//     H1D_producedbygenerator_ratios[iDataset] = (TH1D*)H1D_producedbygenerator[iDataset]->Clone("h_particle_producedbygenerator_ratios"+Datasets[iDataset]+DatasetsNames[iDataset]);
+//     H1D_producedbygenerator_ratios[iDataset]->Reset("M");
+//     divideSuccess_producedbygenerator = H1D_producedbygenerator_ratios[iDataset]->Divide(H1D_producedbygenerator[iDataset], H1D_producedbygenerator[0], 1., 1., "");
+//   }
 
-  TString* pdfName_pdgcode = new TString("particle_pdgcode_DatasetComp_ratios");
-  TString* pdfName_genstatuscode = new TString("particle_genstatuscode_DatasetComp_ratios");
-  TString* pdfName_hepmcstatuscode = new TString("particle_hepmcstatuscode_DatasetComp_ratios");
-  TString* pdfName_process = new TString("particle_process_DatasetComp_ratios");
-  TString* pdfName_producedbygenerator = new TString("particle_producedbygenerator_DatasetComp_ratios");
+//   TString* pdfName_pdgcode = new TString("particle_pdgcode_DatasetComp_ratios");
+//   TString* pdfName_genstatuscode = new TString("particle_genstatuscode_DatasetComp_ratios");
+//   TString* pdfName_hepmcstatuscode = new TString("particle_hepmcstatuscode_DatasetComp_ratios");
+//   TString* pdfName_process = new TString("particle_process_DatasetComp_ratios");
+//   TString* pdfName_producedbygenerator = new TString("particle_producedbygenerator_DatasetComp_ratios");
 
-  TString textContext(contextTrackDatasetComp(""));
+//   TString textContext(contextTrackDatasetComp(""));
 
-  if (divideSuccess_pdgcode == true) {
-    Draw_TH1_Histograms(H1D_pdgcode_ratios, DatasetsNames, nDatasets, textContext, pdfName_pdgcode, texPdgCode, texRatioDatasets, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "autoratio,noMarkerFirst");
-  }
-  else {
-    cout << "Divide failed in Draw_ParticleProcessesRatios_DatasetComparison: divideSuccess_pdgcode = false" << endl;
-  }
+//   if (divideSuccess_pdgcode == true) {
+//     Draw_TH1_Histograms(H1D_pdgcode_ratios, DatasetsNames, nDatasets, textContext, pdfName_pdgcode, texPdgCode, texRatioDatasets, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "autoratio,noMarkerFirst");
+//   }
+//   else {
+//     cout << "Divide failed in Draw_ParticleProcessesRatios_DatasetComparison: divideSuccess_pdgcode = false" << endl;
+//   }
 
-  if (divideSuccess_genstatuscode == true) {
-    Draw_TH1_Histograms(H1D_genstatuscode_ratios, DatasetsNames, nDatasets, textContext, pdfName_genstatuscode, texGenStatusCode, texRatioDatasets, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "autoratio,noMarkerFirst");
-  }
-  else {
-    cout << "Divide failed in Draw_ParticleProcessesRatios_DatasetComparison: divideSuccess_genstatuscode = false" << endl;
-  }
+//   if (divideSuccess_genstatuscode == true) {
+//     Draw_TH1_Histograms(H1D_genstatuscode_ratios, DatasetsNames, nDatasets, textContext, pdfName_genstatuscode, texGenStatusCode, texRatioDatasets, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "autoratio,noMarkerFirst");
+//   }
+//   else {
+//     cout << "Divide failed in Draw_ParticleProcessesRatios_DatasetComparison: divideSuccess_genstatuscode = false" << endl;
+//   }
 
-  if (divideSuccess_hepmcstatuscode == true) {
-    Draw_TH1_Histograms(H1D_hepmcstatuscode_ratios, DatasetsNames, nDatasets, textContext, pdfName_hepmcstatuscode, texHepMcStatusCode, texRatioDatasets, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "autoratio,noMarkerFirst");
-  }
-  else {
-    cout << "Divide failed in Draw_ParticleProcessesRatios_DatasetComparison: divideSuccess_hepmcstatuscode = false" << endl;
-  }
+//   if (divideSuccess_hepmcstatuscode == true) {
+//     Draw_TH1_Histograms(H1D_hepmcstatuscode_ratios, DatasetsNames, nDatasets, textContext, pdfName_hepmcstatuscode, texHepMcStatusCode, texRatioDatasets, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "autoratio,noMarkerFirst");
+//   }
+//   else {
+//     cout << "Divide failed in Draw_ParticleProcessesRatios_DatasetComparison: divideSuccess_hepmcstatuscode = false" << endl;
+//   }
 
-  if (divideSuccess_process == true) {
-    Draw_TH1_Histograms(H1D_process_ratios, DatasetsNames, nDatasets, textContext, pdfName_process, texProcess, texRatioDatasets, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "autoratio,noMarkerFirst");
-  }
-  else {
-    cout << "Divide failed in Draw_ParticleProcessesRatios_DatasetComparison: divideSuccess_process = false" << endl;
-  }
+//   if (divideSuccess_process == true) {
+//     Draw_TH1_Histograms(H1D_process_ratios, DatasetsNames, nDatasets, textContext, pdfName_process, texProcess, texRatioDatasets, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "autoratio,noMarkerFirst");
+//   }
+//   else {
+//     cout << "Divide failed in Draw_ParticleProcessesRatios_DatasetComparison: divideSuccess_process = false" << endl;
+//   }
 
-  if (divideSuccess_producedbygenerator == true) {
-    Draw_TH1_Histograms(H1D_producedbygenerator_ratios, DatasetsNames, nDatasets, textContext, pdfName_producedbygenerator, texProducedByGenerator, texRatioDatasets, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "autoratio,noMarkerFirst");
-  }
-  else {
-    cout << "Divide failed in Draw_ParticleProcessesRatios_DatasetComparison: divideSuccess_producedbygenerator = false" << endl;
-  }
-}
+//   if (divideSuccess_producedbygenerator == true) {
+//     Draw_TH1_Histograms(H1D_producedbygenerator_ratios, DatasetsNames, nDatasets, textContext, pdfName_producedbygenerator, texProducedByGenerator, texRatioDatasets, texCollisionDataInfo, drawnWindowAuto, legendPlacementAuto, contextPlacementAuto, "autoratio,noMarkerFirst");
+//   }
+//   else {
+//     cout << "Divide failed in Draw_ParticleProcessesRatios_DatasetComparison: divideSuccess_producedbygenerator = false" << endl;
+//   }
+// }
 

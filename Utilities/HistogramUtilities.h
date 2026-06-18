@@ -32,4 +32,8 @@ bool DivideWithCorrelatedErrors_simpleMax(TH1D* histNumeratorToBeDivided, TH1D* 
 
 void Save_PtResponseMatrix(TH2D* &H2D_jetPtResponseMatrix, TString fileName);
 
+TH1D* ReweightedRebin(TH1D* h_in, const char* newname, int n_newbins, const double* newbins);
+
+bool HarmonizeBinning(std::vector<TH1*>& hists, double xLo, double xHi);
+
 #endif

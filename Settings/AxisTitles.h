@@ -52,6 +52,14 @@ TString* texChi2NclsITS = new TString("#chi^{2}_{Ncls ITS}");
 TString* texDcaXY = new TString("DCA_{xy}");
 TString* texDcaZ = new TString("DCA_{z}");
 
+
+
+TString* texPdgCode = new TString("pdg code");
+TString* texGenStatusCode = new TString("gen status code");
+TString* texHepMcStatusCode = new TString("hep mc status code");
+TString* texProcess = new TString("process code");
+TString* texProducedByGenerator = new TString("produced by generator boolean");
+
 ////////////////////////////////////////////
 ////////////////// y-axis ////////////////// 
 ////////////////////////////////////////////
@@ -135,10 +143,12 @@ TString* texJetPhiYield_EventNorm = new TString("1/#it{N}_{ev} d#it{N}_{jet}/d#i
 TString* texJetPtYield_EntriesNorm = new TString("1/#it{N}_{jet} d#it{N}_{jet}/d#it{p}_{T} (GeV/#it{c})^{-1}");
 TString* texJetEtaYield_EntriesNorm = new TString("1/#it{N}_{jet} d#it{N}_{jet}/d#it{#eta}");
 TString* texJetPhiYield_EntriesNorm = new TString("1/#it{N}_{jet} d#it{N}_{jet}/d#it{#phi}");
+TString* texJetPtYield_20GevNorm = new TString("1/#it{N}_{jets20GeV} d#it{N}_{jet}/d#it{p}_{T} (GeV/#it{c})^{-1}");
 TString* texJetPtYield_EventNorm_CentWindow = new TString("1/#it{N}_{ev}^{in cent} d#it{N}_{jet}/d#it{p}_{T} (GeV/#it{c})^{-1}");
 TString* texJetEtaYield_EventNorm_CentWindow = new TString("1/#it{N}_{ev}^{in cent} d#it{N}_{jet}/d#it{#eta}");
 TString* texJetEtaYield_EntriesNorm_CentWindow = new TString("1/#it{N}_{jet}^{in cent} d#it{N}_{jet}/d#it{#eta}");
 TString* texJetPhiYield_EventNorm_CentWindow = new TString("1/#it{N}_{ev}^{in cent} d#it{N}_{jet}/d#it{#phi}");
+
 TString* texJetNormNTracksYield = new TString("1/#it{N}_{ev} d#it{N}_{jet}/d#it{N}_{tracks}");
 TString* texEvtNormAreaYield = new TString("1/#it{N}_{ev} d#it{N}_{jet}/d#it{A}_{jet}");
 TString* texJetNormAreaYield = new TString("1/#it{N}_{jet} d#it{N}_{jet}/d#it{A}_{jet}");

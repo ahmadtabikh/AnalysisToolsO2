@@ -636,4 +636,94 @@ void Save_PtResponseMatrix(TH2D* &H2D_jetPtResponseMatrix, TString fileName) {
   newFile->Close();
 }
 
+
+
+TH1D* ReweightedRebin(TH1D* h_in, const char* newname, int n_newbins, const double* newbins){
+    TH1D* h_out = new TH1D(newname, h_in->GetTitle(),
+                            n_newbins, newbins);
+    h_out->Sumw2();
+
+    for (int j = 1; j <= n_newbins; j++) {
+        double newlo = h_out->GetBinLowEdge(j);
+        double newhi = newlo + h_out->GetBinWidth(j);
+
+        double sum_val = 0.0;
+        double sum_var = 0.0;  // sum of variances for error propagation
+        double sum_width = 0.0;
+
+        for (int i = 1; i <= h_in->GetNbinsX(); i++) {
+            double lo = h_in->GetBinLowEdge(i);
+            double hi = lo + h_in->GetBinWidth(i);
+            double w  = h_in->GetBinWidth(i);
+
+            // check old bin is fully inside new bin
+            if (lo >= newlo - 1e-9 && hi <= newhi + 1e-9) {
+                // content is dsigma/dpT deta, multiply back by width
+                sum_val   += h_in->GetBinContent(i) * w;
+                sum_var   += pow(h_in->GetBinError(i) * w, 2);
+                sum_width += w;
+            }
+        }
+
+        double newwidth = h_out->GetBinWidth(j);
+
+        // sanity check: sum_width should equal newwidth
+        if (fabs(sum_width - newwidth) > 1e-6)
+            std::cerr << "WARNING: bin " << j << " width mismatch: "
+                      << sum_width << " vs " << newwidth << std::endl;
+
+        if (newwidth > 0) {
+            h_out->SetBinContent(j, sum_val / newwidth);
+            h_out->SetBinError(j, sqrt(sum_var) / newwidth);
+        }
+    }
+    return h_out;
+}
+
+bool HarmonizeBinning(std::vector<TH1*>& hists, double xLo, double xHi) {
+  if (hists.empty()) { std::cerr << "HarmonizeBinning: empty histogram list\n"; return false; }
+
+  auto edges = [](TH1* h){
+    std::vector<double> e;
+    for (int i=1;i<=h->GetNbinsX();++i) e.push_back(h->GetXaxis()->GetBinLowEdge(i));
+    e.push_back(h->GetXaxis()->GetBinUpEdge(h->GetNbinsX()));
+    return e;
+  };
+  auto approx = [](double a,double b){ return std::fabs(a-b) < 1e-4*(std::fabs(a)+std::fabs(b)+1e-10); };
+
+  // Start from the edges of the first histogram (restricted to [xLo,xHi]),
+  // then intersect with every other histogram's edges in turn.
+  std::vector<double> common;
+  for (double a : edges(hists[0]))
+    if (a >= xLo-1e-6 && a <= xHi+1e-6) common.push_back(a);
+
+  for (size_t k = 1; k < hists.size(); ++k) {
+    std::vector<double> eK = edges(hists[k]);
+    std::vector<double> next;
+    for (double a : common)
+      for (double b : eK)
+        if (approx(a,b)) { next.push_back(a); break; }
+    common = std::move(next);
+    if (common.size() < 2) {
+      std::cerr << "HarmonizeBinning: no overlap in ["<<xLo<<","<<xHi<<"] after intersecting hist "
+                 << k << " (" << hists[k]->GetName() << ")\n";
+      return false;
+    }
+  }
+
+  std::sort(common.begin(), common.end());
+  common.erase(std::unique(common.begin(),common.end(),approx), common.end());
+  if (common.size() < 2) {
+    std::cerr << "HarmonizeBinning: no overlap in ["<<xLo<<","<<xHi<<"]\n";
+    return false;
+  }
+
+  int n = (int)common.size()-1;
+  for (auto& h : hists) {
+    h = ReweightedRebin((TH1D*)h, Form("%s_h", h->GetName()), n, common.data());
+    h->SetDirectory(0);
+  }
+  return true;
+}
+
 #endif

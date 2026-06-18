@@ -364,7 +364,8 @@ std::pair<int, RooUnfold*> Get_Pt_spectrum_unfolded_preWidthScalingAtEnd(TH1D* &
   std::pair<int, RooUnfold*> unfoldInfo = Get_Pt_spectrum_unfolded_preWidthScalingAtEndAndEvtNorm(H1D_jetPt_unfolded, measuredInput, iDataset, iRadius, unfoldParameterInput, options, controlMC, inputIsGen);
   if (normaliseUnfoldingResultsAtEnd){
     if (!controlMC && options.find("inputIsMC") == std::string::npos) { // if option controlMC is false, and if inputIsMC has not been found in options; necessary check for the mcp-folded unfolding test as we want to normalise by the number of events in the MC file
-      NormaliseRawHistToInputN(H1D_jetPt_unfolded, GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflowData, collHistIsObsolete[iDataset]));
+      NormaliseRawHistToInputN(H1D_jetPt_unfolded, GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflowData, collHistIsObsolete[iDataset], derived_data[iDataset]));
+      cout<< "normaliseUnfoldingResultsAtEnd: normalising by number of events in data file, which is " << GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflowData, collHistIsObsolete[iDataset], derived_data[iDataset]) << endl;
     } else {
       TFile* fileNorm = controlMC ? file_O2Analysis_MCfile_UnfoldingControl_input[iDataset] : file_O2Analysis_MCfile_GeneralResponse[iDataset];
       if (mcIsWeighted) {
@@ -578,7 +579,7 @@ void Get_Pt_spectrum_dataUnfoldedThenRefolded_preWidthScalingAtEnd(TH1D* &H1D_je
 
   if (normaliseUnfoldingResultsAtEnd){
     if (!controlMC) {
-      NormaliseRawHistToInputN(H1D_jetPt_unfoldedThenRefolded, GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflowData, collHistIsObsolete[iDataset]));
+      NormaliseRawHistToInputN(H1D_jetPt_unfoldedThenRefolded, GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflowData, collHistIsObsolete[iDataset], derived_data[iDataset]));
     } else {
       if (mcIsWeighted) {
         if (!inputIsGen) {
@@ -716,7 +717,7 @@ void Get_Pt_spectrum_dataUnfoldedThenRefolded_RooUnfoldMethod_preWidthScalingAtE
 
   if (normaliseUnfoldingResultsAtEnd){
     if (!controlMC) {
-      NormaliseRawHistToInputN(H1D_jetPt_unfoldedThenRefolded, GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflowData, collHistIsObsolete[iDataset]));
+      NormaliseRawHistToInputN(H1D_jetPt_unfoldedThenRefolded, GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflowData, collHistIsObsolete[iDataset], derived_data[iDataset]));
     } else {
       if (mcIsWeighted) {
         if (!inputIsGen) {

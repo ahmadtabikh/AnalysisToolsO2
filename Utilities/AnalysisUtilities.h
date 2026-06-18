@@ -10,7 +10,7 @@ void NormaliseYieldToIntegral(TH1D* histogram);
 void NormaliseRawHistToIntegral(TH1D* histogram);
 long int GetNEvents(TFile* file_O2Analysis, TString analysisWorkflow);
 long int GetNEventsGen(TFile* file_O2Analysis);
-long int GetNEventsSelected_JetFramework(TFile* file_O2Analysis, const char analysisWorkflow[], bool collHistIsObsolete);
+long int GetNEventsSelected_JetFramework(TFile* file_O2Analysis, const char analysisWorkflow[], bool collHistIsObsolete, bool isDerived);
 double GetNEventsSelected_JetFramework_weighted(TFile* file_O2Analysis, const char analysisWorkflow[], bool collHistIsObsolete);
 long int GetNEventsSelected_JetFramework_gen(TFile* file_O2Analysis, const char analysisWorkflow[], bool mcCollHistIsObsolete);
 double GetNEventsSelected_JetFramework_gen_weighted(TFile* file_O2Analysis, const char analysisWorkflow[], bool mcCollHistIsObsolete);

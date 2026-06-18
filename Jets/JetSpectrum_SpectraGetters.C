@@ -536,7 +536,7 @@ void Get_Pt_spectrum_bkgCorrected_recBinning_preWidthScalingAtEnd(TH1D* &H1D_jet
   Get_Pt_spectrum_bkgCorrected_recBinning_preWidthScalingAtEndAndEvtNorm(H1D_jetPt, iDataset, iRadius, options, controlMC);
 
   if (!controlMC) {
-    NormaliseRawHistToInputN(H1D_jetPt, GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflowData, collHistIsObsolete[iDataset]));
+    NormaliseRawHistToInputN(H1D_jetPt, GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflowData, collHistIsObsolete[iDataset], derived_data[iDataset]));
   } else {        
     if (mcIsWeighted) {
       if (!mcpInput_useMcpCollCountForUnfoldingResultNorm) {
@@ -571,7 +571,7 @@ void Get_Pt_spectrum_bkgCorrected_genBinning_preWidthScalingAtEnd(TH1D* &H1D_jet
   Get_Pt_spectrum_bkgCorrected_genBinning_preWidthScalingAtEndAndEvtNorm(H1D_jetPt, iDataset, iRadius, options, controlMC);
 
   if (!controlMC) {
-    NormaliseRawHistToInputN(H1D_jetPt, GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflowData, collHistIsObsolete[iDataset]));
+    NormaliseRawHistToInputN(H1D_jetPt, GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflowData, collHistIsObsolete[iDataset], derived_data[iDataset]));
   } else {
     if (mcIsWeighted) {
       if (!mcpInput_useMcpCollCountForUnfoldingResultNorm) {
@@ -606,7 +606,7 @@ void Get_Pt_spectrum_bkgCorrected_fineBinning_preWidthScalingAtEnd(TH1D* &H1D_je
   Get_Pt_spectrum_bkgCorrected_fineBinning_preWidthScalingAtEndAndEvtNorm(H1D_jetPt, iDataset, iRadius, options, controlMC);
 
   if (!controlMC) {
-    NormaliseRawHistToInputN(H1D_jetPt, GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflowData, collHistIsObsolete[iDataset]));
+    NormaliseRawHistToInputN(H1D_jetPt, GetNEventsSelected_JetFramework(file_O2Analysis_list[iDataset], analysisWorkflowData, collHistIsObsolete[iDataset], derived_data[iDataset]));
   } else {
     if (mcIsWeighted) {
       if (!mcpInput_useMcpCollCountForUnfoldingResultNorm) {
